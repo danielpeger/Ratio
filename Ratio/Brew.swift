@@ -45,9 +45,8 @@ final class Brew {
     var tips: [Bool?]  // Array of 3 optional booleans: [doseMore, grindFiner, yieldMore]
     var notes: String?
     
-    init(bean: Bean? = nil, dose: Int, grind: Int, yield: Int, time: Int, rating: Rating = .neutral, tastes: Set<Taste> = [], tips: [Bool?] = [nil, nil, nil], notes: String? = nil) {
+    init(dose: Int, grind: Int, yield: Int, time: Int, rating: Rating = .neutral, tastes: Set<Taste> = [], tips: [Bool?] = [nil, nil, nil], notes: String? = nil, bean: Bean? = nil) {
         self.creationDate = Date()
-        self.bean = bean
         self.dose = dose
         self.grind = grind
         self.yield = yield
@@ -56,5 +55,22 @@ final class Brew {
         self.tastes = tastes
         self.tips = tips
         self.notes = notes
+        self.bean = bean
+    }
+    
+    // Computed properties for named access to tips
+    var doseMore: Bool? {
+        get { tips[0] }
+        set { tips[0] = newValue }
+    }
+    
+    var grindFiner: Bool? {
+        get { tips[1] }
+        set { tips[1] = newValue }
+    }
+    
+    var yieldMore: Bool? {
+        get { tips[2] }
+        set { tips[2] = newValue }
     }
 }

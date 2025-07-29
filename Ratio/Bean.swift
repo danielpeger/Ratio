@@ -88,6 +88,7 @@ enum ImageColor: String, Codable, Hashable, CaseIterable {
 
 @Model
 final class Bean {
+    var creationDate: Date
     var name: String
     var roaster: String?
     var origin: Origin?
@@ -95,9 +96,9 @@ final class Bean {
     var inStock: Bool
     var imageColor: ImageColor?
     var imageData: Data?
-    var creationDate: Date
     
-    init(name: String, roaster: String? = nil, origin: Origin? = nil, processing: Processing? = nil, inStock: Bool, imageColor: ImageColor, imageData: Data? = nil) {
+    init(name: String, roaster: String? = nil, origin: Origin? = nil, processing: Processing? = nil, inStock: Bool = true, imageColor: ImageColor? = nil, imageData: Data? = nil) {
+        self.creationDate = Date()
         self.name = name
         self.roaster = roaster
         self.origin = origin
@@ -105,6 +106,5 @@ final class Bean {
         self.inStock = inStock
         self.imageColor = imageColor
         self.imageData = imageData
-        self.creationDate = Date()
     }
 }
