@@ -7,22 +7,6 @@
 
 import SwiftUI
 
-// Hacky modifier to add a tertiary red background to the image when selected.
-struct SelectedFillModifier: ViewModifier {
-    let selected: Bool
-    
-    func body(content: Content) -> some View {
-        content
-            .overlay {
-                if selected {
-                    Circle()
-                        .fill(Color.accent.tertiary)
-                        .stroke(Color.accent)
-                }
-            }
-    }
-}
-
 enum ImageSize: String, Codable, Hashable, CaseIterable, Identifiable {
     var id: Self { self }
     
@@ -61,10 +45,16 @@ struct BrewImageView: View {
     
     var body: some View {
         ZStack {
-            Circle()
-                .fill(tertiary ? Color(.tertiarySystemBackground) : Color(.secondarySystemBackground))
-                .modifier(SelectedFillModifier(selected: selected))
-                .frame(width: frameSize, height: frameSize)
+            if(selected) {
+                Circle()
+                    .fill(Color.accent.tertiary)
+                    .stroke(Color.accent)
+                    .frame(width: frameSize, height: frameSize)
+            } else {
+                Circle()
+                    .fill(tertiary ? Color(.tertiarySystemBackground) : Color(.secondarySystemBackground))
+                    .frame(width: frameSize, height: frameSize)
+            }
             Text(rating.rawValue)
                 .font(.system(size: iconSize))
         }
