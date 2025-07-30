@@ -17,7 +17,9 @@ struct BrewsView: View {
         NavigationStack {
             List {
                 ForEach(brews) { brew in
-                    BrewRowView(brew: brew)
+                    NavigationLink(destination: BrewDetailView(brew: brew)) {
+                        BrewRowView(brew: brew)
+                    }
                 }
                 .onDelete(perform: deleteBrews)
             }
