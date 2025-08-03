@@ -110,6 +110,7 @@ struct RateBrewView: View {
                 }
             }
         }
+        .contentMargins(.top, 16)
         .listSectionSpacing(16)
         .navigationTitle("Rate brew")
         .navigationBarTitleDisplayMode(.inline)

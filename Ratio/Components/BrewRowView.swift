@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BrewRowView: View {
     let brew: Brew
+    var showBean: Bool = true
     var onDelete: (() -> Void)? = nil
     var onEdit: (() -> Void)? = nil
     
@@ -17,7 +18,7 @@ struct BrewRowView: View {
             Label {
                 VStack(alignment: .leading){
                     Text(formatRelativeDate(brew.creationDate))
-                    if(brew.bean != nil) {
+                    if(showBean && brew.bean != nil) {
                         Text(brew.bean?.name ?? "")
                             .font(.subheadline)
                             .foregroundColor(.secondary)

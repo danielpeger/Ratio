@@ -91,6 +91,7 @@ struct LogBrewView: View {
                     }
                 }
             }
+            .contentMargins(.top, 16)
             .listSectionSpacing(16)
             .navigationTitle("Log brew")
             .navigationBarTitleDisplayMode(.inline)

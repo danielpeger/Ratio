@@ -7,9 +7,9 @@
 
 import Foundation
  
- // Helper function to create mock brews for preview
+ // Helper function to create mock brews for preview (mix of with and without bean relationships)
  func createMockBrews() -> [Brew] {
-     let mockBeans = createMockBeans()
+     let mockBeans = createMockBeansWithoutBrews()
      let calendar = Calendar.current
      
      // Helper function to create a date with specific components
@@ -24,19 +24,19 @@ import Foundation
      }
      
      return [
-        // Recent brews with varying times
+        // Recent brews with varying times - some with beans, some without
         Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.sweet, .balanced, .creamy], tips: [true, false, nil], notes: "This is a note", bean: mockBeans[0], creationDate: createDate(year: 2025, month: 7, day: 31, hour: 8, minute: 30)),
         Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: mockBeans[1], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15)),
         
-        // Last week with different times
+        // Last week with different times - some with beans, some without
         Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.tasteless], tips: [false, nil, false], notes: "This is a note", bean: mockBeans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45)),
         Brew(dose: 15, grind: 45, yield: 45, time: 28, rating: .good, tastes: [.sweet, .harsh], tips: [true, true, nil], notes: "Perfect morning brew", creationDate: createDate(year: 2025, month: 1, day: 8, hour: 16, minute: 20)),
         
-        // Last month with evening times
+        // Last month with evening times - some with beans, some without
         Brew(dose: 20, grind: 65, yield: 60, time: 35, rating: .bad, tastes: [.bitter, .burnt], tips: [false, false, true], notes: "Too coarse grind, over-extracted", creationDate: createDate(year: 2024, month: 12, day: 20, hour: 19, minute: 30)),
         Brew(dose: 16, grind: 50, yield: 48, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: mockBeans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0)),
         
-        // Last year with various times
+        // Last year with various times - some with beans, some without
         Brew(dose: 18, grind: 58, yield: 54, time: 33, rating: .good, tastes: [.balanced, .sweet], tips: [true, true, true], notes: "Great balance of flavors", bean: mockBeans[6], creationDate: createDate(year: 2024, month: 7, day: 22, hour: 11, minute: 45)),
         Brew(dose: 14, grind: 42, yield: 42, time: 25, rating: .bad, tastes: [.sour, .salty], tips: [false, nil, false], notes: "Under-extracted, too fine grind", bean: mockBeans[7], creationDate: createDate(year: 2024, month: 3, day: 5, hour: 6, minute: 15))
      ]
