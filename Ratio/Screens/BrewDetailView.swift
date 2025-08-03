@@ -10,6 +10,7 @@ import Flow
 
 struct BrewDetailView: View {
     var brew: Brew
+    @Binding var path: [Screen]
     
     @State private var navigateToBean = false
     
@@ -23,12 +24,16 @@ struct BrewDetailView: View {
                             .font(.largeTitle)
                             .bold()
                             .multilineTextAlignment(.center)
-                        if(brew.bean != nil) {
-                            Text(brew.bean?.name ?? "")
+                        if let bean = brew.bean {
+                            Text(bean.name)
                                 .font(.title3)
                                 .foregroundColor(.accent)
                                 .onTapGesture {
-                                    navigateToBean = true
+                                    if let secondLast = path.dropLast().last, case .beanDetail = secondLast {
+                                        path.removeLast()
+                                    } else {
+                                        path.append(.beanDetail(bean: bean))
+                                    }
                                 }
                         }
                     }
@@ -100,9 +105,9 @@ struct BrewDetailView: View {
             }
         }
         .listSectionSpacing(32)
-        .navigationDestination(isPresented: $navigateToBean) {
-            if let bean = brew.bean {
-                BeanDetailView(bean: bean)
+        .navigationDestination(for: Screen.self) { screen in
+            if case let .beanDetail(bean) = screen {
+                BeanDetailView(bean: bean, path: $path)
             }
         }
         .toolbar {
@@ -124,7 +129,6 @@ struct BrewDetailView: View {
                 })
                 .labelStyle(.iconOnly)
             }
-            
         }
         .navigationTitle("Brew details")
         .navigationBarTitleDisplayMode(.inline)
@@ -132,7 +136,8 @@ struct BrewDetailView: View {
 }
 
 #Preview {
+    let path = [Screen]()
     if let fifthBrew = createMockBrews().dropFirst(5).first {
-        BrewDetailView(brew: fifthBrew)
+        BrewDetailView(brew: fifthBrew, path: .constant(path))
     }
 }

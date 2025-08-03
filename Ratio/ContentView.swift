@@ -7,21 +7,32 @@
 
 import SwiftUI
 
-struct ContentView: View {
+enum Screen: Hashable {
+    case beans
+    case brews
+    case beanDetail(bean: Bean)
+    case brewDetail(brew: Brew)
+    case addBeans
+    case changeImage
+    case logBrew
+    case rateBrew
+}
 
+struct ContentView: View {
+    
     var body: some View {
-            TabView {
-                BeansView()
-                    .tabItem {
-                        Image("beanbag")
-                        Text("Beans")
-                    }
-                BrewsView()
-                    .tabItem {
-                        Image(systemName: "cup.and.saucer")
-                        Text("Brews")
-                    }
-            }
+        TabView {
+            BeansView()
+                .tabItem {
+                    Image("beanbag")
+                    Text("Beans")
+                }
+            BrewsView()
+                .tabItem {
+                    Image(systemName: "cup.and.saucer")
+                    Text("Brews")
+                }
+        }
     }
 }
 

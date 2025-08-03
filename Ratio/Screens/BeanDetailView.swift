@@ -9,10 +9,14 @@ import SwiftUI
 
 struct BeanDetailView: View {
     @Environment(\.modelContext) private var context
+    
     var bean: Bean
+    
+    @Binding var path: [Screen]
     
     @State private var showingLogBrew = false
     @State private var editingBrew: Brew? = nil
+    @State private var editingBean: Bean? = nil
     
     var body: some View {
         List {
@@ -62,6 +66,14 @@ struct BeanDetailView: View {
                         }, onEdit: {
                             editingBrew = brew
                         })
+                        .onTapGesture {
+                            if let secondLast = path.dropLast().last, case .brewDetail = secondLast {
+                                path.removeLast()
+                            } else {
+                                path.append(.beanDetail(bean: bean))
+                            }
+                            path.append(.brewDetail(brew: brew))
+                        }
                     }
                 }
             } else {
@@ -84,18 +96,44 @@ struct BeanDetailView: View {
             }
         }
         .sheet(isPresented: $showingLogBrew) {
-            LogBrewView()
+            LogBrewView(initialBean: bean)
         }
         .sheet(item: $editingBrew) { brew in
             Text("Edit Brew View")
         }
+        .sheet(item: $editingBean) { bean in
+            AddBeansView(bean: bean)
+        }
         .navigationTitle("Bean details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Edit bean", systemImage: "pencil", action: {
+                    editingBean = bean
+                    
+                    // Add haptic feedback
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                    impactFeedback.impactOccurred()
+                })
+                .labelStyle(.iconOnly)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Log brew", systemImage: "plus", action: {
+                    showingLogBrew = true
+                    
+                    // Add haptic feedback
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                    impactFeedback.impactOccurred()
+                })
+                .labelStyle(.iconOnly)
+            }
+        }
     }
 }
 
 #Preview {
+    let path = [Screen]()
     if let firstBean = createMockBeans().dropFirst(2).first {
-        BeanDetailView(bean: firstBean)
+        BeanDetailView(bean: firstBean, path: .constant(path))
     }
 }
