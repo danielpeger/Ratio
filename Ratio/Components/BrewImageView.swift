@@ -18,7 +18,7 @@ enum ImageSize: String, Codable, Hashable, CaseIterable, Identifiable {
 struct BrewImageView: View {
     var rating: Rating
     var size: ImageSize = .small
-    var tertiary: Bool = false
+    var brightBackground: Bool = false
     var selected: Bool = false
     
     private var frameSize: CGFloat {
@@ -47,12 +47,12 @@ struct BrewImageView: View {
         ZStack {
             if(selected) {
                 Circle()
-                    .fill(Color.accent.tertiary)
+                    .fill(Color.accent.quaternary)
                     .stroke(Color.accent)
                     .frame(width: frameSize, height: frameSize)
             } else {
                 Circle()
-                    .fill(tertiary ? Color(.tertiarySystemBackground) : Color(.secondarySystemBackground))
+                    .fill(brightBackground ? Color(.secondarySystemGroupedBackground) : Color(.systemGroupedBackground))
                     .frame(width: frameSize, height: frameSize)
             }
             Text(rating.rawValue)
@@ -62,9 +62,9 @@ struct BrewImageView: View {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        BrewImageView(rating: .good, size: .small)
-        BrewImageView(rating: .neutral, size: .medium, selected: true)
-        BrewImageView(rating: .bad, size: .large, tertiary: true)
-    }
+        VStack(spacing: 20) {
+            BrewImageView(rating: .good, size: .small)
+            BrewImageView(rating: .neutral, size: .medium, selected: true)
+            BrewImageView(rating: .bad, size: .large, brightBackground: true)
+        }
 }

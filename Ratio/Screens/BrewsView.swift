@@ -11,18 +11,21 @@ import SwiftData
 struct BrewsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Brew.creationDate, order: .reverse) private var brews: [Brew]
-    @State private var showingAddBrew = false
+    @State private var showingLogBrew = false
+    @State private var editingBrew: Brew? = nil
     
     var body: some View {
         NavigationStack {
             List {
                 ForEach(brews) { brew in
-                    NavigationLink(destination: BrewDetailView(brew: brew)) {
-                        BrewRowView(brew: brew)
-                    }
+                    BrewRowView(brew: brew, onDelete: {
+                        context.delete(brew)
+                    }, onEdit: {
+                        editingBrew = brew
+                    })
                 }
-                .onDelete(perform: deleteBrews)
             }
+            .animation(.default, value: brews.count)
             .background(Color(.secondarySystemBackground))
             .overlay {
                 if(brews.isEmpty){
@@ -31,11 +34,11 @@ struct BrewsView: View {
                             Label("No brews", systemImage: "cup.and.saucer.fill")
                         },
                         description: {
-                            Text("Add your first brew to get started")
+                            Text("Log a brew to get started")
                         },
                         actions: {
-                            Button("Add brew") {
-                                showingAddBrew.toggle()
+                            Button("Log brew") {
+                                showingLogBrew.toggle()
                             }
                             .buttonStyle(.borderedProminent)
                             .bold()
@@ -47,7 +50,7 @@ struct BrewsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add brew", systemImage: "plus", action: {
-                        showingAddBrew.toggle()
+                        showingLogBrew.toggle()
                         
                         // Add haptic feedback
                         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -58,15 +61,11 @@ struct BrewsView: View {
             }
             .navigationTitle("Brews")
         }
-        .sheet(isPresented: $showingAddBrew) {
-            // TODO: Add AddBrewView here
-            Text("Add Brew View")
+        .sheet(isPresented: $showingLogBrew) {
+            LogBrewView()
         }
-    }
-    
-    private func deleteBrews(offsets: IndexSet) {
-        for index in offsets {
-            context.delete(brews[index])
+        .sheet(item: $editingBrew) { brew in
+            Text("Edit Brew View")
         }
     }
 }
@@ -74,7 +73,6 @@ struct BrewsView: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Bean.self, Brew.self, configurations: config)
-    
     
     // Add mock data to the container
     let mockBrews = createMockBrews()

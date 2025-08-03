@@ -25,7 +25,7 @@ struct BeanImageView: View {
                     .fill((color ?? .red).color.gradient)
                     .frame(width: large ? 120 : 44, height: large ? 120 : 44)
                 Image("beanbag")
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(.tertiarySystemBackground))
                     .font(.system(size: large ? 65 : 24))
             }
         }

@@ -57,14 +57,18 @@ struct BeansView: View {
                     if(!filteredBeans.isEmpty){
                         LazyVGrid(columns: columns, spacing: 12) {
                             ForEach(filteredBeans) { bean in
-                                BeanCardView(bean: bean, onToggleStock: {
-                                    bean.inStock.toggle()
-                                }, onDelete: {
-                                    context.delete(bean)
-                                }, onEdit: {
-                                    editingBean = bean
+                                NavigationLink(destination: {
+                                    BeanDetailView(bean: bean)
+                                }, label: {
+                                    BeanCardView(bean: bean, onToggleStock: {
+                                        bean.inStock.toggle()
+                                    }, onDelete: {
+                                        context.delete(bean)
+                                    }, onEdit: {
+                                        editingBean = bean
+                                    })
+                                    .animation(.default, value: filteredBeans.count)
                                 })
-                                .animation(.default, value: filteredBeans.count)
                             }
                         }
                         .padding([.horizontal, .bottom], 16)
@@ -105,7 +109,7 @@ struct BeansView: View {
                     )
                 }
             }
-            .background(Color(.secondarySystemBackground))
+            .background(Color(.systemGroupedBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add beans", systemImage: "plus", action: {

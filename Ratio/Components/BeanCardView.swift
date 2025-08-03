@@ -19,14 +19,20 @@ struct BeanCardView: View {
     var beanImageData: Data? { bean.imageData }
     var inStock: Bool { bean.inStock }
     
+    var brewCount: Int {
+        return bean.brews?.count ?? 0
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8){
             HStack(alignment: .top, spacing: 0){
                 BeanImageView(color: beanImageColor, imageData: beanImageData)
                 Spacer()
                 HStack(spacing:4) {
-                    Text("3")
-                        .foregroundColor(.secondary)
+                    if(brewCount > 0) {
+                        Text("\(brewCount)")
+                            .foregroundColor(.secondary)
+                    }
                     Image(systemName: "chevron.right")
                         .foregroundColor(Color(UIColor.tertiaryLabel))
                 }
@@ -37,6 +43,7 @@ struct BeanCardView: View {
                 Text(name)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    .foregroundColor(.primary)
                 if let roaster = roaster, !roaster.isEmpty {
                     Text(roaster)
                         .font(.subheadline)
@@ -53,7 +60,7 @@ struct BeanCardView: View {
             }
             .padding([.leading, .trailing, .bottom], 12)
         }
-        .background(Color(.tertiarySystemBackground))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(9)
         .contextMenu {
             Button(inStock ? "Out of stock" : "In stock", systemImage: inStock ? "arrow.right" : "arrow.left") {
@@ -71,7 +78,7 @@ struct BeanCardView: View {
 
 #Preview {
     ZStack {
-        Color(.secondarySystemBackground)
+        Color(.systemGroupedBackground)
             .ignoresSafeArea()
         let bean = Bean(name: "Test bean", roaster: "Test roaster", inStock: true, imageColor: .blue)
         BeanCardView(bean: bean)

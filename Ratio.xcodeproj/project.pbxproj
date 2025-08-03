@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		441948AE2E3E301E000E104C /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 441948AD2E3E301E000E104C /* Flow */; };
 		445A45922E240F05002A100B /* PreviewAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 445A45902E240ED2002A100B /* PreviewAssets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				441948AE2E3E301E000E104C /* Flow in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			);
 			name = Ratio;
 			packageProductDependencies = (
+				441948AD2E3E301E000E104C /* Flow */,
 			);
 			productName = Ratio;
 			productReference = 445A45932E24AFBF002A100B /* Ratio.app */;
@@ -100,6 +103,9 @@
 			);
 			mainGroup = 448559582E1FD6FC00B2FD12;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				441948AC2E3E301E000E104C /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 448559582E1FD6FC00B2FD12;
 			projectDirPath = "";
@@ -341,6 +347,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		441948AC2E3E301E000E104C /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		441948AD2E3E301E000E104C /* Flow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 441948AC2E3E301E000E104C /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
+			productName = Flow;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 448559592E1FD6FC00B2FD12 /* Project object */;
 }

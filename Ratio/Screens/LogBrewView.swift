@@ -1,0 +1,132 @@
+//
+//  LogBrewView.swift
+//  Ratio
+//
+//  Created by Daniel Péger on 2025. 08. 02..
+//
+
+import SwiftUI
+import SwiftData
+
+struct LogBrewView: View {
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var context
+    @Query(sort: \Bean.name) private var beans: [Bean]
+    
+    var brew: Brew?
+    
+    @State private var brewBean: Bean?
+    @State private var brewDose: Int = 18
+    @State private var brewGrind: Int = 15
+    @State private var brewYield: Int = 36
+    @State private var brewTime: Int = 28
+    @State private var brewRating: Rating = .neutral
+    @State private var brewTastes: Set<Taste> = []
+    @State private var brewTips: [Bool?] = [nil, nil, nil]
+    @State private var brewNotes: String?
+
+    @State private var navigateToRateBrew = false
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Beans", selection: $brewBean) {
+                        Text("Not set").tag(nil as Bean?)
+                        ForEach(beans.filter { $0.inStock }) { bean in
+                            Text(bean.name).tag(bean as Bean?)
+                        }
+                    }
+                }
+                Section {
+                    Stepper(
+                        value: $brewDose,
+                        in: 1...50,
+                    ) {
+                        HStack{
+                            Text("Dose")
+                            Spacer()
+                            Text("\(brewDose)g")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                Section {
+                    Stepper(
+                        value: $brewGrind,
+                        in: 1...100,
+                    ) {
+                        HStack{
+                            Text("Grind")
+                            Spacer()
+                            Text("\(brewGrind)")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                Section {
+                    Stepper(
+                        value: $brewYield,
+                        in: 1...100,
+                    ) {
+                        HStack{
+                            Text("Yield")
+                            Spacer()
+                            Text("\(brewYield)")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                Section {
+                    Stepper(
+                        value: $brewTime,
+                        in: 1...120,
+                    ) {
+                        HStack{
+                            Text("Time")
+                            Spacer()
+                            Text("\(brewTime)")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+            .listSectionSpacing(16)
+            .navigationTitle("Log brew")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Next") {
+                        navigateToRateBrew = true
+                    }
+                }
+            }
+            .navigationDestination(isPresented: $navigateToRateBrew) {
+                RateBrewView(
+                    rating: $brewRating,
+                    tastes: $brewTastes,
+                    tips: $brewTips,
+                    notes: $brewNotes,
+                    onSave: {
+                        let newBrew = Brew(dose: brewDose, grind: brewGrind, yield: brewYield, time: brewTime, rating: brewRating, tastes: brewTastes, tips: brewTips, notes: brewNotes, bean: brewBean)
+                        context.insert(newBrew)
+                        
+                        // Add haptic feedback
+                        let notificationFeedback = UINotificationFeedbackGenerator()
+                        notificationFeedback.notificationOccurred(.success)
+                        dismiss()
+                    }
+                )
+            }
+        }
+    }
+}
+
+#Preview {
+   LogBrewView()
+}

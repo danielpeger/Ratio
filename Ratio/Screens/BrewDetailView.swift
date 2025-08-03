@@ -6,37 +6,105 @@
 //
 
 import SwiftUI
+import Flow
 
 struct BrewDetailView: View {
     var brew: Brew
     
+    @State private var navigateToBean = false
+    
     var body: some View {
         NavigationStack{
-            VStack {
-                BrewImageView(rating: brew.rating, size: .large, tertiary: true)
-                VStack(spacing: 4) {
-                    Text(formatRelativeDate(brew.creationDate))
-                        .font(.largeTitle)
-                        .bold()
-                    if(brew.bean != nil) {
-                        NavigationLink(destination: {
-                            BeanDetailView()
-                        }, label: {
-                            Text(brew.bean?.name ?? "")
-                                .font(.title3)
-                        })
+            List{
+                Section {
+                    VStack {
+                        BrewImageView(rating: brew.rating, size: .large, brightBackground: true)
+                        VStack(spacing: 4) {
+                            Text(formatRelativeDate(brew.creationDate))
+                                .font(.largeTitle)
+                                .bold()
+                                .multilineTextAlignment(.center)
+                            if(brew.bean != nil) {
+                                Text(brew.bean?.name ?? "")
+                                    .font(.title3)
+                                    .onTapGesture {
+                                        navigateToBean = true
+                                    }
+                                    .foregroundColor(.accent)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                }
+                Section {
+                    HStack {
+                        Text("Dose")
+                        Spacer()
+                        Text("\(brew.dose)g")
+                            .foregroundColor(.secondary)
+                    }
+                    HStack {
+                        Text("Grind")
+                        Spacer()
+                        Text("\(brew.grind)")
+                            .foregroundColor(.secondary)
+                    }
+                    HStack {
+                        Text("Yield")
+                        Spacer()
+                        Text("\(brew.yield)g")
+                            .foregroundColor(.secondary)
+                    }
+                    HStack {
+                        Text("Time")
+                        Spacer()
+                        Text("\(brew.time)s")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                Section {
+                    if (brew.tasteArray != []) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Taste")
+                            HFlow(spacing: 8) {
+                                ForEach(brew.tasteArray, id: \.self) { taste in
+                                    PillView(text: taste.rawValue)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    
+                    if (brew.tipArray != []) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Tips for next brew")
+                            HFlow(spacing: 8) {
+                                ForEach(brew.tipArray, id: \.self) { tip in
+                                    PillView(text: tip.rawValue)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    
+                    if let notes = brew.notes, !notes.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Notes")
+                            if let notes = brew.notes, !notes.isEmpty {
+                                Text(notes)
+                                    .foregroundColor(.secondary)
+                                    .padding(.bottom, 8)
+                            }
+                        }
                     }
                 }
             }
-            List{
-                HStack {
-                    Text("Dose")
-                    Spacer()
-                    Text("/brew.dose")
-                        .foregroundColor(.secondary)
+            .navigationDestination(isPresented: $navigateToBean) {
+                if let bean = brew.bean {
+                    BeanDetailView(bean: bean)
                 }
             }
-            .background(Color(.secondarySystemBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Pin brew", systemImage: "pin", action: {
@@ -66,7 +134,7 @@ struct BrewDetailView: View {
 }
 
 #Preview {
-    if let firstBrew = createMockBrews().first {
-        BrewDetailView(brew: firstBrew)
+    if let fifthBrew = createMockBrews().dropFirst(5).first {
+        BrewDetailView(brew: fifthBrew)
     }
 }

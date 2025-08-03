@@ -13,6 +13,7 @@ struct RatioApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Bean.self,
+            Brew.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

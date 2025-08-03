@@ -9,25 +9,42 @@ import SwiftUI
 
 struct BrewRowView: View {
     let brew: Brew
+    var onDelete: (() -> Void)? = nil
+    var onEdit: (() -> Void)? = nil
     
     var body: some View {
-        Label {
-            VStack(alignment: .leading){
-                Text(formatRelativeDate(brew.creationDate))
-                if(brew.bean != nil) {
-                    Text(brew.bean?.name ?? "")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+        NavigationLink(destination: BrewDetailView(brew: brew)) {
+            Label {
+                VStack(alignment: .leading){
+                    Text(formatRelativeDate(brew.creationDate))
+                    if(brew.bean != nil) {
+                        Text(brew.bean?.name ?? "")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
+            } icon: {
+                BrewImageView(rating: brew.rating)
             }
-        } icon: {
-            ZStack {
-                Circle()
-                    .fill(Color(.secondarySystemBackground))
-                    .frame(width: 44, height: 44)
-                Text(brew.rating.rawValue)
-                    .font(.system(size: 24))
+        }
+        .contextMenu {
+            Button("Edit") {
+                onEdit?()
             }
+            
+            Button("Delete", role: .destructive) {
+                onDelete?()
+            }
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button("Delete", role: .destructive) {
+                onDelete?()
+            }
+            
+            Button("Edit") {
+                onEdit?()
+            }
+            .tint(.blue)
         }
     }
 }

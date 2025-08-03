@@ -8,11 +8,16 @@
 import SwiftUI
 
 struct BeanDetailView: View {
+    var bean: Bean
+    
     var body: some View {
         Text("Hello bean detail view!")
+            .navigationTitle(bean.name)
     }
 }
 
 #Preview {
-    BeanDetailView()
+    if let firstBean = createMockBeans().dropFirst(2).first {
+        BeanDetailView(bean: firstBean)
+    }
 }

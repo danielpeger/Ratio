@@ -21,7 +21,12 @@ func formatRelativeDate(_ date: Date) -> String {
         return "\(formatter.string(from: date)) at \(formatTime(date))"
     } else {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
+        // Check if the date is in the current year
+        if calendar.isDate(date, equalTo: now, toGranularity: .year) {
+            formatter.dateFormat = "MMM d"
+        } else {
+            formatter.dateFormat = "YYYY MMM d"
+        }
         return "\(formatter.string(from: date)) at \(formatTime(date))"
     }
 }
