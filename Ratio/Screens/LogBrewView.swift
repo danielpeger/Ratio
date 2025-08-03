@@ -14,6 +14,7 @@ struct LogBrewView: View {
     @Query(sort: \Bean.name) private var beans: [Bean]
     
     var brew: Brew?
+    var initialBean: Bean?
     
     @State private var brewBean: Bean?
     @State private var brewDose: Int = 18
@@ -24,6 +25,13 @@ struct LogBrewView: View {
     @State private var brewTastes: Set<Taste> = []
     @State private var brewTips: [Bool?] = [nil, nil, nil]
     @State private var brewNotes: String?
+
+    // Initialize the view with an optional initial bean
+    init(brew: Brew? = nil, initialBean: Bean? = nil) {
+        self.brew = brew
+        self.initialBean = initialBean
+        self._brewBean = State(initialValue: initialBean)
+    }
 
     @State private var navigateToRateBrew = false
     
