@@ -26,7 +26,7 @@ import Foundation
      return [
         // Recent brews with varying times - some with beans, some without
         Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.sweet, .balanced, .creamy], tips: [true, false, nil], notes: "This is a note", bean: mockBeans[0], creationDate: createDate(year: 2025, month: 7, day: 31, hour: 8, minute: 30)),
-        Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: mockBeans[1], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15)),
+        Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: mockBeans[0], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15)),
         
         // Last week with different times - some with beans, some without
         Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.tasteless], tips: [false, nil, false], notes: "This is a note", bean: mockBeans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45)),

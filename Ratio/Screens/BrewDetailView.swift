@@ -29,12 +29,13 @@ struct BrewDetailView: View {
                                 .font(.title3)
                                 .foregroundColor(.accent)
                                 .onTapGesture {
-                                    if let secondLast = path.dropLast().last, case .beanDetail = secondLast {
+                                    if let previousScreen = path.dropLast().last, case .beanDetail = previousScreen {
                                         path.removeLast()
                                     } else {
                                         path.append(.beanDetail(bean: bean))
                                     }
                                 }
+                            
                         }
                     }
                 }
@@ -105,11 +106,6 @@ struct BrewDetailView: View {
             }
         }
         .listSectionSpacing(32)
-        .navigationDestination(for: Screen.self) { screen in
-            if case let .beanDetail(bean) = screen {
-                BeanDetailView(bean: bean, path: $path)
-            }
-        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Pin brew", systemImage: "pin", action: {

@@ -66,9 +66,9 @@ struct BeansView: View {
                                     editingBean = bean
                                 })
                                 .animation(.default, value: filteredBeans.count)
-                                .onTapGesture(perform: {
+                                .onTapGesture {
                                     path.append(.beanDetail(bean: bean))
-                                })
+                                }
                             }
                         }
                         .padding([.horizontal, .bottom], 16)

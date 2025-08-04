@@ -67,12 +67,11 @@ struct BeanDetailView: View {
                             editingBrew = brew
                         })
                         .onTapGesture {
-                            if let secondLast = path.dropLast().last, case .brewDetail = secondLast {
+                            if let previousScreen = path.dropLast().last, case .brewDetail(let previousBrew) = previousScreen, previousBrew.id == brew.id {
                                 path.removeLast()
                             } else {
-                                path.append(.beanDetail(bean: bean))
+                                path.append(.brewDetail(brew: brew))
                             }
-                            path.append(.brewDetail(brew: brew))
                         }
                     }
                 }
