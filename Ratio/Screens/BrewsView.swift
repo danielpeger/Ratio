@@ -1,5 +1,5 @@
 //
-//  BeansView.swift
+//  BrewsView.swift
 //  Ratio
 //
 //  Created by Daniel Péger on 2025. 07. 10..
@@ -11,11 +11,12 @@ import SwiftData
 struct BrewsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Brew.creationDate, order: .reverse) private var brews: [Brew]
+    @State private var path = [Screen]()
     @State private var showingLogBrew = false
     @State private var editingBrew: Brew? = nil
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 ForEach(brews) { brew in
                     BrewRowView(brew: brew, onDelete: {
@@ -23,6 +24,9 @@ struct BrewsView: View {
                     }, onEdit: {
                         editingBrew = brew
                     })
+                    .onTapGesture {
+                        path.append(.brewDetail(brew: brew))
+                    }
                 }
             }
             .animation(.default, value: brews.count)
@@ -60,6 +64,14 @@ struct BrewsView: View {
                 }
             }
             .navigationTitle("Brews")
+            .navigationDestination(for: Screen.self) { screen in
+                if case let .beanDetail(bean) = screen {
+                    BeanDetailView(bean: bean, path: $path)
+                }
+                if case let .brewDetail(brew) = screen {
+                    BrewDetailView(brew: brew, path: $path)
+                }
+            }
         }
         .sheet(isPresented: $showingLogBrew) {
             LogBrewView()

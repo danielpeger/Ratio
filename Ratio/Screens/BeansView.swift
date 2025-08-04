@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct BeansView: View {
+    @State private var path = [Screen]()
     @State private var showingAddBeans = false
     @State private var editingBean: Bean? = nil
     @State private var searchText = ""
@@ -42,7 +43,7 @@ struct BeansView: View {
     @State private var selectedFilter: StockFilter = .inStock
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack {
                 ScrollView {
                     Picker("Stock Filter", selection: $selectedFilter) {
@@ -57,18 +58,17 @@ struct BeansView: View {
                     if(!filteredBeans.isEmpty){
                         LazyVGrid(columns: columns, spacing: 12) {
                             ForEach(filteredBeans) { bean in
-                                NavigationLink(destination: {
-                                    BeanDetailView(bean: bean)
-                                }, label: {
-                                    BeanCardView(bean: bean, onToggleStock: {
-                                        bean.inStock.toggle()
-                                    }, onDelete: {
-                                        context.delete(bean)
-                                    }, onEdit: {
-                                        editingBean = bean
-                                    })
-                                    .animation(.default, value: filteredBeans.count)
+                                BeanCardView(bean: bean, onToggleStock: {
+                                    bean.inStock.toggle()
+                                }, onDelete: {
+                                    context.delete(bean)
+                                }, onEdit: {
+                                    editingBean = bean
                                 })
+                                .animation(.default, value: filteredBeans.count)
+                                .onTapGesture {
+                                    path.append(.beanDetail(bean: bean))
+                                }
                             }
                         }
                         .padding([.horizontal, .bottom], 16)
@@ -123,6 +123,14 @@ struct BeansView: View {
                 }
             }
             .navigationTitle("Beans")
+            .navigationDestination(for: Screen.self) { screen in
+                if case let .beanDetail(bean) = screen {
+                    BeanDetailView(bean: bean, path: $path)
+                }
+                if case let .brewDetail(brew) = screen {
+                    BrewDetailView(brew: brew, path: $path)
+                }
+            }
         }
         .searchable(text: $searchText)
         

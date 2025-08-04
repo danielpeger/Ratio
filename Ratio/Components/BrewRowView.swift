@@ -14,19 +14,17 @@ struct BrewRowView: View {
     var onEdit: (() -> Void)? = nil
     
     var body: some View {
-        NavigationLink(destination: BrewDetailView(brew: brew)) {
-            Label {
-                VStack(alignment: .leading){
-                    Text(formatRelativeDate(brew.creationDate))
-                    if(showBean && brew.bean != nil) {
-                        Text(brew.bean?.name ?? "")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+        Label {
+            VStack(alignment: .leading){
+                Text(formatRelativeDate(brew.creationDate))
+                if(showBean && brew.bean != nil) {
+                    Text(brew.bean?.name ?? "")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
-            } icon: {
-                BrewImageView(rating: brew.rating)
             }
+        } icon: {
+            BrewImageView(rating: brew.rating)
         }
         .contextMenu {
             Button("Edit") {
