@@ -49,6 +49,12 @@ struct BeanDetailView: View {
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 .listRowBackground(Color.clear)
             }
+            
+            if let lastBrew = beanBrews.first {
+                Section(header: Text("Last brew")) {
+                    BrewCardView(brew: lastBrew)
+                }
+            }
 
             if !beanBrews.isEmpty {
                 Section(header: Text("Brews")) {
@@ -72,9 +78,11 @@ struct BeanDetailView: View {
                     label: {
                         Text("No brews")
                             .bold()
+                            .foregroundColor(Color(.tertiaryLabel))
                     },
                     description: {
                         Text("Log a brew to get started")
+                            .foregroundColor(Color(.tertiaryLabel))
                     },
                     actions: {
                         Button("Log brew") {
@@ -126,7 +134,7 @@ struct BeanDetailView: View {
 
 #Preview {
     let path = [Screen]()
-    if let firstBean = createMockBeans().dropFirst(2).first {
+    if let firstBean = createMockBeans().dropFirst().first {
         BeanDetailView(bean: firstBean, path: .constant(path))
     }
 }

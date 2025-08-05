@@ -27,9 +27,9 @@ enum Taste: String, Codable, Hashable, CaseIterable, Identifiable {
 enum Rating: String, Codable, Hashable, CaseIterable, Identifiable {
     var id: Self { self }
     
-    case bad = "🙁"
+    case bad = "👎"
     case neutral = "😐"
-    case good = "🙂"
+    case good = "❤️"
 }
 
 enum Tip: String, Codable, Hashable, CaseIterable, Identifiable {
