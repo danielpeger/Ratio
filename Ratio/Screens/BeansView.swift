@@ -13,13 +13,9 @@ struct BeansView: View {
     @State private var showingAddBeans = false
     @State private var editingBean: Bean? = nil
     @State private var searchText = ""
+    @State private var selectedFilter: StockFilter = .inStock
     @Environment(\.modelContext) private var context
     @Query(sort: \Bean.creationDate, order: .reverse) private var beans: [Bean]
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
     
     var filteredBeans: [Bean] {
         let stockFiltered = beans.filter { bean in
@@ -40,7 +36,6 @@ struct BeansView: View {
         case outOfStock = "Out of stock"
         var id: Self { self }
     }
-    @State private var selectedFilter: StockFilter = .inStock
     
     var body: some View {
         NavigationStack(path: $path) {
@@ -56,7 +51,10 @@ struct BeansView: View {
                     .padding(.bottom, 8)
                     
                     if(!filteredBeans.isEmpty){
-                        LazyVGrid(columns: columns, spacing: 12) {
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ], spacing: 12) {
                             ForEach(filteredBeans) { bean in
                                 BeanCardView(bean: bean, onToggleStock: {
                                     bean.inStock.toggle()

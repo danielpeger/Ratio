@@ -80,7 +80,7 @@ struct LogBrewView: View {
                         HStack{
                             Text("Yield")
                             Spacer()
-                            Text("\(brewYield)")
+                            Text("\(brewYield)g")
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -93,7 +93,7 @@ struct LogBrewView: View {
                         HStack{
                             Text("Time")
                             Spacer()
-                            Text("\(brewTime)")
+                            Text("\(brewTime)s")
                                 .foregroundColor(.secondary)
                         }
                     }

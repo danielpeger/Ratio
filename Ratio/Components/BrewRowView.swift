@@ -14,18 +14,28 @@ struct BrewRowView: View {
     var onEdit: (() -> Void)? = nil
     
     var body: some View {
-        Label {
-            VStack(alignment: .leading){
-                Text(formatRelativeDate(brew.creationDate))
-                if(showBean && brew.bean != nil) {
-                    Text(brew.bean?.name ?? "")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+        HStack {
+            Label {
+                VStack(alignment: .leading){
+                    Text(formatRelativeDate(brew.creationDate))
+                    if(showBean && brew.bean != nil) {
+                        Text(brew.bean?.name ?? "")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
+            } icon: {
+                BrewImageView(rating: brew.rating)
             }
-        } icon: {
-            BrewImageView(rating: brew.rating)
+            
+            Spacer()
+            
+            // NavigationLink-style chevron
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Color(.tertiaryLabel))
         }
+        .contentShape(Rectangle()) // Makes the entire row tappable
         .contextMenu {
             Button("Edit") {
                 onEdit?()

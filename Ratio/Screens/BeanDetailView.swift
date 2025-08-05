@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct BeanDetailView: View {
     @Environment(\.modelContext) private var context
@@ -13,10 +14,17 @@ struct BeanDetailView: View {
     var bean: Bean
     
     @Binding var path: [Screen]
-    
     @State private var showingLogBrew = false
     @State private var editingBrew: Brew? = nil
     @State private var editingBean: Bean? = nil
+    
+    // Query brews for this specific bean to ensure automatic updates
+    @Query(sort: \Brew.creationDate, order: .reverse) private var brews: [Brew]
+    var beanBrews: [Brew] {
+        return brews.filter { brew in
+            brew.bean == bean
+        }
+    }
     
     var body: some View {
         List {
@@ -28,39 +36,23 @@ struct BeanDetailView: View {
                             .font(.largeTitle)
                             .bold()
                             .multilineTextAlignment(.center)
-                        if let roaster = bean.roaster {
-                            Text(roaster)
+                        let details = [bean.roaster, bean.origin?.rawValue, bean.processing?.rawValue].compactMap { $0 }
+                        if !details.isEmpty {
+                            Text(details.joined(separator: ", "))
                                 .font(.title3)
                                 .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
                         }
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 .listRowBackground(Color.clear)
             }
-            
-            Section {
-                if let origin = bean.origin {
-                    HStack {
-                        Text("Origin")
-                        Spacer()
-                        Text(origin.rawValue)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                if let processing = bean.processing {
-                    HStack {
-                        Text("Processing")
-                        Spacer()
-                        Text(processing.rawValue)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            
-            if let brews = bean.brews, !brews.isEmpty {
+
+            if !beanBrews.isEmpty {
                 Section(header: Text("Brews")) {
-                    ForEach(brews) { brew in
+                    ForEach(beanBrews) { brew in
                         BrewRowView(brew: brew, showBean: false, onDelete: {
                             context.delete(brew)
                         }, onEdit: {
@@ -78,7 +70,8 @@ struct BeanDetailView: View {
             } else {
                 ContentUnavailableView(
                     label: {
-                        Label("No brews", systemImage: "cup.and.saucer.fill")
+                        Text("No brews")
+                            .bold()
                     },
                     description: {
                         Text("Log a brew to get started")
@@ -94,6 +87,7 @@ struct BeanDetailView: View {
                 .listRowBackground(Color.clear)
             }
         }
+        .animation(.default, value: beanBrews.count)
         .sheet(isPresented: $showingLogBrew) {
             LogBrewView(initialBean: bean)
         }
