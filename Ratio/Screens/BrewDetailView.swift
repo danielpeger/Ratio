@@ -108,14 +108,21 @@ struct BrewDetailView: View {
         }
         .listSectionSpacing(32)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Pin brew", systemImage: "pin", action: {
-                    
-                    // Add haptic feedback
-                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                    impactFeedback.impactOccurred()
-                })
-                .labelStyle(.iconOnly)
+            if let bean = brew.bean {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Pin brew", systemImage: brew.pinned ? "pin.fill" : "pin", action: {
+                        if brew.pinned {
+                            bean.pinnedBrew = nil
+                        } else {
+                            bean.pinnedBrew = brew
+                        }
+                        
+                        // Add haptic feedback
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                        impactFeedback.impactOccurred()
+                    })
+                    .labelStyle(.iconOnly)
+                }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit brew", systemImage: "pencil", action: {

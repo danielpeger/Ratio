@@ -56,6 +56,12 @@ final class Brew {
     var tips: [Bool?]  // Array of 3 optional booleans: [doseMore, grindFiner, yieldMore]
     var notes: String?
     
+    // Computed property that returns true if this brew is pinned by any bean
+    var pinned: Bool {
+        // Check if any bean has this brew as their pinnedBrew
+        return bean?.pinnedBrew == self
+    }
+    
     init(dose: Int, grind: Int, yield: Int, time: Int, rating: Rating = .neutral, tastes: Set<Taste> = [], tips: [Bool?] = [nil, nil, nil], notes: String? = nil, bean: Bean? = nil, creationDate: Date = Date()) {
         self.creationDate = creationDate
         self.dose = dose

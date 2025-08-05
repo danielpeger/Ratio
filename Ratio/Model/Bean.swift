@@ -97,6 +97,7 @@ final class Bean {
     var imageColor: ImageColor?
     var imageData: Data?
     @Relationship(deleteRule: .cascade) var brews: [Brew]?
+    @Relationship var pinnedBrew: Brew?
     
     init(name: String, roaster: String? = nil, origin: Origin? = nil, processing: Processing? = nil, inStock: Bool = true, imageColor: ImageColor? = nil, imageData: Data? = nil) {
         self.creationDate = Date()

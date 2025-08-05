@@ -50,7 +50,12 @@ struct BeanDetailView: View {
                 .listRowBackground(Color.clear)
             }
             
-            if let lastBrew = beanBrews.first {
+            if let pinnedBrew = bean.pinnedBrew {
+                Section(header: Label("Pinned brew", systemImage: "pin.fill")) {
+                    BrewCardView(brew: pinnedBrew, showPills: false)
+                }
+            }
+            else if let lastBrew = beanBrews.first {
                 Section(header: Text("Last brew")) {
                     BrewCardView(brew: lastBrew)
                 }

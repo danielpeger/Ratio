@@ -30,30 +30,63 @@ struct BrewRowView: View {
             
             Spacer()
             
-            // NavigationLink-style chevron
-            Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(Color(.tertiaryLabel))
+            HStack(spacing: 8) {
+                if(brew.pinned) {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.accent)
+                }
+                // NavigationLink-style chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(.tertiaryLabel))
+            }
         }
         .contentShape(Rectangle()) // Makes the entire row tappable
         .contextMenu {
-            Button("Edit") {
+            if let bean = brew.bean {
+                if(brew.pinned) {
+                    Button("Unpin", systemImage: "pin.slash.fill") {
+                        bean.pinnedBrew = nil
+                    }
+                } else {
+                    Button("Pin", systemImage: "pin") {
+                        bean.pinnedBrew = brew
+                    }
+                }
+            }
+            
+            Button("Edit", systemImage: "pencil") {
                 onEdit?()
             }
             
-            Button("Delete", role: .destructive) {
+            Button("Delete", systemImage: "trash", role: .destructive) {
                 onDelete?()
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button("Delete", role: .destructive) {
+            Button("Delete", systemImage: "trash", role: .destructive) {
                 onDelete?()
             }
             
-            Button("Edit") {
+            Button("Edit", systemImage: "pencil") {
                 onEdit?()
             }
-            .tint(.blue)
+            .tint(Color(.systemGray2))
+            
+            if let bean = brew.bean {
+                if(brew.pinned) {
+                    Button("Unpin", systemImage: "pin.slash.fill") {
+                        bean.pinnedBrew = nil
+                    }
+                    .tint(.indigo)
+                } else {
+                    Button("Pin", systemImage: "pin") {
+                        bean.pinnedBrew = brew
+                    }
+                    .tint(.indigo)
+                }
+            }
         }
     }
 }
