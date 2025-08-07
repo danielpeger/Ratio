@@ -16,7 +16,7 @@
  func createMockBeansWithoutBrews() -> [Bean] {
      return [
          Bean(name: "Ethiopian Yirgacheffe", roaster: "Blue Bottle Coffee", origin: .ethiopia, processing: .washed, inStock: true, imageColor: .yellow),
-         Bean(name: "Colombian Supremo", roaster: "Stumptown Coffee", inStock: true, imageColor: .green),
+         Bean(name: "Colombian Supremo", roaster: "", origin:.dominica, processing: .notSet, inStock: true, imageColor: .green),
          Bean(name: "Brazilian Santos", processing: .natural, inStock: false, imageColor: .brown, imageData: imageDataFromPreviewAsset(named: "beanImage1")),
          Bean(name: "Guatemalan Antigua", roaster: "Long roaster name Counter Culture", origin: .guatemala, processing: .washed, inStock: true, imageColor: .orange),
          Bean(name: "Kenyan AA", inStock: true, imageColor: .red, imageData: imageDataFromPreviewAsset(named: "beanImage2")),
@@ -59,12 +59,7 @@
          Brew(dose: 14, grind: 42, yield: 42, time: 25, rating: .bad, tastes: [.sour, .salty], tips: [false, nil, false], notes: "Under-extracted, too fine grind", bean: beans[7], creationDate: createDate(year: 2024, month: 3, day: 5, hour: 6, minute: 15))
      ]
      
-     // Establish the brews relationship for each bean
-     for bean in beans {
-         let beanBrews = brews.filter { $0.bean?.id == bean.id }
-         bean.brews = beanBrews
-     }
-     
+     // The relationships are already established when creating brews with bean parameter
      return beans
  }
  

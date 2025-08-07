@@ -73,6 +73,7 @@ struct BeansView: View {
                         
                     }
                 }
+                .scrollDisabled(beans.isEmpty)
             }
             .overlay {
                 if(filteredBeans.isEmpty){
@@ -80,13 +81,13 @@ struct BeansView: View {
                         label: {
                             if beans.isEmpty {
                                 Label("No beans", image: "beanbag")
-                                    .foregroundColor(Color(.tertiaryLabel))
+                                    .foregroundColor(Color(.secondaryLabel))
                             } else if (searchText.isEmpty && selectedFilter == .inStock) {
                                 Label("All beans are out of stock", systemImage: "arrow.right")
-                                    .foregroundColor(Color(.tertiaryLabel))
+                                    .foregroundColor(Color(.secondaryLabel))
                             } else if (searchText.isEmpty && selectedFilter == .outOfStock) {
                                 Label("All beans are in stock", systemImage: "arrow.left")
-                                    .foregroundColor(Color(.tertiaryLabel))
+                                    .foregroundColor(Color(.secondaryLabel))
                             } else {
                                 Label("No results", systemImage: "magnifyingglass")
                             }

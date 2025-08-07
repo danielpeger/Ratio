@@ -36,7 +36,7 @@ struct BrewsView: View {
                     ContentUnavailableView(
                         label: {
                             Label("No brews", systemImage: "cup.and.saucer.fill")
-                                .foregroundColor(Color(.tertiaryLabel))
+                                .foregroundColor(Color(.secondaryLabel))
                         },
                         description: {
                             Text("Log a brew to get started")

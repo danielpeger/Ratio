@@ -21,12 +21,11 @@ struct BrewDetailView: View {
                     BrewImageView(rating: brew.rating, size: .large, brightBackground: true)
                     VStack(spacing: 4) {
                         Text(formatRelativeDate(brew.creationDate))
-                            .font(.largeTitle)
+                            .font(.title)
                             .bold()
                             .multilineTextAlignment(.center)
                         if let bean = brew.bean {
                             Text(bean.name)
-                                .font(.title3)
                                 .foregroundColor(.accent)
                                 .onTapGesture {
                                     if let previousScreen = path.dropLast().last, case .beanDetail = previousScreen {
@@ -112,9 +111,9 @@ struct BrewDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Pin brew", systemImage: brew.pinned ? "pin.fill" : "pin", action: {
                         if brew.pinned {
-                            bean.pinnedBrew = nil
+                            bean.unpinAllBrews()
                         } else {
-                            bean.pinnedBrew = brew
+                            bean.pinBrew(brew)
                         }
                         
                         // Add haptic feedback
@@ -134,7 +133,7 @@ struct BrewDetailView: View {
                 .labelStyle(.iconOnly)
             }
         }
-        .navigationTitle("Brew details")
+        .navigationTitle("Brew")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

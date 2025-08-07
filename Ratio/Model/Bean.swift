@@ -97,7 +97,24 @@ final class Bean {
     var imageColor: ImageColor?
     var imageData: Data?
     @Relationship(deleteRule: .cascade) var brews: [Brew]?
-    @Relationship var pinnedBrew: Brew?
+    
+    // Computed property to get the pinned brew
+    var pinnedBrew: Brew? {
+        return brews?.first { $0.pinned }
+    }
+    
+    // Method to pin a specific brew (unpins all others)
+    func pinBrew(_ brew: Brew) {
+        // First, unpin all existing brews
+        brews?.forEach { $0.pinned = false }
+        // Then pin the specified brew
+        brew.pinned = true
+    }
+    
+    // Method to unpin all brews
+    func unpinAllBrews() {
+        brews?.forEach { $0.pinned = false }
+    }
     
     init(name: String, roaster: String? = nil, origin: Origin? = nil, processing: Processing? = nil, inStock: Bool = true, imageColor: ImageColor? = nil, imageData: Data? = nil) {
         self.creationDate = Date()
