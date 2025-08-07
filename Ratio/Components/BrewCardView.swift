@@ -12,13 +12,58 @@ struct BrewCardView: View {
     var brew: Brew
     var showPills: Bool = true
     
+    let delayInterval = 0.05
+    var animationLength: Int {
+        return brew.tasteArray.count + brew.tipArray.count + 1
+    }
+    @State private var visibleIndicesState: Set<Int> = []
+    @State private var isAnimating: Bool = false
+    
+    fileprivate func animateIn() {
+        if isAnimating { return }
+        isAnimating = true
+        for index in 0..<animationLength {
+            let delay = Double(index) * delayInterval
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                let animationBlock: () -> Void = {
+                    visibleIndicesState.insert(index)
+                    if index == animationLength - 1 {
+                        isAnimating = false
+                    }
+                }
+                withAnimation(.default, animationBlock)
+            }
+        }
+    }
+    
+    fileprivate func animateOut() {
+        if isAnimating { return }
+        isAnimating = true
+        for index in (0..<animationLength).reversed() {
+            let delay = Double(animationLength - 1 - index) * delayInterval
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                let animationBlock: () -> Void = {
+                    visibleIndicesState.remove(index)
+                    if (index == 0) {
+                        visibleIndicesState = []
+                        isAnimating = false
+                    }
+                }
+                withAnimation(.default, animationBlock)
+            }
+        }
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // let pillsSection: Bool = showPills && (!brew.tasteArray.isEmpty || !brew.tipArray.isEmpty)
+
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack {
                     Text("Dose")
                     Text("\(brew.dose)g")
                         .foregroundColor(.secondary)
+                        .contentTransition(.numericText(value: Double(brew.dose)))
                 }
                 Spacer()
                 Divider()
@@ -27,6 +72,7 @@ struct BrewCardView: View {
                     Text("Grind")
                     Text("\(brew.grind)")
                         .foregroundColor(.secondary)
+                        .contentTransition(.numericText(value: Double(brew.grind)))
                 }
                 Spacer()
                 Divider()
@@ -35,6 +81,7 @@ struct BrewCardView: View {
                     Text("Yield")
                     Text("\(brew.yield)g")
                         .foregroundColor(.secondary)
+                        .contentTransition(.numericText(value: Double(brew.yield)))
                 }
                 Spacer()
                 Divider()
@@ -43,36 +90,77 @@ struct BrewCardView: View {
                     Text("Time")
                     Text("\(brew.time)s")
                         .foregroundColor(.secondary)
+                        .contentTransition(.numericText(value: Double(brew.time)))
                 }
             }
-            .padding(.top, 4)
-            .padding(.bottom, showPills ? 0 : 4)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
             .padding(.horizontal, 8)
-            if showPills {
+            if visibleIndicesState.contains(0) {
                 Divider()
-                HFlow {
-                    ForEach(brew.tasteArray, id: \.self) { taste in
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.vertical, 12)
+            }
+            HFlow {
+                ForEach(Array(brew.tasteArray.enumerated()), id: \.element) { index, taste in
+                    if visibleIndicesState.contains(index + 1) {
                         PillView(text: taste.rawValue)
-                    }
-                    ForEach(brew.tipArray, id: \.self) { tip in
-                        PillView(text: tip.rawValue)
+                            .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
-                .padding(.bottom, 12)
+                ForEach(Array(brew.tipArray.enumerated()), id: \.element) { index, tip in
+                    let tipIndex = brew.tasteArray.count + index + 1
+                    if visibleIndicesState.contains(tipIndex) {
+                        PillView(text: tip.rawValue)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                }
+            }
+        }
+        .onAppear {
+            if showPills {
+                visibleIndicesState = Set(0..<animationLength)
+            } else {
+                visibleIndicesState = []
+            }
+        }
+        .onChange(of: brew) { _, _ in
+            if !isAnimating {
+                if showPills {
+                    animateIn()
+                } else {
+                    animateOut()
+                }
+            }
+        }
+        .onChange(of: showPills) { _, newShowPills in
+            if !isAnimating {
+                if newShowPills {
+                    animateIn()
+                } else {
+                    animateOut()
+                }
             }
         }
     }
 }
 
 #Preview {
+    @Previewable @State var showPillsInPreview: Bool = true
+    
     if let fifthBrew = createMockBrews().dropFirst(4).first {
-        List{
-            Section {
-                BrewCardView(brew: fifthBrew)
-            }
-            Section {
-                BrewCardView(brew: fifthBrew, showPills: false)
-                    .listRowBackground(Color.clear)
-            }
+        LazyVStack {
+            BrewCardView(brew: fifthBrew, showPills: showPillsInPreview)
+                .background(.white)
+                .padding(20)
         }
-    }}
+        .background(Color(.systemGroupedBackground))
+        Button("Toggle pills"){
+            showPillsInPreview.toggle()
+        }
+    }
+}
+
+/*
+.transition(.asymmetric(insertion: AnyTransition.move(edge: .top).combined(with: .opacity).animation(.default.delay(transitionDelayForwards)),removal: AnyTransition.move(edge: .top).combined(with: .opacity).animation(.default.delay(transitionDelayBackwards))))
+ */

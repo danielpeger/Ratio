@@ -47,11 +47,15 @@ struct BrewRowView: View {
             if let bean = brew.bean {
                 if(brew.pinned) {
                     Button("Unpin", systemImage: "pin.slash.fill") {
-                        bean.pinnedBrew = nil
+                        withAnimation {
+                            bean.unpinAllBrews()
+                        }
                     }
                 } else {
                     Button("Pin", systemImage: "pin") {
-                        bean.pinnedBrew = brew
+                        withAnimation {
+                            bean.pinBrew(brew)
+                        }
                     }
                 }
             }
@@ -77,12 +81,16 @@ struct BrewRowView: View {
             if let bean = brew.bean {
                 if(brew.pinned) {
                     Button("Unpin", systemImage: "pin.slash.fill") {
-                        bean.pinnedBrew = nil
+                        withAnimation {
+                            bean.unpinAllBrews()
+                        }
                     }
                     .tint(.indigo)
                 } else {
                     Button("Pin", systemImage: "pin") {
-                        bean.pinnedBrew = brew
+                        withAnimation {
+                            bean.pinBrew(brew)
+                        }
                     }
                     .tint(.indigo)
                 }
