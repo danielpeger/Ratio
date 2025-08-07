@@ -12,9 +12,17 @@ struct BrewCardView: View {
     var brew: Brew
     var showPills: Bool = true
     
+    @State private var displayBrew: Brew
+    
     let delayInterval = 0.05
+    
+    init(brew: Brew, showPills: Bool = true) {
+        self.brew = brew
+        self.showPills = showPills
+        self._displayBrew = State(initialValue: brew)
+    }
     var animationLength: Int {
-        return brew.tasteArray.count + brew.tipArray.count + 1
+        return displayBrew.tasteArray.count + displayBrew.tipArray.count + 1
     }
     @State private var visibleIndicesState: Set<Int> = []
     @State private var isAnimating: Bool = false
@@ -102,14 +110,14 @@ struct BrewCardView: View {
                     .padding(.vertical, 12)
             }
             HFlow {
-                ForEach(Array(brew.tasteArray.enumerated()), id: \.element) { index, taste in
+                ForEach(Array(displayBrew.tasteArray.enumerated()), id: \.element) { index, taste in
                     if visibleIndicesState.contains(index + 1) {
                         PillView(text: taste.rawValue)
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
-                ForEach(Array(brew.tipArray.enumerated()), id: \.element) { index, tip in
-                    let tipIndex = brew.tasteArray.count + index + 1
+                ForEach(Array(displayBrew.tipArray.enumerated()), id: \.element) { index, tip in
+                    let tipIndex = displayBrew.tasteArray.count + index + 1
                     if visibleIndicesState.contains(tipIndex) {
                         PillView(text: tip.rawValue)
                             .transition(.move(edge: .top).combined(with: .opacity))
@@ -124,12 +132,25 @@ struct BrewCardView: View {
                 visibleIndicesState = []
             }
         }
-        .onChange(of: brew) { _, _ in
+        .onChange(of: brew) { _, newBrew in
             if !isAnimating {
                 if showPills {
+                    withAnimation {
+                        displayBrew = newBrew
+                    }
                     animateIn()
                 } else {
+                    // Animate out current brew's pills first, then update to new brew
                     animateOut()
+                    // Update displayBrew after animation completes
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Double(animationLength) * delayInterval) {
+                        withAnimation {
+                            displayBrew = newBrew
+                        }
+                        if showPills {
+                            animateIn()
+                        }
+                    }
                 }
             }
         }

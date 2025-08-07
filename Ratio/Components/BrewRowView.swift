@@ -65,12 +65,16 @@ struct BrewRowView: View {
             }
             
             Button("Delete", systemImage: "trash", role: .destructive) {
-                onDelete?()
+                withAnimation {
+                    onDelete?()
+                }
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button("Delete", systemImage: "trash", role: .destructive) {
-                onDelete?()
+                withAnimation {
+                    onDelete?()
+                }
             }
             
             Button("Edit", systemImage: "pencil") {
