@@ -50,7 +50,7 @@ struct BrewsView: View {
                             .bold()
                         }
                     )
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color(.systemGroupedBackground))
                 }
             }
             .toolbar {

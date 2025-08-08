@@ -45,18 +45,18 @@
      // Create brews with direct references to the beans
      let brews = [
          // Recent brews with varying times
-         Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.sweet, .balanced, .creamy], tips: [true, false, nil], notes: "This is a note", bean: beans[0], creationDate: createDate(year: 2025, month: 7, day: 31, hour: 8, minute: 30)),
-         Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: beans[1], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15)),
+        Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.sweet, .balanced, .creamy], tips: [true, false, nil], notes: "This is a note", bean: beans[0], creationDate: createDate(year: 2025, month: 7, day: 31, hour: 8, minute: 30), pinned: false),
+         Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: beans[1], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15), pinned: false),
          
          // Last week with different times
-         Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.tasteless], tips: [false, nil, false], notes: "This is a note", bean: beans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45)),
+         Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.tasteless], tips: [false, nil, false], notes: "This is a note", bean: beans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45), pinned: false),
          
          // Last month with evening times
-         Brew(dose: 16, grind: 50, yield: 48, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: beans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0)),
+         Brew(dose: 16, grind: 50, yield: 48, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: beans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0), pinned: false),
          
          // Last year with various times
-         Brew(dose: 18, grind: 58, yield: 54, time: 33, rating: .good, tastes: [.balanced, .sweet], tips: [true, true, true], notes: "Great balance of flavors", bean: beans[6], creationDate: createDate(year: 2024, month: 7, day: 22, hour: 11, minute: 45)),
-         Brew(dose: 14, grind: 42, yield: 42, time: 25, rating: .bad, tastes: [.sour, .salty], tips: [false, nil, false], notes: "Under-extracted, too fine grind", bean: beans[7], creationDate: createDate(year: 2024, month: 3, day: 5, hour: 6, minute: 15))
+         Brew(dose: 18, grind: 58, yield: 54, time: 33, rating: .good, tastes: [.balanced, .sweet], tips: [true, true, true], notes: "Great balance of flavors", bean: beans[6], creationDate: createDate(year: 2024, month: 7, day: 22, hour: 11, minute: 45), pinned: false),
+         Brew(dose: 14, grind: 42, yield: 42, time: 25, rating: .bad, tastes: [.sour, .salty], tips: [false, nil, false], notes: "Under-extracted, too fine grind", bean: beans[7], creationDate: createDate(year: 2024, month: 3, day: 5, hour: 6, minute: 15), pinned: false)
      ]
      
      // The relationships are already established when creating brews with bean parameter

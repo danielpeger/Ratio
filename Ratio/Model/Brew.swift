@@ -57,7 +57,7 @@ final class Brew {
     var notes: String?
     var pinned: Bool = false
     
-    init(dose: Int, grind: Int, yield: Int, time: Int, rating: Rating = .neutral, tastes: Set<Taste> = [], tips: [Bool?] = [nil, nil, nil], notes: String? = nil, bean: Bean? = nil, creationDate: Date = Date()) {
+    init(dose: Int, grind: Int, yield: Int, time: Int, rating: Rating = .neutral, tastes: Set<Taste> = [], tips: [Bool?] = [nil, nil, nil], notes: String? = nil, bean: Bean? = nil, creationDate: Date = Date(), pinned: Bool) {
         self.creationDate = creationDate
         self.dose = dose
         self.grind = grind
@@ -68,6 +68,7 @@ final class Brew {
         self.tips = tips
         self.notes = notes
         self.bean = bean
+        self.pinned = pinned
     }
     
     // Computed property that returns tastes in enum order

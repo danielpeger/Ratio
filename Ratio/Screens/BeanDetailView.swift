@@ -121,7 +121,7 @@ struct BeanDetailView: View {
                                 
                                 if brew != beanBrews.last {
                                     Divider()
-                                        .padding(.leading, 16)
+                                        .padding(.leading, 72)
                                 }
                             }
                         }
@@ -153,7 +153,7 @@ struct BeanDetailView: View {
                     .padding(.bottom, 16)
                 }
             }
-            .animation(.default, value: beanBrews.count)
+            //.animation(.default, value: beanBrews.count)
             .sheet(isPresented: $showingLogBrew) {
                 LogBrewView(initialBean: bean)
             }
