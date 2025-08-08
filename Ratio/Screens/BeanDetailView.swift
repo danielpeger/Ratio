@@ -29,7 +29,7 @@ struct SectionHeader: View {
         .font(.system(size: 13))
         .foregroundColor(.secondary)
         .textCase(.uppercase)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 32)
         .padding(.bottom, 7)
     }
 }
@@ -82,11 +82,13 @@ struct BeanDetailView: View {
                             Text(details.joined(separator: ", "))
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .truncationMode(.tail)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity)
                 .padding(.top, 32)
+                .padding(.horizontal, 16)
                 
                 if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
                     let isPinned = bean.pinnedBrew != nil
@@ -94,8 +96,7 @@ struct BeanDetailView: View {
                         SectionHeader(isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
                         VStack(spacing: 0) {
                             BrewCardView(brew: featuredBrew, showPills: !isPinned)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
+                                .padding(16)
                         }
                         .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
                         .cornerRadius(9)
@@ -120,13 +121,12 @@ struct BeanDetailView: View {
                                 
                                 if brew != beanBrews.last {
                                     Divider()
-                                        .background(Color(.separator))
                                         .padding(.leading, 16)
                                 }
                             }
                         }
                         .background(Color(.secondarySystemGroupedBackground)) // grouped list card background
-                        .cornerRadius(10)
+                        .cornerRadius(9)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 16)
                     }
