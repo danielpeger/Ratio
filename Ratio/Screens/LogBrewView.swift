@@ -54,7 +54,7 @@ struct LogBrewView: View {
                         HStack{
                             Text("Dose")
                             Spacer()
-                            Text("\(brewDose)g")
+                            NumericText(text: "\(brewDose)g", numericValue: Double(brewDose))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -67,7 +67,7 @@ struct LogBrewView: View {
                         HStack{
                             Text("Grind")
                             Spacer()
-                            Text("\(brewGrind)")
+                            NumericText(text: "\(brewGrind)", numericValue: Double(brewGrind))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -80,7 +80,7 @@ struct LogBrewView: View {
                         HStack{
                             Text("Yield")
                             Spacer()
-                            Text("\(brewYield)g")
+                            NumericText(text: "\(brewYield)g", numericValue: Double(brewYield))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -93,7 +93,7 @@ struct LogBrewView: View {
                         HStack{
                             Text("Time")
                             Spacer()
-                            Text("\(brewTime)s")
+                            NumericText(text: "\(brewTime)s", numericValue: Double(brewTime))
                                 .foregroundColor(.secondary)
                         }
                     }

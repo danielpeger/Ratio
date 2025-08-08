@@ -131,7 +131,6 @@ struct BeanDetailView: View {
                         .padding(.bottom, 16)
                     }
                 } else {
-                    SectionHeader("Brews")
                     ContentUnavailableView(
                         label: {
                             Text("No brews")

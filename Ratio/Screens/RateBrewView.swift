@@ -60,9 +60,8 @@ struct RateBrewView: View {
                     HStack{
                         Text("Taste")
                         Spacer()
-                        Text("\(tastes.count) selected")
+                        NumericText(text: "\(tastes.count) selected", numericValue: Double(tastes.count))
                             .foregroundColor(.secondary)
-                            .contentTransition(.numericText(value: Double(tastes.count)))
                     }
                     HFlow(spacing: 8) {
                         ForEach(Taste.allCases, id: \.self) { tasteOption in
@@ -87,9 +86,8 @@ struct RateBrewView: View {
                     HStack {
                         Text("Tips for next brew")
                         Spacer()
-                        Text("\(tipsCount) selected")
+                        NumericText(text: "\(tipsCount) selected", numericValue: Double(tipsCount))
                             .foregroundColor(.secondary)
-                            .contentTransition(.numericText(value: Double(tipsCount)))
                     }
                     VStack(spacing: 12) {
                         TipPickerView(tip: $tips[0], trueOption: .doseMore, falseOption: .doseLess)

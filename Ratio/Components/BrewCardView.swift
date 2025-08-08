@@ -80,32 +80,19 @@ private struct MetricItem: View {
     }
 }
 
-private struct NumericText: View {
-    let text: String
-    let numericValue: Double?
-    var body: some View {
-        Group {
-            if let numericValue {
-                Text(text)
-                    .monospacedDigit()
-                    .contentTransition(.numericText(value: numericValue))
-            } else {
-                Text(text)
-                    .monospacedDigit()
-            }
-        }
-    }
-}
-
 private struct PillsSection: View {
     let tasteInput: [String]
     let tipsInput: [String]
     let showPills: Bool
     let staggerDelay: Double
 
+    // Snapshot states for animating out pills
     @State private var localTaste: [String] = []
     @State private var localTips: [String] = []
+    
     @State private var visibleItemIndices: Set<Int> = []
+
+    // This cancels stale scheduled inserts/removes when state flips quickly
     @State private var animationToken = UUID()
 
     init(taste: [String], tips: [String], showPills: Bool, staggerDelay: Double) {
@@ -154,7 +141,7 @@ private struct PillsSection: View {
                 presentAll()
             } else {
                 // Animate out in reverse
-                dismissAllReverse()
+                dismissAll()
             }
         }
         .onChange(of: tasteInput) { _, newTaste in
@@ -179,7 +166,7 @@ private struct PillsSection: View {
         }
     }
 
-    private func dismissAllReverse(completion: (() -> Void)? = nil) {
+    private func dismissAll(completion: (() -> Void)? = nil) {
         let token = UUID()
         animationToken = token
         for index in (0..<itemCount).reversed() {
@@ -203,7 +190,7 @@ private struct PillsSection: View {
             return
         } else {
             // Visible: animate out then in with new data
-            dismissAllReverse { [newTaste, newTips] in
+            dismissAll { [newTaste, newTips] in
                 localTaste = newTaste
                 localTips = newTips
                 presentAll()
