@@ -16,7 +16,8 @@ struct RateBrewView: View {
     @Binding var pinned: Bool
 
     var onSave: (() -> Void)?
-    var onYayDone: (() -> Void)?
+    var onDismiss: (() -> Void)?
+    var onYayPinToggle: (() -> Void)?
     
     @State private var navigateToYay = false
     
@@ -45,8 +46,10 @@ struct RateBrewView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
                     onSave?()
-                    if(rating == .good) {
+                    if rating == .good {
                         navigateToYay = true
+                    } else {
+                        onDismiss?()
                     }
                 }
             }
@@ -54,11 +57,9 @@ struct RateBrewView: View {
         .navigationDestination(isPresented: $navigateToYay) {
             YayView(
                 pinned : $pinned,
-                onPinToggle: {
-                    pinned.toggle()
-                },
+                onPinToggle: { onYayPinToggle?() },
                 onDone: {
-                    onYayDone?()
+                    onDismiss?()
                 }
             )
         }

@@ -26,6 +26,7 @@ struct LogBrewView: View {
     @State private var brewTips: [Bool?] = [nil, nil, nil]
     @State private var brewNotes: String?
     @State private var brewPinned: Bool = false
+    @State private var createdBrew: Brew? = nil
 
     // Initialize the view with an optional initial bean
     init(brew: Brew? = nil, initialBean: Bean? = nil) {
@@ -126,17 +127,20 @@ struct LogBrewView: View {
                     onSave: {
                         let newBrew = Brew(dose: brewDose, grind: brewGrind, yield: brewYield, time: brewTime, rating: brewRating, tastes: brewTastes, tips: brewTips, notes: brewNotes, bean: brewBean, pinned: brewPinned)
                         context.insert(newBrew)
-                        
-                        // Add haptic feedback
-                        let notificationFeedback = UINotificationFeedbackGenerator()
-                        notificationFeedback.notificationOccurred(.success)
+                        createdBrew = newBrew
                     },
-                    onYayDone: {
+                    onDismiss: {
                         dismiss()
                         
                         // Add haptic feedback
                         let notificationFeedback = UINotificationFeedbackGenerator()
                         notificationFeedback.notificationOccurred(.success)
+                    },
+                    onYayPinToggle: {
+                        if let brew = createdBrew {
+                            brew.pinned.toggle()
+                            try? context.save()
+                        }
                     }
                 )
             }

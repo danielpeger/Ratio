@@ -18,7 +18,7 @@ struct YayView: View {
             Image(systemName: "heart.fill")
                 .font(.system(size: 120))
             VStack(spacing: 12) {
-                Text("Yay, you've logged a great brew!")
+                Text("Yay, you've made a great brew!")
                     .font(.largeTitle)
                     .bold()
                     .multilineTextAlignment(.center)
@@ -28,16 +28,22 @@ struct YayView: View {
                     .multilineTextAlignment(.center)
             }
             Spacer()
-            Button(pinned ? "Pinned" : "Pin brew", systemImage: pinned ? "pin.fill" : "pin") {
+            Button(action: {
                 pinned.toggle()
                 onPinToggle?()
+            }) {
+                Label(pinned ? "Pinned" : "Pin brew", systemImage: pinned ? "pin.fill" : "pin")
+                    .fontWeight(.bold)
+                    .foregroundColor(.accent)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 12))
             }
-            .bold()
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .background(.white)
-            .foregroundColor(.accent)
-            .cornerRadius(12)
+            .buttonStyle(.plain)
 
         }
         .frame(maxWidth: .infinity, alignment: .center)
@@ -53,6 +59,11 @@ struct YayView: View {
                 }
             }
         }
+        // Make navigation bar items (including Back) white for this screen
+        .toolbarBackground(Color.accentColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .tint(.white)
         .animation(.none, value: pinned)
     }
 }
