@@ -106,6 +106,9 @@ struct LogBrewView: View {
 
     var body: some View {
         NavigationStack {
+            if let pinnedBrew = brewBean?.pinnedBrew {
+                BrewCardView(brew: pinnedBrew, showPills: false)
+            }
             Form {
                 Section {
                     Picker("Beans", selection: $brewBean) {
