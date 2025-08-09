@@ -12,10 +12,6 @@ enum Screen: Hashable {
     case brews
     case beanDetail(bean: Bean)
     case brewDetail(brew: Brew)
-    case addBeans
-    case changeImage
-    case logBrew
-    case rateBrew
 }
 
 struct ContentView: View {

@@ -11,7 +11,7 @@ import Flow
 private enum BrewCardStyle {
     static let metricsHorizontalPadding: CGFloat = 8
     static let verticalPadding: CGFloat = 12
-    static let staggerDelay: Double = 0.03
+    static let staggerDelay: Double = 0.04
 }
 
 struct BrewCardView: View {
@@ -31,12 +31,14 @@ struct BrewCardView: View {
             MetricsRow(brew: displayBrew)
                 .padding(.horizontal, BrewCardStyle.metricsHorizontalPadding)
 
-            PillsSection(
-                taste: displayBrew.tasteArray.map { $0.rawValue },
-                tips: displayBrew.tipArray.map { $0.rawValue },
-                showPills: showPills,
-                staggerDelay: BrewCardStyle.staggerDelay
-            )
+            if (displayBrew.tasteArray.count + displayBrew.tipArray.count) > 0 {
+                PillsSection(
+                    taste: displayBrew.tasteArray.map { $0.rawValue },
+                    tips: displayBrew.tipArray.map { $0.rawValue },
+                    showPills: showPills,
+                    staggerDelay: BrewCardStyle.staggerDelay
+                )
+            }
         }
         .onChange(of: brew) { _, newBrew in
             withAnimation {
@@ -188,14 +190,17 @@ private struct PillsSection: View {
         if !showPills {
             // Hidden: do nothing now. We'll resync on next showPills=true.
             return
-        } else {
-            // Visible: animate out then in with new data
-            dismissAll { [newTaste, newTips] in
-                localTaste = newTaste
-                localTips = newTips
-                presentAll()
-            }
         }
+        // Visible: switch immediately without waiting for reverse dismiss
+        // Cancel any pending animations and clear current visibility
+        animationToken = UUID()
+        withAnimation(.default) {
+            visibleItemIndices = []
+        }
+        // Swap to the new content and animate it in right away
+        localTaste = newTaste
+        localTips = newTips
+        presentAll()
     }
 }
 

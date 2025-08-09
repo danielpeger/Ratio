@@ -76,7 +76,7 @@ struct ChangeImageView: View {
                     .bold()
                 }
             }
-
+            
             if imageDataState == nil {
                 ColorSwatchGridView(selectedColor: $pickedColorState)
             }

@@ -10,47 +10,58 @@ import SwiftUI
 struct YayView: View {
     @Binding var pinned: Bool
     
+    var isPinnable: Bool
     var onPinToggle: (() -> Void)?
     var onDone: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             Image(systemName: "heart.fill")
                 .font(.system(size: 120))
-            VStack(spacing: 12) {
-                Text("Yay, you've made a great brew!")
+            VStack(spacing: 16) {
+                Text("Yay, you've brewed a great coffee!")
                     .font(.largeTitle)
                     .bold()
                     .multilineTextAlignment(.center)
-                Text("Pin it if you'd like to remember and recreate.")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                if isPinnable {
+                    Text("Pin it if you'd like to remember it and reproduce it later.")
+                        .font(.title3)
+                        .foregroundStyle(.white)
+                        .opacity(0.75)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text("To save it for later, add it to a bean.")
+                        .font(.title3)
+                        .foregroundStyle(.white)
+                        .opacity(0.75)
+                        .multilineTextAlignment(.center)
+                }
             }
             Spacer()
-            Button(action: {
-                pinned.toggle()
-                onPinToggle?()
-            }) {
-                Label(pinned ? "Pinned" : "Pin brew", systemImage: pinned ? "pin.fill" : "pin")
-                    .fontWeight(.bold)
-                    .foregroundColor(.accent)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.white)
-                    )
-                    .contentShape(RoundedRectangle(cornerRadius: 12))
+            if isPinnable {
+                Button(action: {
+                    pinned.toggle()
+                    onPinToggle?()
+                }) {
+                    Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
+                        .fontWeight(.bold)
+                        .foregroundColor(.accent)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white)
+                        )
+                        .contentShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-
         }
-        .frame(maxWidth: .infinity, alignment: .center)
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding(.horizontal, 24)
         .padding(.top, 56)
         .padding(.bottom, 32)
-        .foregroundStyle(.white)
         .background(.accent)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -71,5 +82,5 @@ struct YayView: View {
 #Preview {
     @Previewable @State var pinned: Bool = false
 
-    YayView(pinned: $pinned)
+    YayView(pinned: $pinned, isPinnable: true)
 }

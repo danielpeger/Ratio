@@ -8,6 +8,17 @@
 import SwiftUI
 import SwiftData
 
+struct CustomLabel: LabelStyle {
+    var spacing: Double = 0.0
+    
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: spacing) {
+            configuration.icon
+            configuration.title
+        }
+    }
+}
+
 struct SectionHeader: View {
     let title: String
     let systemImage: String?
@@ -21,6 +32,8 @@ struct SectionHeader: View {
         HStack {
             if let systemImage = systemImage {
                 Label(title, systemImage: systemImage)
+                    .labelStyle(CustomLabel(spacing: 4))
+                    .foregroundColor(.accent)
             } else {
                 Text(title)
             }
@@ -29,7 +42,7 @@ struct SectionHeader: View {
         .font(.system(size: 13))
         .foregroundColor(.secondary)
         .textCase(.uppercase)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 40)
         .padding(.bottom, 7)
     }
 }
@@ -51,7 +64,7 @@ struct BeanDetailView: View {
             brew.bean == bean
         }
     }
-
+    
     private func handleBrewTap(_ brew: Brew) {
         if let previousScreen = path.dropLast().last, case .brewDetail(let previousBrew) = previousScreen, previousBrew.id == brew.id {
             path.removeLast()
@@ -67,47 +80,48 @@ struct BeanDetailView: View {
         let details = [detailRoaster, detailOrigin, detailProcessing].compactMap { $0 }
         
         ScrollView {
-            LazyVStack(spacing: 32) {
-                VStack {
-                    BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData)
-                    VStack(spacing: 4) {
-                        Text(bean.name)
-                            .font(.title)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .truncationMode(.tail)
-
-                        if !details.isEmpty {
-                            Text(details.joined(separator: ", "))
-                                .foregroundColor(.secondary)
+            LazyVStack(spacing: 16) {
+                VStack(spacing: 32) {
+                    VStack {
+                        BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData)
+                        VStack(spacing: 4) {
+                            Text(bean.name)
+                                .font(.title)
+                                .bold()
                                 .multilineTextAlignment(.center)
                                 .lineLimit(2)
                                 .truncationMode(.tail)
+                            
+                            if !details.isEmpty {
+                                Text(details.joined(separator: ", "))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .truncationMode(.tail)
+                            }
                         }
                     }
-                }
-                .padding(.top, 32)
-                .padding(.horizontal, 16)
-                
-                if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
-                    let isPinned = bean.pinnedBrew != nil
-                    VStack(spacing: 0) {
-                        SectionHeader(isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
+                    .padding(.top, 32)
+                    .padding(.horizontal, 20)
+                    
+                    if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
+                        let isPinned = bean.pinnedBrew != nil
                         VStack(spacing: 0) {
-                            BrewCardView(brew: featuredBrew, showPills: !isPinned)
-                                .padding(16)
+                            SectionHeader(isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
+                            VStack(spacing: 0) {
+                                BrewCardView(brew: featuredBrew, showPills: !isPinned)
+                                    .padding(16)
+                            }
+                            .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
+                            .cornerRadius(9)
+                            .padding(.horizontal, 20)
                         }
-                        .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
-                        .cornerRadius(9)
-                        .padding(.horizontal, 16)
                     }
                 }
                 
                 if !beanBrews.isEmpty {
-                    VStack(spacing: 0) {
-                        SectionHeader("Brews")
-                        VStack(spacing: 0) {
+                    List{
+                        Section(header: Text("Brews")) {
                             ForEach(beanBrews) { brew in
                                 BrewRowView(brew: brew, showBean: false, onDelete: {
                                     context.delete(brew)
@@ -115,21 +129,12 @@ struct BeanDetailView: View {
                                     editingBrew = brew
                                 })
                                 .onTapGesture { handleBrewTap(brew) }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.clear)
-                                
-                                if brew != beanBrews.last {
-                                    Divider()
-                                        .padding(.leading, 72)
-                                }
                             }
                         }
-                        .background(Color(.secondarySystemGroupedBackground)) // grouped list card background
-                        .cornerRadius(9)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 16)
                     }
+                    .scrollDisabled(true)
+                    .frame(height: CGFloat((40 + beanBrews.count * 66)), alignment: .top)
+                    .animation(.default, value:  beanBrews.count)
                 } else {
                     ContentUnavailableView(
                         label: {
@@ -192,9 +197,29 @@ struct BeanDetailView: View {
     }
 }
 
-#Preview {
-    let path = [Screen]()
-    if let firstBean = createMockBeans().dropFirst().first {
-        BeanDetailView(bean: firstBean, path: .constant(path))
+private struct BeanDetailPreviewWrapper: View {
+    let container: ModelContainer
+    let beans: [Bean]
+    let path: [Screen] = []
+    
+    init() {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        self.container = try! ModelContainer(for: Bean.self, Brew.self, configurations: config)
+        self.beans = createMockBeansWithoutBrews()
+        for bean in beans { container.mainContext.insert(bean) }
+        
+        let brew1 = Brew(dose: 17, grind: 58, yield: 48, time: 30, rating: .neutral, tastes: [.balanced], tips: [nil, true, nil], notes: nil, bean: beans[2], pinned: false)
+        let brew2 = Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.thin, .thick, .bitter, .creamy, .harsh, .burnt, .tasteless, .sweet, .balanced], tips: [true, true, true], notes: "Great shot", bean: beans[2], pinned: false)
+        container.mainContext.insert(brew1)
+        container.mainContext.insert(brew2)
     }
+    
+    var body: some View {
+        BeanDetailView(bean: beans[2], path: .constant(path))
+            .modelContainer(container)
+    }
+}
+
+#Preview {
+    BeanDetailPreviewWrapper()
 }

@@ -124,6 +124,7 @@ struct LogBrewView: View {
                     tips: $brewTips,
                     notes: $brewNotes,
                     pinned: $brewPinned,
+                    isPinnable: (brewBean != nil),
                     onSave: {
                         let newBrew = Brew(dose: brewDose, grind: brewGrind, yield: brewYield, time: brewTime, rating: brewRating, tastes: brewTastes, tips: brewTips, notes: brewNotes, bean: brewBean, pinned: brewPinned)
                         context.insert(newBrew)

@@ -15,6 +15,7 @@ struct RateBrewView: View {
     @Binding var notes: String?
     @Binding var pinned: Bool
 
+    var isPinnable: Bool
     var onSave: (() -> Void)?
     var onDismiss: (() -> Void)?
     var onYayPinToggle: (() -> Void)?
@@ -57,6 +58,7 @@ struct RateBrewView: View {
         .navigationDestination(isPresented: $navigateToYay) {
             YayView(
                 pinned : $pinned,
+                isPinnable: isPinnable,
                 onPinToggle: { onYayPinToggle?() },
                 onDone: {
                     onDismiss?()
@@ -175,6 +177,7 @@ private struct NotesSection: View {
         tastes: $previewTastes,
         tips: $previewTips,
         notes: $previewNotes,
-        pinned: $previewPinned
+        pinned: $previewPinned,
+        isPinnable: true
     )
 }
