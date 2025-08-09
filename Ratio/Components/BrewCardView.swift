@@ -132,7 +132,7 @@ private struct PillsSection: View {
             }
         }
         .onAppear {
-            if showPills { presentAll() } else { visibleItemIndices = [] }
+            if showPills { visibleItemIndices = Set(0..<itemCount) } else { visibleItemIndices = [] }
         }
         .onChange(of: showPills) { _, newValue in
             if newValue {

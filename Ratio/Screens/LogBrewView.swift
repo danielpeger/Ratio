@@ -28,24 +28,81 @@ struct LogBrewView: View {
     @State private var brewPinned: Bool = false
     @State private var createdBrew: Brew? = nil
 
-    // Initialize the view with an optional brew (for editing) or initial bean (for creating)
+    @State private var navigateToRateBrew = false
+
+    // Initialize the view with the following logic:
+    // - if you're editing a brew, then the edited brew's settings
+    // - otherwise if the selected bean has a pinned brew, then the pinned brew's settings
+    // - otherwise if the selected bean has any brews, then the latest brew's settings
+    // - otherwise the default settings (18,15,36,28)
     init(brew: Brew? = nil, initialBean: Bean? = nil) {
         self.brew = brew
         self.initialBean = initialBean
-        // Pre-fill state for editing, otherwise use provided initial bean and defaults
-        self._brewBean = State(initialValue: brew?.bean ?? initialBean)
-        self._brewDose = State(initialValue: brew?.dose ?? 18)
-        self._brewGrind = State(initialValue: brew?.grind ?? 15)
-        self._brewYield = State(initialValue: brew?.yield ?? 36)
-        self._brewTime = State(initialValue: brew?.time ?? 28)
-        self._brewRating = State(initialValue: brew?.rating ?? .neutral)
-        self._brewTastes = State(initialValue: brew?.tastes ?? [])
-        self._brewTips = State(initialValue: brew?.tips ?? [nil, nil, nil])
-        self._brewNotes = State(initialValue: brew?.notes)
-        self._brewPinned = State(initialValue: brew?.pinned ?? false)
+
+        if let editingBrew = brew {
+            // Editing: pre-fill with the existing brew completely
+            self._brewBean = State(initialValue: editingBrew.bean)
+            self._brewDose = State(initialValue: editingBrew.dose)
+            self._brewGrind = State(initialValue: editingBrew.grind)
+            self._brewYield = State(initialValue: editingBrew.yield)
+            self._brewTime = State(initialValue: editingBrew.time)
+            self._brewRating = State(initialValue: editingBrew.rating)
+            self._brewTastes = State(initialValue: editingBrew.tastes)
+            self._brewTips = State(initialValue: editingBrew.tips)
+            self._brewNotes = State(initialValue: editingBrew.notes)
+            self._brewPinned = State(initialValue: editingBrew.pinned)
+        } else {
+            // Creating: prefer template from initial bean (pinned > latest) else defaults
+            let source: Brew? = initialBean.flatMap { Self.templateBrew(for: $0) }
+
+            self._brewBean = State(initialValue: initialBean)
+            self._brewDose = State(initialValue: source?.dose ?? 18)
+            self._brewGrind = State(initialValue: source?.grind ?? 15)
+            self._brewYield = State(initialValue: source?.yield ?? 36)
+            self._brewTime = State(initialValue: source?.time ?? 28)
+            // Keep subjective fields at defaults for a new brew
+            self._brewRating = State(initialValue: .neutral)
+            self._brewTastes = State(initialValue: [])
+            self._brewTips = State(initialValue: [nil, nil, nil])
+            self._brewNotes = State(initialValue: nil)
+            self._brewPinned = State(initialValue: false)
+        }
     }
 
-    @State private var navigateToRateBrew = false
+    // MARK: - Helpers (templates and defaults)
+    private static func templateBrew(for bean: Bean) -> Brew? {
+        if let pinned = bean.pinnedBrew { return pinned }
+        // fallback to latest brew by creationDate
+        return bean.brews?.sorted(by: { $0.creationDate > $1.creationDate }).first
+    }
+
+    private func applyTemplate(from source: Brew) {
+        brewDose = source.dose
+        brewGrind = source.grind
+        brewYield = source.yield
+        brewTime = source.time
+    }
+
+    private func resetToDefaults() {
+        brewDose = 18
+        brewGrind = 15
+        brewYield = 36
+        brewTime = 28
+    }
+
+    private func applyTemplateForSelectedBeanIfNeeded() {
+        // Do not override values while editing an existing brew
+        guard brew == nil else { return }
+        guard let selectedBean = brewBean else {
+            resetToDefaults()
+            return
+        }
+        if let source = Self.templateBrew(for: selectedBean) {
+            applyTemplate(from: source)
+        } else {
+            resetToDefaults()
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -115,6 +172,9 @@ struct LogBrewView: View {
             .listSectionSpacing(16)
             .navigationTitle(brew == nil ? "Log brew" : "Edit brew")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: brewBean) { _ in
+                applyTemplateForSelectedBeanIfNeeded()
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
