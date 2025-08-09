@@ -16,6 +16,9 @@ struct RateBrewView: View {
     @Binding var pinned: Bool
 
     var isPinnable: Bool
+    // Edit flow controls
+    var isEditing: Bool = false
+    var originalRating: Rating? = nil
     var onSave: (() -> Void)?
     var onDismiss: (() -> Void)?
     var onYayPinToggle: (() -> Void)?
@@ -47,10 +50,18 @@ struct RateBrewView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
                     onSave?()
-                    if rating == .good {
-                        navigateToYay = true
+                    if isEditing {
+                        if (originalRating != .good) && (rating == .good) {
+                            navigateToYay = true
+                        } else {
+                            onDismiss?()
+                        }
                     } else {
-                        onDismiss?()
+                        if rating == .good {
+                            navigateToYay = true
+                        } else {
+                            onDismiss?()
+                        }
                     }
                 }
             }

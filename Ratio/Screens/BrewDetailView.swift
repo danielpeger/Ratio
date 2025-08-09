@@ -13,6 +13,7 @@ struct BrewDetailView: View {
     @Binding var path: [Screen]
     
     @State private var navigateToBean = false
+    @State private var editingBrew: Brew? = nil
     
     var body: some View {
         List{
@@ -125,7 +126,7 @@ struct BrewDetailView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit brew", systemImage: "pencil", action: {
-                    
+                    editingBrew = brew
                     // Add haptic feedback
                     let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
                     impactFeedback.impactOccurred()
@@ -135,6 +136,9 @@ struct BrewDetailView: View {
         }
         .navigationTitle("Brew")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $editingBrew) { brew in
+            LogBrewView(brew: brew)
+        }
     }
 }
 

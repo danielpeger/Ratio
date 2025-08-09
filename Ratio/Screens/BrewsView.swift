@@ -79,7 +79,7 @@ struct BrewsView: View {
             LogBrewView()
         }
         .sheet(item: $editingBrew) { brew in
-            Text("Edit Brew View")
+            LogBrewView(brew: brew)
         }
     }
 }

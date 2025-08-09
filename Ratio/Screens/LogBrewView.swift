@@ -28,11 +28,21 @@ struct LogBrewView: View {
     @State private var brewPinned: Bool = false
     @State private var createdBrew: Brew? = nil
 
-    // Initialize the view with an optional initial bean
+    // Initialize the view with an optional brew (for editing) or initial bean (for creating)
     init(brew: Brew? = nil, initialBean: Bean? = nil) {
         self.brew = brew
         self.initialBean = initialBean
-        self._brewBean = State(initialValue: initialBean)
+        // Pre-fill state for editing, otherwise use provided initial bean and defaults
+        self._brewBean = State(initialValue: brew?.bean ?? initialBean)
+        self._brewDose = State(initialValue: brew?.dose ?? 18)
+        self._brewGrind = State(initialValue: brew?.grind ?? 15)
+        self._brewYield = State(initialValue: brew?.yield ?? 36)
+        self._brewTime = State(initialValue: brew?.time ?? 28)
+        self._brewRating = State(initialValue: brew?.rating ?? .neutral)
+        self._brewTastes = State(initialValue: brew?.tastes ?? [])
+        self._brewTips = State(initialValue: brew?.tips ?? [nil, nil, nil])
+        self._brewNotes = State(initialValue: brew?.notes)
+        self._brewPinned = State(initialValue: brew?.pinned ?? false)
     }
 
     @State private var navigateToRateBrew = false
@@ -103,7 +113,7 @@ struct LogBrewView: View {
             }
             .contentMargins(.top, 16)
             .listSectionSpacing(16)
-            .navigationTitle("Log brew")
+            .navigationTitle(brew == nil ? "Log brew" : "Edit brew")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -125,10 +135,40 @@ struct LogBrewView: View {
                     notes: $brewNotes,
                     pinned: $brewPinned,
                     isPinnable: (brewBean != nil),
+                    isEditing: brew != nil,
+                    originalRating: brew?.rating,
                     onSave: {
-                        let newBrew = Brew(dose: brewDose, grind: brewGrind, yield: brewYield, time: brewTime, rating: brewRating, tastes: brewTastes, tips: brewTips, notes: brewNotes, bean: brewBean, pinned: brewPinned)
-                        context.insert(newBrew)
-                        createdBrew = newBrew
+                        if let editingBrew = brew {
+                            // Update existing brew
+                            editingBrew.bean = brewBean
+                            editingBrew.dose = brewDose
+                            editingBrew.grind = brewGrind
+                            editingBrew.yield = brewYield
+                            editingBrew.time = brewTime
+                            editingBrew.rating = brewRating
+                            editingBrew.tastes = brewTastes
+                            editingBrew.tips = brewTips
+                            editingBrew.notes = brewNotes
+                            editingBrew.pinned = brewPinned
+                            try? context.save()
+                            createdBrew = editingBrew
+                        } else {
+                            // Create new brew
+                            let newBrew = Brew(
+                                dose: brewDose,
+                                grind: brewGrind,
+                                yield: brewYield,
+                                time: brewTime,
+                                rating: brewRating,
+                                tastes: brewTastes,
+                                tips: brewTips,
+                                notes: brewNotes,
+                                bean: brewBean,
+                                pinned: brewPinned
+                            )
+                            context.insert(newBrew)
+                            createdBrew = newBrew
+                        }
                     },
                     onDismiss: {
                         dismiss()

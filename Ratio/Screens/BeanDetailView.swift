@@ -163,7 +163,7 @@ struct BeanDetailView: View {
                 LogBrewView(initialBean: bean)
             }
             .sheet(item: $editingBrew) { brew in
-                Text("Edit Brew View")
+                LogBrewView(brew: brew)
             }
             .sheet(item: $editingBean) { bean in
                 AddBeansView(bean: bean)
