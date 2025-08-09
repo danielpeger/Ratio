@@ -30,6 +30,7 @@ struct BrewsView: View {
                 }
             }
             .animation(.default, value: brews.count)
+            .contentMargins(.top, 8)
             .background(Color(.secondarySystemBackground))
             .overlay {
                 if(brews.isEmpty){

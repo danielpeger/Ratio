@@ -42,7 +42,7 @@ struct SectionHeader: View {
         .font(.system(size: 13))
         .foregroundColor(.secondary)
         .textCase(.uppercase)
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 32)
         .padding(.bottom, 7)
     }
 }
@@ -102,7 +102,7 @@ struct BeanDetailView: View {
                         }
                     }
                     .padding(.top, 32)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 16)
                     
                     if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
                         let isPinned = bean.pinnedBrew != nil
@@ -114,7 +114,7 @@ struct BeanDetailView: View {
                             }
                             .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
                             .cornerRadius(9)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 16)
                         }
                     }
                 }
@@ -158,7 +158,7 @@ struct BeanDetailView: View {
                     .padding(.bottom, 16)
                 }
             }
-            //.animation(.default, value: beanBrews.count)
+            .padding(.bottom, 32)
             .sheet(isPresented: $showingLogBrew) {
                 LogBrewView(initialBean: bean)
             }
@@ -215,8 +215,10 @@ private struct BeanDetailPreviewWrapper: View {
     }
     
     var body: some View {
-        BeanDetailView(bean: beans[2], path: .constant(path))
-            .modelContainer(container)
+        NavigationStack {
+            BeanDetailView(bean: beans[2], path: .constant(path))
+                .modelContainer(container)
+        }
     }
 }
 
