@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct AddBeansView: View {
     @Environment(\.dismiss) var dismiss
@@ -21,7 +22,13 @@ struct AddBeansView: View {
     @State private var beanImageColor: ImageColor = .red
     @State private var beanImageData: Data?
     
-    @State private var navigateToChangeImage = false
+    @State private var showCamera = false
+    @State private var pickedPhoto: PhotosPickerItem? = nil
+    @State private var showPhotoPicker = false
+    @State private var scanning = false
+    @State private var scanningError = false
+    @State private var scanningSucceded = false
+    @State private var scanningFailed = false
     
     init(bean: Bean? = nil) {
         self.bean = bean
@@ -40,24 +47,95 @@ struct AddBeansView: View {
                 Section {
                     HStack {
                         Spacer()
-                        
-                        VStack(spacing: 12) {
-                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData)
-                            Button("Change image") {
-                                navigateToChangeImage = true
+                        VStack(spacing: 20) {
+                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData, scanning: $scanning, scanningSucceded: $scanningSucceded, scanningFailed: $scanningFailed)
+                            if beanImageData == nil {
+                                HStack(spacing: 16) {
+                                    ForEach(ImageColor.allCases, id: \.self) { color in
+                                        ColorSwatchView(
+                                            color: color.color,
+                                            isSelected: beanImageColor == color
+                                        )
+                                        .onTapGesture {
+                                            beanImageColor = color
+                                        }
+                                    }
+                                }
                             }
-                            .buttonStyle(.bordered)
-                            .foregroundColor(.primary)
-                            .bold()
                         }
-                        .contentShape(Rectangle()) // Expand tappable area
-                        .onTapGesture {
-                            navigateToChangeImage = true
-                        }
-                        
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 2, trailing: 0))
+                }
+                
+                Section {
+                    VStack(spacing: 8) {
+                        Menu {
+                            Button {
+                                showCamera = true
+                            } label: {
+                                Label("Take photo", systemImage: "camera")
+                            }
+                            Button {
+                                showPhotoPicker = true
+                            } label: {
+                                Label("Pick photo", systemImage: "photo.on.rectangle")
+                            }
+                        } label: {
+                            HStack{
+                                Image("scan.beanbag")
+                                Text("Scan bean bag")
+                                    .fontWeight(.medium)
+                            }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                        }
+                        .foregroundColor(.primary)
+                        .buttonStyle(.bordered)
+                        .fullScreenCover(isPresented: $showCamera) {
+                            ZStack {
+                                Color.black.edgesIgnoringSafeArea(.all)
+                                CameraPicker { image in
+                                    if let data = image.jpegData(compressionQuality: 0.9) {
+                                        beanImageData = data
+                                        scanBagImage(imageData: data)
+                                    }
+                                }
+                            }
+                        }
+                        .photosPicker(isPresented: $showPhotoPicker,
+                                       selection: $pickedPhoto,
+                                       matching: .images,
+                                       photoLibrary: .shared())
+                        .onChange(of: pickedPhoto) {
+                            Task {
+                                if let data = try? await pickedPhoto?.loadTransferable(type: Data.self) {
+                                    beanImageData = data
+                                    scanBagImage(imageData: data)
+                                }
+                            }
+                        }
+
+                        if beanImageData != nil {
+                            Button(role: .destructive ,action: {
+                                beanImageData = nil
+                                pickedPhoto = nil
+                            }) {
+                                HStack{
+                                    Image(systemName: "trash")
+                                    Text("Remove photo")
+                                        .fontWeight(.medium)
+                                }
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 
                 Section {
@@ -79,9 +157,7 @@ struct AddBeansView: View {
                       Toggle("In stock", isOn: $beanInStock)
                   }
             }
-            .navigationDestination(isPresented: $navigateToChangeImage) {
-                ChangeImageView(pickedColor: $beanImageColor, imageData: $beanImageData)
-            }
+            .listSectionSpacing(24)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
@@ -117,6 +193,34 @@ struct AddBeansView: View {
             }
             .navigationTitle(bean == nil ? "Add beans" : "Edit beans")
             .navigationBarTitleDisplayMode(.inline)
+            .alert(isPresented: $scanningError) {
+                Alert(title: Text("Error scanning image"), message: Text("Ratio couldn't scan your image for some reason."), dismissButton: .default(Text("OK")))
+            }
+        }
+    }
+
+    private func scanBagImage(imageData: Data) {
+        self.scanning = true
+        self.scanningSucceded = false
+        self.scanningFailed = false
+        sendGptImageRequest(imageData: imageData) { response in
+            if let parsed = response {
+                if let name = parsed.name, !name.isEmpty { self.beanName = name }
+                if let roaster = parsed.roaster { self.beanRoaster = roaster }
+                if let origin = parsed.origin { self.beanOrigin = origin }
+                if let processing = parsed.processing { self.beanProcessing = processing }
+                self.scanning = false
+                let hasAny = (parsed.name != nil) || (parsed.roaster != nil) || (parsed.origin != nil) || (parsed.processing != nil)
+                if hasAny {
+                    self.scanningSucceded = true
+                } else {
+                    print("SCAnning failed")
+                    self.scanningFailed = true
+                }
+            } else {
+                self.scanningError = true
+                self.scanning = false
+            }
         }
     }
 }

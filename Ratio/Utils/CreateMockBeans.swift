@@ -17,12 +17,12 @@
      return [
          Bean(name: "Ethiopian Yirgacheffe", roaster: "Blue Bottle Coffee", origin: .ethiopia, processing: .washed, inStock: true, imageColor: .yellow),
          Bean(name: "Colombian Supremo", roaster: "", origin:.dominica, processing: .notSet, inStock: true, imageColor: .green),
-         Bean(name: "Brazilian Santos", processing: .natural, inStock: false, imageColor: .brown, imageData: imageDataFromPreviewAsset(named: "beanImage1")),
+         Bean(name: "Brazilian Santos", processing: .natural, inStock: false, imageColor: .green, imageData: imageDataFromPreviewAsset(named: "beanImage1")),
          Bean(name: "Guatemalan Antigua", roaster: "Long roaster name Counter Culture", origin: .guatemala, processing: .washed, inStock: true, imageColor: .orange),
          Bean(name: "Kenyan AA", inStock: true, imageColor: .red, imageData: imageDataFromPreviewAsset(named: "beanImage2")),
          Bean(name: "Costa Rican Tarrazu", roaster: "Stumptown Coffee", origin: .costarica, processing: .honey, inStock: true, imageColor: .purple, imageData: imageDataFromPreviewAsset(named: "beanImage3")),
-         Bean(name: "Peruvian Organic", origin: .peru, processing: .washed, inStock: false, imageColor: .teal),
-         Bean(name: "Sumatra Mandheling", roaster: "Counter Culture", origin: .indonesia, processing: .wetHulled, inStock: true, imageColor: .indigo)
+         Bean(name: "Peruvian Organic", origin: .peru, processing: .washed, inStock: false, imageColor: .blue),
+         Bean(name: "Sumatra Mandheling", roaster: "Counter Culture", origin: .indonesia, processing: .wetHulled, inStock: true, imageColor: .green)
      ]
  }
  
