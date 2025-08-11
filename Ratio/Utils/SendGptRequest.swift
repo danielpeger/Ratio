@@ -12,8 +12,12 @@ import Foundation
 struct ResponsesRequest: Codable {
     let model: String
     let input: String
-    let temperature: Int
+    let reasoning: Reasoning?
     let text: TextOptions?
+}
+
+struct Reasoning: Codable {
+    let effort: String
 }
 
 struct TextOptions: Codable {
@@ -84,9 +88,9 @@ func sendGptRequest(prompt: String, completion: @escaping (String?) -> Void) {
 
     // Prepare request body
     let requestBody = ResponsesRequest(
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano",
         input: input,
-        temperature: 1,
+        reasoning: Reasoning(effort: "low"),
         text: textOptions
     )
     

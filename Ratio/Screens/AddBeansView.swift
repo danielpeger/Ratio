@@ -7,8 +7,6 @@
 
 import SwiftUI
 import PhotosUI
-import Vision
-import ImageIO
 
 struct AddBeansView: View {
     @Environment(\.dismiss) var dismiss
@@ -102,7 +100,10 @@ struct AddBeansView: View {
                                 CameraPicker { image in
                                     if let data = image.jpegData(compressionQuality: 0.9) {
                                         beanImageData = data
-                                        recognizeTextFromImageData(data)
+                                        // recognizeTextFromImageData(data) { updated in
+                                        //     scannedText = updated
+                                        // }
+                                        jsonFromBagImage(imageData: data)
                                     }
                                 }
                             }
@@ -115,7 +116,10 @@ struct AddBeansView: View {
                             Task {
                                 if let data = try? await pickedPhoto?.loadTransferable(type: Data.self) {
                                     beanImageData = data
-                                    recognizeTextFromImageData(data)
+                                    // recognizeTextFromImageData(data) { updated in
+                                    //     scannedText = updated
+                                    // }
+                                    jsonFromBagImage(imageData: data)
                                 }
                             }
                         }
@@ -196,54 +200,13 @@ struct AddBeansView: View {
         }
     }
 
-    private func recognizeTextFromImageData(_ imageData: Data) {
-        DispatchQueue.main.async { self.scannedText = "Scanning..." }
-        DispatchQueue.global(qos: .userInitiated).async {
-            guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
-                  let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
-                DispatchQueue.main.async { self.scannedText = "OCR failed" }
-                return
-            }
-
-            let request = VNRecognizeTextRequest()
-            request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
-
-            let orientation: CGImagePropertyOrientation? = {
-                guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-                      let raw = properties[kCGImagePropertyOrientation] as? UInt32,
-                      let value = CGImagePropertyOrientation(rawValue: raw) else { return nil }
-                return value
-            }()
-
-            let handler: VNImageRequestHandler
-            if let orientation {
-                handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
+    private func jsonFromBagImage(imageData: Data) {
+        self.scannedText = "Parsing..."
+        sendGptImageRequest(imageData: imageData) { jsonResponse in
+            if let jsonResponse = jsonResponse {
+                self.scannedText = "\(jsonResponse)"
             } else {
-                handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            }
-
-            do {
-                try handler.perform([request])
-                let observations = request.results as? [VNRecognizedTextObservation] ?? []
-                let fullText = observations.compactMap { $0.topCandidates(1).first?.string }
-                    .joined(separator: "\n")
-                DispatchQueue.main.async {
-                    if (fullText.isEmpty) {
-                        self.scannedText = "No text found"
-                    } else {
-                        sendGptRequest(prompt: fullText) { jsonResponse in
-                            if let jsonResponse = jsonResponse {
-                                self.scannedText = "\(jsonResponse)"
-                            } else {
-                                self.scannedText = "Failed to get a gpt response"
-                            }
-                        }
-                    }
-                    
-                }
-            } catch {
-                DispatchQueue.main.async { self.scannedText = "OCR failed" }
+                self.scannedText = "Failed to get a gpt response"
             }
         }
     }
