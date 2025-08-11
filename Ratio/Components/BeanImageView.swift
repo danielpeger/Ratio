@@ -35,7 +35,7 @@ struct BeanImageView: View {
                 ProgressView()
                     .progressViewStyle(.circular)
                     .tint(.white)
-            }
+               }
         }
 
     }
