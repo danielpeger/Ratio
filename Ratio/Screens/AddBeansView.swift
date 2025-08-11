@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import PhotosUI
+import Vision
+import ImageIO
 
 struct AddBeansView: View {
     @Environment(\.dismiss) var dismiss
@@ -21,7 +24,10 @@ struct AddBeansView: View {
     @State private var beanImageColor: ImageColor = .red
     @State private var beanImageData: Data?
     
-    @State private var navigateToChangeImage = false
+    @State private var showCamera = false
+    @State private var pickedPhoto: PhotosPickerItem? = nil
+    @State private var showPhotoPicker = false
+    @State private var scannedText = "Not scanned anything"
     
     init(bean: Bean? = nil) {
         self.bean = bean
@@ -40,24 +46,97 @@ struct AddBeansView: View {
                 Section {
                     HStack {
                         Spacer()
-                        
-                        VStack(spacing: 12) {
+                        VStack(spacing: 24) {
                             BeanImageView(color: beanImageColor, large: true, imageData: beanImageData)
-                            Button("Change image") {
-                                navigateToChangeImage = true
+                            if beanImageData == nil {
+                                HStack(spacing: 16) {
+                                    ForEach(ImageColor.allCases, id: \.self) { color in
+                                        ColorSwatchView(
+                                            color: color.color,
+                                            isSelected: beanImageColor == color
+                                        )
+                                        .onTapGesture {
+                                            beanImageColor = color
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                }
+                
+                Section {
+                    HStack {
+                        Spacer()
+                        
+                        Menu {
+                            Button {
+                                showCamera = true
+                            } label: {
+                                Label("Take photo", systemImage: "camera")
+                            }
+                            Button {
+                                showPhotoPicker = true
+                            } label: {
+                                Label("Pick photo", systemImage: "photo.on.rectangle")
+                            }
+                        } label: {
+                            Label {
+                                Text("Scan bag")
+                                    .fontWeight(.semibold)
+                                    .font(.title3)
+                            } icon: {
+                                Image("scan.beanbag")
+                                    .font(.title3)
+                            }
+                            .labelStyle(CustomLabel(spacing: 8))
+                        }
+                        .foregroundColor(.primary)
+                        .buttonStyle(.bordered)
+                        .fullScreenCover(isPresented: $showCamera) {
+                            ZStack {
+                                Color.black.edgesIgnoringSafeArea(.all)
+                                CameraPicker { image in
+                                    if let data = image.jpegData(compressionQuality: 0.9) {
+                                        beanImageData = data
+                                        recognizeTextFromImageData(data)
+                                    }
+                                }
+                            }
+                        }
+                        .photosPicker(isPresented: $showPhotoPicker,
+                                       selection: $pickedPhoto,
+                                       matching: .images,
+                                       photoLibrary: .shared())
+                        .onChange(of: pickedPhoto) {
+                            Task {
+                                if let data = try? await pickedPhoto?.loadTransferable(type: Data.self) {
+                                    beanImageData = data
+                                    recognizeTextFromImageData(data)
+                                }
+                            }
+                        }
+
+                        if beanImageData != nil {
+                            Button(role: .destructive ,action: {
+                                beanImageData = nil
+                                pickedPhoto = nil
+                            }) {
+                                Label("Remove photo", systemImage: "trash")
                             }
                             .buttonStyle(.bordered)
-                            .foregroundColor(.primary)
                             .bold()
-                        }
-                        .contentShape(Rectangle()) // Expand tappable area
-                        .onTapGesture {
-                            navigateToChangeImage = true
                         }
                         
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    
+                    Text(scannedText)
                 }
                 
                 Section {
@@ -78,9 +157,6 @@ struct AddBeansView: View {
                   Section {
                       Toggle("In stock", isOn: $beanInStock)
                   }
-            }
-            .navigationDestination(isPresented: $navigateToChangeImage) {
-                ChangeImageView(pickedColor: $beanImageColor, imageData: $beanImageData)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -117,6 +193,58 @@ struct AddBeansView: View {
             }
             .navigationTitle(bean == nil ? "Add beans" : "Edit beans")
             .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private func recognizeTextFromImageData(_ imageData: Data) {
+        DispatchQueue.main.async { self.scannedText = "Scanning..." }
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
+                  let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+                DispatchQueue.main.async { self.scannedText = "OCR failed" }
+                return
+            }
+
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+
+            let orientation: CGImagePropertyOrientation? = {
+                guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                      let raw = properties[kCGImagePropertyOrientation] as? UInt32,
+                      let value = CGImagePropertyOrientation(rawValue: raw) else { return nil }
+                return value
+            }()
+
+            let handler: VNImageRequestHandler
+            if let orientation {
+                handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
+            } else {
+                handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            }
+
+            do {
+                try handler.perform([request])
+                let observations = request.results as? [VNRecognizedTextObservation] ?? []
+                let fullText = observations.compactMap { $0.topCandidates(1).first?.string }
+                    .joined(separator: "\n")
+                DispatchQueue.main.async {
+                    if (fullText.isEmpty) {
+                        self.scannedText = "No text found"
+                    } else {
+                        sendGptRequest(prompt: fullText) { jsonResponse in
+                            if let jsonResponse = jsonResponse {
+                                self.scannedText = "\(jsonResponse)"
+                            } else {
+                                self.scannedText = "Failed to get a gpt response"
+                            }
+                        }
+                    }
+                    
+                }
+            } catch {
+                DispatchQueue.main.async { self.scannedText = "OCR failed" }
+            }
         }
     }
 }

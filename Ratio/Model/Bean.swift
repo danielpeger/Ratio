@@ -31,6 +31,7 @@ enum Origin: String, Codable, Hashable, CaseIterable, Identifiable {
     case indonesia = "Indonesia"
     case jamaica = "Jamaica"
     case kenya = "Kenya"
+    case laos = "Laos"
     case malawi = "Malawi"
     case mexico = "Mexico"
     case myanmar = "Myanmar"
@@ -66,22 +67,16 @@ enum Processing: String, Codable, Hashable, CaseIterable, Identifiable {
 }
 
 enum ImageColor: String, Codable, Hashable, CaseIterable {
-    case red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink, brown
+    case red, orange, yellow, green, blue, purple
 
     var color: Color {
         switch self {
-        case .red: return .red
-        case .orange: return .orange
-        case .yellow: return .yellow
-        case .green: return .green
-        case .mint: return .mint
-        case .teal: return .teal
-        case .cyan: return .cyan
-        case .blue: return .blue
-        case .indigo: return .indigo
-        case .purple: return .purple
-        case .pink: return .pink
-        case .brown: return .brown
+            case .red: return .red
+            case .orange: return .orange
+            case .yellow: return .yellow
+            case .green: return .green
+            case .blue: return .blue
+            case .purple: return .purple
         }
     }
 }

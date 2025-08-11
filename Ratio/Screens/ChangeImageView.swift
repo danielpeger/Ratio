@@ -55,15 +55,16 @@ struct ChangeImageView: View {
                     PhotosPicker(
                         selection: $pickedPhoto,
                         matching: .images,
-                        photoLibrary: .shared()) {
-                            Button(action: {}) {
-                                Label("Pick photo", systemImage: "photo.on.rectangle")
-                            }
-                            .buttonStyle(.bordered)
-                            .bold()
-                            .foregroundColor(.primary)
-                            .allowsHitTesting(false)
+                        photoLibrary: .shared()
+                    ) {
+                        Button(action: {}) {
+                            Label("Pick photo", systemImage: "photo.on.rectangle")
                         }
+                        .buttonStyle(.bordered)
+                        .bold()
+                        .foregroundColor(.primary)
+                        .allowsHitTesting(false)
+                    }
                 }
                 if imageDataState != nil {
                     Button(role: .destructive ,action: {
