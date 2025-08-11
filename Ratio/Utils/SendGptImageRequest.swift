@@ -229,7 +229,7 @@ private func normalizeOptional(_ value: String?) -> String? {
     let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty { return nil }
     let lower = trimmed.lowercased()
-    let nullish: Set<String> = ["null", "none", "n/a", "na", "not set", "unknown"]
+    let nullish: Set<String> = ["null", "none", "n/a", "na", "not set", "unknown", ":null", ":null,", ",", ":"]
     if nullish.contains(lower) { return nil }
     return trimmed
 }

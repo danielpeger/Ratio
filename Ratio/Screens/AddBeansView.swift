@@ -27,6 +27,8 @@ struct AddBeansView: View {
     @State private var showPhotoPicker = false
     @State private var scanning = false
     @State private var scanningError = false
+    @State private var scanningSucceded = false
+    @State private var scanningFailed = false
     
     init(bean: Bean? = nil) {
         self.bean = bean
@@ -45,8 +47,8 @@ struct AddBeansView: View {
                 Section {
                     HStack {
                         Spacer()
-                        VStack(spacing: 24) {
-                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData, scanning: scanning)
+                        VStack(spacing: 20) {
+                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData, scanning: $scanning, scanningSucceded: $scanningSucceded, scanningFailed: $scanningFailed)
                             if beanImageData == nil {
                                 HStack(spacing: 16) {
                                     ForEach(ImageColor.allCases, id: \.self) { color in
@@ -64,13 +66,11 @@ struct AddBeansView: View {
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 2, trailing: 0))
                 }
                 
                 Section {
-                    HStack {
-                        Spacer()
-                        
+                    VStack(spacing: 8) {
                         Menu {
                             Button {
                                 showCamera = true
@@ -83,11 +83,13 @@ struct AddBeansView: View {
                                 Label("Pick photo", systemImage: "photo.on.rectangle")
                             }
                         } label: {
-                            Label {
-                                Text("Scan bag")
-                            } icon: {
+                            HStack{
                                 Image("scan.beanbag")
+                                Text("Scan bean bag")
+                                    .fontWeight(.medium)
                             }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
                         }
                         .foregroundColor(.primary)
                         .buttonStyle(.bordered)
@@ -120,13 +122,18 @@ struct AddBeansView: View {
                                 beanImageData = nil
                                 pickedPhoto = nil
                             }) {
-                                Label("Remove photo", systemImage: "trash")
+                                HStack{
+                                    Image(systemName: "trash")
+                                    Text("Remove photo")
+                                        .fontWeight(.medium)
+                                }
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
                             }
                             .buttonStyle(.bordered)
                         }
-                        
-                        Spacer()
                     }
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .listRowBackground(Color.clear)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
@@ -150,6 +157,7 @@ struct AddBeansView: View {
                       Toggle("In stock", isOn: $beanInStock)
                   }
             }
+            .listSectionSpacing(24)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
@@ -193,6 +201,8 @@ struct AddBeansView: View {
 
     private func scanBagImage(imageData: Data) {
         self.scanning = true
+        self.scanningSucceded = false
+        self.scanningFailed = false
         sendGptImageRequest(imageData: imageData) { response in
             if let parsed = response {
                 if let name = parsed.name, !name.isEmpty { self.beanName = name }
@@ -200,6 +210,13 @@ struct AddBeansView: View {
                 if let origin = parsed.origin { self.beanOrigin = origin }
                 if let processing = parsed.processing { self.beanProcessing = processing }
                 self.scanning = false
+                let hasAny = (parsed.name != nil) || (parsed.roaster != nil) || (parsed.origin != nil) || (parsed.processing != nil)
+                if hasAny {
+                    self.scanningSucceded = true
+                } else {
+                    print("SCAnning failed")
+                    self.scanningFailed = true
+                }
             } else {
                 self.scanningError = true
                 self.scanning = false
