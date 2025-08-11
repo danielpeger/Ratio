@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import SwiftData
 
 struct AddBeansView: View {
     @Environment(\.dismiss) var dismiss
@@ -30,6 +31,23 @@ struct AddBeansView: View {
     @State private var scanningSucceded = false
     @State private var scanningFailed = false
     
+    @Query private var beans: [Bean]
+    @FocusState private var roasterFocused: Bool
+
+    private var uniqueRoasters: [String] {
+    Array(
+        Set(
+        beans.compactMap { $0.roaster?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        )
+    ).sorted()
+    }
+
+    private var filteredRoasters: [String] {
+    guard !beanRoaster.isEmpty else { return uniqueRoasters }
+    return uniqueRoasters.filter { $0.localizedCaseInsensitiveContains(beanRoaster) }
+    }
+    
     init(bean: Bean? = nil) {
         self.bean = bean
         _beanName = State(initialValue: bean?.name ?? "")
@@ -40,7 +58,7 @@ struct AddBeansView: View {
         _beanImageColor = State(initialValue: bean?.imageColor ?? .red)
         _beanImageData = State(initialValue: bean?.imageData)
     }
-
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -105,9 +123,9 @@ struct AddBeansView: View {
                             }
                         }
                         .photosPicker(isPresented: $showPhotoPicker,
-                                       selection: $pickedPhoto,
-                                       matching: .images,
-                                       photoLibrary: .shared())
+                                      selection: $pickedPhoto,
+                                      matching: .images,
+                                      photoLibrary: .shared())
                         .onChange(of: pickedPhoto) {
                             Task {
                                 if let data = try? await pickedPhoto?.loadTransferable(type: Data.self) {
@@ -116,7 +134,7 @@ struct AddBeansView: View {
                                 }
                             }
                         }
-
+                        
                         if beanImageData != nil {
                             Button(role: .destructive ,action: {
                                 beanImageData = nil
@@ -141,6 +159,9 @@ struct AddBeansView: View {
                 Section {
                     TextField("Name", text: $beanName)
                     TextField("Roaster", text: $beanRoaster)
+                        .focused($roasterFocused)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled(true)
                     Picker("Origin", selection: $beanOrigin) {
                         ForEach(Origin.allCases) { origin in
                             Text(origin.rawValue)
@@ -151,11 +172,11 @@ struct AddBeansView: View {
                             Text(processing.rawValue)
                         }
                     }
-                  }
-
-                  Section {
-                      Toggle("In stock", isOn: $beanInStock)
-                  }
+                }
+                
+                Section {
+                    Toggle("In stock", isOn: $beanInStock)
+                }
             }
             .listSectionSpacing(24)
             .toolbar {
@@ -174,7 +195,7 @@ struct AddBeansView: View {
                             bean.inStock = beanInStock
                             bean.imageColor = beanImageColor
                             bean.imageData = beanImageData
-
+                            
                             // Add haptic feedback
                             let notificationFeedback = UINotificationFeedbackGenerator()
                             notificationFeedback.notificationOccurred(.success)
@@ -190,6 +211,27 @@ struct AddBeansView: View {
                     }
                     .disabled(beanName.isEmpty)
                 }
+                if roasterFocused {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(uniqueRoasters.filter { beanRoaster.isEmpty ? true : $0.localizedCaseInsensitiveContains(beanRoaster) }.prefix(10), id: \.self) { suggestion in
+                                    Button {
+                                        beanRoaster = suggestion
+                                    } label: {
+                                        Text(suggestion)
+                                            .font(.callout)
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 10)
+                                            .background(.thinMaterial, in: Capsule())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
             }
             .navigationTitle(bean == nil ? "Add beans" : "Edit beans")
             .navigationBarTitleDisplayMode(.inline)
@@ -198,7 +240,7 @@ struct AddBeansView: View {
             }
         }
     }
-
+    
     private func scanBagImage(imageData: Data) {
         self.scanning = true
         self.scanningSucceded = false
