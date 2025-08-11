@@ -7,13 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4414ED3A2E4A44FD006458CC /* RecognizeTextFromImageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4414ED392E4A44FD006458CC /* RecognizeTextFromImageData.swift */; };
 		441948AE2E3E301E000E104C /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 441948AD2E3E301E000E104C /* Flow */; };
 		445A45922E240F05002A100B /* PreviewAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 445A45902E240ED2002A100B /* PreviewAssets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4414ED392E4A44FD006458CC /* RecognizeTextFromImageData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognizeTextFromImageData.swift; sourceTree = "<group>"; };
 		445A45902E240ED2002A100B /* PreviewAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = PreviewAssets.xcassets; sourceTree = "<group>"; };
 		445A45932E24AFBF002A100B /* Ratio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ratio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -49,7 +47,6 @@
 		448559582E1FD6FC00B2FD12 = {
 			isa = PBXGroup;
 			children = (
-				4414ED392E4A44FD006458CC /* RecognizeTextFromImageData.swift */,
 				448559632E1FD6FC00B2FD12 /* Ratio */,
 				445A45912E240ED2002A100B /* Preview Content */,
 				445A45932E24AFBF002A100B /* Ratio.app */,
@@ -135,7 +132,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4414ED3A2E4A44FD006458CC /* RecognizeTextFromImageData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

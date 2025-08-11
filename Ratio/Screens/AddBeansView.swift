@@ -25,7 +25,8 @@ struct AddBeansView: View {
     @State private var showCamera = false
     @State private var pickedPhoto: PhotosPickerItem? = nil
     @State private var showPhotoPicker = false
-    @State private var scannedText = "Not scanned anything"
+    @State private var scanning = false
+    @State private var scanningError = false
     
     init(bean: Bean? = nil) {
         self.bean = bean
@@ -45,7 +46,7 @@ struct AddBeansView: View {
                     HStack {
                         Spacer()
                         VStack(spacing: 24) {
-                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData)
+                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData, scanning: scanning)
                             if beanImageData == nil {
                                 HStack(spacing: 16) {
                                     ForEach(ImageColor.allCases, id: \.self) { color in
@@ -84,13 +85,9 @@ struct AddBeansView: View {
                         } label: {
                             Label {
                                 Text("Scan bag")
-                                    .fontWeight(.semibold)
-                                    .font(.title3)
                             } icon: {
                                 Image("scan.beanbag")
-                                    .font(.title3)
                             }
-                            .labelStyle(CustomLabel(spacing: 8))
                         }
                         .foregroundColor(.primary)
                         .buttonStyle(.bordered)
@@ -100,10 +97,7 @@ struct AddBeansView: View {
                                 CameraPicker { image in
                                     if let data = image.jpegData(compressionQuality: 0.9) {
                                         beanImageData = data
-                                        // recognizeTextFromImageData(data) { updated in
-                                        //     scannedText = updated
-                                        // }
-                                        jsonFromBagImage(imageData: data)
+                                        scanBagImage(imageData: data)
                                     }
                                 }
                             }
@@ -116,10 +110,7 @@ struct AddBeansView: View {
                             Task {
                                 if let data = try? await pickedPhoto?.loadTransferable(type: Data.self) {
                                     beanImageData = data
-                                    // recognizeTextFromImageData(data) { updated in
-                                    //     scannedText = updated
-                                    // }
-                                    jsonFromBagImage(imageData: data)
+                                    scanBagImage(imageData: data)
                                 }
                             }
                         }
@@ -132,15 +123,12 @@ struct AddBeansView: View {
                                 Label("Remove photo", systemImage: "trash")
                             }
                             .buttonStyle(.bordered)
-                            .bold()
                         }
                         
                         Spacer()
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    
-                    Text(scannedText)
                 }
                 
                 Section {
@@ -197,16 +185,24 @@ struct AddBeansView: View {
             }
             .navigationTitle(bean == nil ? "Add beans" : "Edit beans")
             .navigationBarTitleDisplayMode(.inline)
+            .alert(isPresented: $scanningError) {
+                Alert(title: Text("Error scanning image"), message: Text("Ratio couldn't scan your image for some reason."), dismissButton: .default(Text("OK")))
+            }
         }
     }
 
-    private func jsonFromBagImage(imageData: Data) {
-        self.scannedText = "Parsing..."
-        sendGptImageRequest(imageData: imageData) { jsonResponse in
-            if let jsonResponse = jsonResponse {
-                self.scannedText = "\(jsonResponse)"
+    private func scanBagImage(imageData: Data) {
+        self.scanning = true
+        sendGptImageRequest(imageData: imageData) { response in
+            if let parsed = response {
+                if let name = parsed.name, !name.isEmpty { self.beanName = name }
+                if let roaster = parsed.roaster { self.beanRoaster = roaster }
+                if let origin = parsed.origin { self.beanOrigin = origin }
+                if let processing = parsed.processing { self.beanProcessing = processing }
+                self.scanning = false
             } else {
-                self.scannedText = "Failed to get a gpt response"
+                self.scanningError = true
+                self.scanning = false
             }
         }
     }

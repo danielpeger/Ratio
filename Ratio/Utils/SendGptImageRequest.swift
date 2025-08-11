@@ -6,11 +6,26 @@
 //
 
 import Foundation
+ 
+
+struct ParsedBeanInfo {
+    let name: String?
+    let roaster: String?
+    let origin: Origin?
+    let processing: Processing?
+}
+
+private struct CoffeeBeanInfo: Decodable {
+    let name: String?
+    let roaster: String?
+    let origin: String?
+    let processing: String?
+}
 
 /// Sends an image to the OpenAI Responses API (gpt-5-nano) and asks it to extract
 /// structured fields from a coffee bean bag: name, roaster, origin, processing.
-/// The completion returns a JSON string representing the strict object, or nil on failure.
-func sendGptImageRequest(imageData: Data, completion: @escaping (String?) -> Void) {
+/// The completion returns the parsed pieces mapped to app enums, or nil on failure.
+func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?) -> Void) {
     let apiKey = "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"
 
     guard let url = URL(string: "https://api.openai.com/v1/responses") else {
@@ -18,21 +33,40 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (String?) -> Voi
         return
     }
 
-    let instruction = "You are a parser. Given an image of a coffee bean bag label, extract: name, roaster, origin, processing. Return ONLY a JSON object with exactly these keys. Use null for missing values. If the image is not a coffee bean bag label, set all values to null."
+    // Build instruction with guidance to map to enums
+    let instruction = "You are a parser. Given an image of a coffee bean bag label, extract: name, roaster, origin, processing. Return ONLY a JSON object with exactly these keys. If you don't confidently recognise a value, use null. If the image is not a coffee bean bag, set all values to null. Choose the origin and processing values from the allowed lists in the provided schema, but if you haven't confidentally recognized the origin or processing, use null."
 
     // Build data URI for the image
     let mimeType = guessMimeType(for: imageData)
     let base64 = imageData.base64EncodedString()
     let dataURL = "data:\(mimeType);base64,\(base64)"
 
+    // Enum lists from app models (excluding "Not set")
+    let originValues: [String] = Origin.allCases.filter { $0 != .notSet }.map { $0.rawValue }
+    let processingValues: [String] = Processing.allCases.filter { $0 != .notSet }.map { $0.rawValue }
+    var originEnum: [Any] = originValues
+    originEnum.append(NSNull())
+    var processingEnum: [Any] = processingValues
+    processingEnum.append(NSNull())
+
     // Strict JSON schema definition
     let schema: [String: Any] = [
         "type": "object",
         "properties": [
-            "name": ["type": "string", "nullable": true, "description": "Name of the coffee"],
-            "roaster": ["type": "string", "nullable": true, "description": "Roaster name"],
-            "origin": ["type": "string", "nullable": true, "description": "Origin country or region"],
-            "processing": ["type": "string", "nullable": true, "description": "Processing method of the raw coffee"]
+            "name": ["type": "string", "nullable": true, "description": "Name of the coffee, or null if not confidently recognized"],
+            "roaster": ["type": "string", "nullable": true, "description": "Roaster name, or null if not confidently recognized"],
+            "origin": [
+                "type": ["string", "null"],
+                "nullable": true,
+                "description": "Origin country from a fixed list, or null if not confidently recognized",
+                "enum": originEnum
+            ],
+            "processing": [
+                "type": ["string", "null"],
+                "nullable": true,
+                "description": "Processing method from a fixed list, or null if not confidently recognized",
+                "enum": processingEnum
+            ]
         ],
         "required": ["name", "roaster", "origin", "processing"],
         "additionalProperties": false
@@ -88,7 +122,7 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (String?) -> Voi
             return
         }
 
-        // Parse just the structured JSON if present, else fallback like the text function
+        // Parse structured JSON if present, else fallback like the text function
         do {
             let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
             if let root = jsonObject as? [String: Any] {
@@ -108,40 +142,35 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (String?) -> Voi
                 for content in contentsList {
                     if let jsonItem = content.first(where: { ($0["type"] as? String) == "output_json" }),
                        let jsonDict = jsonItem["json"] {
-                        if JSONSerialization.isValidJSONObject(jsonDict) {
-                            let compact = try JSONSerialization.data(withJSONObject: jsonDict, options: [])
-                            let compactString = String(data: compact, encoding: .utf8)
-                            DispatchQueue.main.async { completion(compactString) }
+                        // Convert dict -> Data -> decode
+                        let data = try JSONSerialization.data(withJSONObject: jsonDict, options: [])
+                        if let parsed = decodeAndMap(data: data) {
+                            DispatchQueue.main.async { completion(parsed) }
                             return
                         }
                     }
                 }
 
-                // Fallback to text; if it looks like JSON, return only the JSON part
+                // Fallback to text; if it looks like JSON, parse it
                 for content in contentsList {
                     if let textItem = content.first(where: { ($0["type"] as? String) == "output_text" }),
                        let text = textItem["text"] as? String {
                         if let textData = text.data(using: .utf8),
-                           let json = try? JSONSerialization.jsonObject(with: textData, options: []),
-                           JSONSerialization.isValidJSONObject(json) {
-                            let compact = try JSONSerialization.data(withJSONObject: json, options: [])
-                            let compactString = String(data: compact, encoding: .utf8)
-                            DispatchQueue.main.async { completion(compactString) }
+                           let parsed = decodeAndMap(data: textData) {
+                            DispatchQueue.main.async { completion(parsed) }
                         } else {
-                            DispatchQueue.main.async { completion(text) }
+                            DispatchQueue.main.async { completion(nil) }
                         }
                         return
                     }
                 }
             }
 
-            // Last resort: return raw body
-            let raw = String(data: data, encoding: .utf8)
-            DispatchQueue.main.async { completion(raw) }
+            // Last resort: return nil
+            DispatchQueue.main.async { completion(nil) }
         } catch {
             print("sendGptImageRequest parse error: \(error)")
-            let raw = String(data: data, encoding: .utf8)
-            DispatchQueue.main.async { completion(raw) }
+            DispatchQueue.main.async { completion(nil) }
         }
     }
     task.resume()
@@ -164,4 +193,43 @@ private func guessMimeType(for data: Data) -> String {
         }
     }
     return "image/jpeg"
+}
+
+// MARK: - Mapping helpers
+
+private func decodeAndMap(data: Data) -> ParsedBeanInfo? {
+    guard let info = try? JSONDecoder().decode(CoffeeBeanInfo.self, from: data) else { return nil }
+
+    let name = normalizeOptional(info.name)
+    let roaster = normalizeOptional(info.roaster)
+    let origin = normalizeOptional(info.origin).flatMap { mapToOrigin($0) }
+    let processing = normalizeOptional(info.processing).flatMap { mapToProcessing($0) }
+    return ParsedBeanInfo(name: name?.isEmpty == true ? nil : name,
+                          roaster: roaster,
+                          origin: origin,
+                          processing: processing)
+}
+
+private func mapToOrigin(_ value: String) -> Origin? {
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if let exact = Origin.allCases.first(where: { $0.rawValue == trimmed }) { return exact }
+    if let ci = Origin.allCases.first(where: { $0.rawValue.compare(trimmed, options: .caseInsensitive) == .orderedSame }) { return ci }
+    return nil
+}
+
+private func mapToProcessing(_ value: String) -> Processing? {
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if let exact = Processing.allCases.first(where: { $0.rawValue == trimmed }) { return exact }
+    if let ci = Processing.allCases.first(where: { $0.rawValue.compare(trimmed, options: .caseInsensitive) == .orderedSame }) { return ci }
+    return nil
+}
+
+private func normalizeOptional(_ value: String?) -> String? {
+    guard let value else { return nil }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.isEmpty { return nil }
+    let lower = trimmed.lowercased()
+    let nullish: Set<String> = ["null", "none", "n/a", "na", "not set", "unknown"]
+    if nullish.contains(lower) { return nil }
+    return trimmed
 }
