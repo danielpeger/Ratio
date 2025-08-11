@@ -82,7 +82,7 @@ struct BeanImageView: View {
             if isSuccess {
                 ZStack{
                     if showSuccessIcon {
-                        Color.green.opacity(0.85)
+                        Color.green.opacity(0.75)
                             .clipShape(RoundedRectangle(cornerRadius: 30))
                             .transition(.opacity)
                     }
@@ -130,7 +130,7 @@ struct BeanImageView: View {
             } else if isFailure {
                 ZStack{
                     if showFailureIcon {
-                        Color.red.opacity(0.85)
+                        Color.red.opacity(0.75)
                             .clipShape(RoundedRectangle(cornerRadius: 30))
                             .transition(.opacity)
                     }

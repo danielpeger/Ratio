@@ -32,16 +32,18 @@ struct AddBeansView: View {
     @State private var scanningFailed = false
     
     @Query private var beans: [Bean]
-    @FocusState private var roasterFocused: Bool
 
     private var uniqueRoasters: [String] {
     Array(
         Set(
-        beans.compactMap { $0.roaster?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        )
-    ).sorted()
+            beans.compactMap { $0.roaster?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            )
+        ).sorted()
     }
+
+    enum Field: Hashable { case name, roaster, none }
+    @FocusState private var focusedField: Field?
 
     private var filteredRoasters: [String] {
     guard !beanRoaster.isEmpty else { return uniqueRoasters }
@@ -158,10 +160,13 @@ struct AddBeansView: View {
                 
                 Section {
                     TextField("Name", text: $beanName)
+                        .focused($focusedField, equals: .name)
+                        .onSubmit { focusedField = .roaster }
                     TextField("Roaster", text: $beanRoaster)
-                        .focused($roasterFocused)
+                        .focused($focusedField, equals: .roaster)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled(true)
+                        .onSubmit { focusedField = .none }
                     Picker("Origin", selection: $beanOrigin) {
                         ForEach(Origin.allCases) { origin in
                             Text(origin.rawValue)
@@ -211,7 +216,7 @@ struct AddBeansView: View {
                     }
                     .disabled(beanName.isEmpty)
                 }
-                if roasterFocused {
+                if focusedField == .roaster {
                     ToolbarItemGroup(placement: .keyboard) {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
