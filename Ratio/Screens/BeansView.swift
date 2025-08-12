@@ -136,7 +136,6 @@ struct BeansView: View {
             }
         }
         .searchable(text: $searchText)
-        
         .sheet(isPresented: $showingAddBeans, content: {
             AddBeansView()
         })

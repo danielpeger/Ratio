@@ -14,56 +14,71 @@ struct BrewsView: View {
     @State private var path = [Screen]()
     @State private var showingLogBrew = false
     @State private var editingBrew: Brew? = nil
+    @State var pullProgress: Double = 0
     
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                ForEach(brews) { brew in
-                    BrewRowView(brew: brew, onDelete: {
-                        context.delete(brew)
-                    }, onEdit: {
-                        editingBrew = brew
-                    })
-                    .onTapGesture {
-                        path.append(.brewDetail(brew: brew))
+            PullActionScrollView(threshold: 80, onTrigger: {
+                showingLogBrew.toggle()
+            }, onProgress: { progress in
+                pullProgress = progress
+            }) {
+                if brews.isEmpty {
+                    VStack {
+                        Spacer(minLength: 48)
+                        ContentUnavailableView(
+                            label: {
+                                Label("No brews", systemImage: "cup.and.saucer.fill")
+                                    .foregroundColor(Color(.secondaryLabel))
+                            },
+                            description: {
+                                Text("Log a brew to get started")
+                                    .foregroundColor(Color(.tertiaryLabel))
+                            },
+                            actions: {
+                                Button("Log brew") {
+                                    showingLogBrew.toggle()
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .bold()
+                            }
+                        )
+                        Spacer(minLength: 200)
                     }
+                    .frame(maxWidth: .infinity)
+                    .background(Color(.systemGroupedBackground))
+                } else {
+                    List{
+                        ForEach(brews) { brew in
+                            BrewRowView(brew: brew, onDelete: {
+                                context.delete(brew)
+                            }, onEdit: {
+                                editingBrew = brew
+                            })
+                            .onTapGesture {
+                                path.append(.brewDetail(brew: brew))
+                            }
+                        }
+                    }
+                    .contentMargins(.top, 8)
+                    .scrollDisabled(true)
+                    .frame(height: CGFloat((40 + brews.count * 66)), alignment: .top)
+                    .animation(.default, value:  brews.count)
                 }
             }
             .animation(.default, value: brews.count)
-            .contentMargins(.top, 8)
             .background(Color(.secondarySystemBackground))
-            .overlay {
-                if(brews.isEmpty){
-                    ContentUnavailableView(
-                        label: {
-                            Label("No brews", systemImage: "cup.and.saucer.fill")
-                                .foregroundColor(Color(.secondaryLabel))
-                        },
-                        description: {
-                            Text("Log a brew to get started")
-                                .foregroundColor(Color(.tertiaryLabel))
-                        },
-                        actions: {
-                            Button("Log brew") {
-                                showingLogBrew.toggle()
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .bold()
-                        }
-                    )
-                    .background(Color(.systemGroupedBackground))
-                }
-            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add brew", systemImage: "plus", action: {
-                        showingLogBrew.toggle()
-                        
-                        // Add haptic feedback
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                        impactFeedback.impactOccurred()
-                    })
-                    .labelStyle(.iconOnly)
+                    ZStack {
+                        Button(action: {
+                            showingLogBrew.toggle()
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        }) {
+                            AddCircle(progress: $pullProgress)
+                        }
+                        .labelStyle(.iconOnly)
+                    }
                 }
             }
             .navigationTitle("Brews")
@@ -81,6 +96,29 @@ struct BrewsView: View {
         }
         .sheet(item: $editingBrew) { brew in
             LogBrewView(brew: brew)
+        }
+    }
+}
+
+struct AddCircle: View {
+    @Binding var progress: Double
+    
+    var body: some View {
+        let size = max(0, progress) * 32
+
+        ZStack {
+            Image(systemName: "plus")
+                .foregroundStyle(.red)
+                .frame(width: 32, height: 32)
+            Circle()
+                .fill(.red)
+                .frame(width: size, height: size)
+            Image(systemName: "plus")
+                .foregroundStyle(.white)
+                .mask(
+                    Circle()
+                        .frame(width: size, height: size)
+                )
         }
     }
 }

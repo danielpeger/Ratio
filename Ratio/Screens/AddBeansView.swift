@@ -266,7 +266,6 @@ struct AddBeansView: View {
                 if hasAny {
                     self.scanningSucceded = true
                 } else {
-                    print("SCAnning failed")
                     self.scanningFailed = true
                 }
             } else {
