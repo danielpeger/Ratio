@@ -18,8 +18,8 @@ struct BrewsView: View {
     
     var body: some View {
         NavigationStack(path: $path) {
-            PullActionScrollView(threshold: 80, onTrigger: {
-                showingLogBrew.toggle()
+            PullActionScrollView(threshold: 100, onTrigger: {
+                showingLogBrew = true
             }, onProgress: { progress in
                 pullProgress = progress
             }) {
@@ -97,28 +97,10 @@ struct BrewsView: View {
         .sheet(item: $editingBrew) { brew in
             LogBrewView(brew: brew)
         }
-    }
-}
-
-struct AddCircle: View {
-    @Binding var progress: Double
-    
-    var body: some View {
-        let size = max(0, progress) * 32
-
-        ZStack {
-            Image(systemName: "plus")
-                .foregroundStyle(.red)
-                .frame(width: 32, height: 32)
-            Circle()
-                .fill(.red)
-                .frame(width: size, height: size)
-            Image(systemName: "plus")
-                .foregroundStyle(.white)
-                .mask(
-                    Circle()
-                        .frame(width: size, height: size)
-                )
+        .onChange(of: showingLogBrew) { _, newValue in
+            if newValue == false {
+                pullProgress = 0
+            }
         }
     }
 }

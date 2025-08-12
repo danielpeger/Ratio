@@ -102,8 +102,13 @@ struct PullActionScrollView<Content: View>: View {
                     let pull = max(0, -(contentOffset.y + adjustedTop))
                     if pullDistance != pull {
                         pullDistance = pull
-                        let progress = min(max(Double(pullDistance / threshold), 0), 1)
-                        onProgress(progress)
+                        let computed = min(max(Double(pullDistance / threshold), 0), 1)
+                        // Pin progress to 1 as soon as threshold has been passed during this drag
+                        // and keep it pinned while dragging. After release, existing logic keeps it at 1
+                        // until the bounce settles.
+                        let shouldPinAtOne = didHapticForCurrentDrag || (!isDragging && hasTriggered)
+                        let progressToReport: Double = shouldPinAtOne ? 1.0 : computed
+                        onProgress(progressToReport)
                         if isDragging && !didHapticForCurrentDrag && pullDistance > threshold {
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                             didHapticForCurrentDrag = true
@@ -113,14 +118,21 @@ struct PullActionScrollView<Content: View>: View {
                     if !isDragging && wasDragging {
                         if (pullDistance > threshold || didHapticForCurrentDrag) && !hasTriggered {
                             hasTriggered = true
-                            onTrigger()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                onTrigger()
+                            }
                         }
                         lastDistanceBeforeRelease = pullDistance
                     }
                     // While bouncing back, keep reporting progress. Reset only once bounce reaches zero.
                     if !isDragging && pull <= 0 {
                         pullDistance = 0
-                        onProgress(0)
+                        if hasTriggered {
+                            // If the action triggered, keep progress at 1 until we fully settle, then reset.
+                            onProgress(1)
+                        } else {
+                            onProgress(0)
+                        }
                         hasTriggered = false
                         didHapticForCurrentDrag = false
                     }
@@ -138,3 +150,76 @@ struct PullActionScrollView<Content: View>: View {
         .scrollBounceBehavior(.always)
     }
 }
+
+struct AddCircle: View {
+    @Binding var progress: Double
+    @State private var rippleTrigger: Int = 0
+    @State private var rippleScale: CGFloat = 1
+    @State private var hasAnimatedSinceReset: Bool = false
+    
+    var body: some View {
+        let size = max(0, progress) * 32
+
+        ZStack {
+            Image(systemName: "plus")
+                .foregroundStyle(.accent)
+                .frame(width: 32, height: 32)
+            Circle()
+                .fill(.red)
+                .frame(width: size, height: size)
+            Image(systemName: "plus")
+                .foregroundStyle(Color(.systemBackground))
+                .mask(
+                    Circle()
+                        .frame(width: size, height: size)
+                )
+        }
+        .overlay {
+            Circle()
+                .stroke(.red, lineWidth: 0.5)
+                .phaseAnimator([0.0, 1.0, 0.0], trigger: rippleTrigger) { view, phase in
+                    let opacity = (progress == 0) ? 0 : phase
+                    view.opacity(opacity)
+                } animation: { _ in
+                    .easeOut(duration: 0.35)
+                }
+                .scaleEffect(rippleScale)
+                .animation(.easeOut(duration: 0.7), value: rippleScale)
+                .transaction { tx in
+                    if progress == 0 {
+                        tx.animation = nil
+                    } else if hasAnimatedSinceReset {
+                        // Disable opacity animation for subsequent 1.0 hits until reset
+                        tx.animation = nil
+                    }
+                }
+        }
+        .onChange(of: progress) { _, newValue in
+            if newValue == 1.0 {
+                if !hasAnimatedSinceReset {
+                    rippleTrigger += 1
+                    rippleScale = 2
+                    hasAnimatedSinceReset = true
+                }
+            } else if newValue == 0.0 {
+                hasAnimatedSinceReset = false
+                // Reset without animation
+                withAnimation(nil) {
+                    rippleScale = 1
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    @Previewable @State var progress: Double = 0.0
+    
+    AddCircle(progress: $progress)
+    
+    Slider(
+        value: $progress,
+        in: 0...1,
+    )
+}
+
