@@ -33,8 +33,7 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?
         return
     }
 
-    // Build instruction with guidance to map to enums
-    let instruction = "You are a parser. Given an image of a coffee bean bag label, extract: name, roaster, origin, processing. Return ONLY a JSON object with exactly these keys. If you don't confidently recognise a value, use null. If the image is not a coffee bean bag, set all values to null. Choose the origin and processing values from the allowed lists in the provided schema, but if you haven't confidentally recognized the origin or processing, use null."
+    let instruction = "First, decide if the image provided is a coffee bean bag label. If you're not at least 99% sure it is, return null for all values. If you're sure it is a bean bag, extract information from it: name, roaster, origin, processing. Choose the origin and processing values from the allowed lists in the provided schema. If you don't recognise a value, use null."
 
     // Build data URI for the image
     let mimeType = guessMimeType(for: imageData)
