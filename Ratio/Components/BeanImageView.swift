@@ -60,13 +60,9 @@ struct BeanImageView: View {
             }
             if isScanning {
                 RoundedRectangle(cornerRadius: 100)
-                    .fill(LinearGradient(stops: [
-                        .init(color: Color.clear, location: 0),
-                        .init(color: .red, location: 0.5),
-                        .init(color: Color.clear, location: 1),
-                    ], startPoint: .top, endPoint: .bottom))
-                    .frame(width: 160, height: 8)
-                    .offset(y: scanPhase ? 112 : -4)
+                    .fill(.accent)
+                    .frame(width: 160, height: 2)
+                    .offset(y: scanPhase ? 119 : -1)
                     .onAppear {
                         scanPhase = false
                         withAnimation(.linear(duration: 1).repeatForever(autoreverses: true)) {
