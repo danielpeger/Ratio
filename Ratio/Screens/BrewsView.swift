@@ -69,7 +69,6 @@ struct BrewsView: View {
                     }
                 }
             }
-            .background(Color(.secondarySystemBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     ZStack {

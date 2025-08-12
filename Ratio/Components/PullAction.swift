@@ -78,7 +78,7 @@ struct PullActionScrollView<Content: View>: View {
     @State private var pullDistance: CGFloat = 0
     @State private var lastDistanceBeforeRelease: CGFloat = 0
     @State private var hasTriggered = false
-    @State private var didHapticForCurrentDrag = false
+    @State private var hasCrossedThresholdThisDrag = false
     @State private var wasDragging = false
 
     // No named coordinate space needed anymore
@@ -100,43 +100,57 @@ struct PullActionScrollView<Content: View>: View {
                 // Observer must be inside ScrollView content so it can find the UIScrollView ancestor
                 ScrollViewOffsetObserver { contentOffset, adjustedTop, isDragging in
                     let pull = max(0, -(contentOffset.y + adjustedTop))
+                    let previousPull = pullDistance
+                    // Detect drag start: reset crossing state
+                    if isDragging && !wasDragging {
+                        DispatchQueue.main.async { hasCrossedThresholdThisDrag = false }
+                    }
                     if pullDistance != pull {
-                        pullDistance = pull
-                        let computed = min(max(Double(pullDistance / threshold), 0), 1)
-                        // Pin progress to 1 as soon as threshold has been passed during this drag
-                        // and keep it pinned while dragging. After release, existing logic keeps it at 1
-                        // until the bounce settles.
-                        let shouldPinAtOne = didHapticForCurrentDrag || (!isDragging && hasTriggered)
-                        let progressToReport: Double = shouldPinAtOne ? 1.0 : computed
-                        onProgress(progressToReport)
-                        if isDragging && !didHapticForCurrentDrag && pullDistance > threshold {
+                        let didCrossNow = isDragging && !hasCrossedThresholdThisDrag && previousPull < threshold && pull >= threshold
+                        if didCrossNow {
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            didHapticForCurrentDrag = true
+                            DispatchQueue.main.async {
+                                hasCrossedThresholdThisDrag = true
+                                onProgress(1.0)
+                            }
+                        } else if isDragging && hasCrossedThresholdThisDrag {
+                            DispatchQueue.main.async { onProgress(1.0) }
+                        } else {
+                            let normalized = min(max(Double(pull / threshold), 0), 0.999)
+                            DispatchQueue.main.async { onProgress(normalized) }
                         }
+                        DispatchQueue.main.async { pullDistance = pull }
                     }
                     // On release, decide whether to trigger based on threshold or haptic
                     if !isDragging && wasDragging {
-                        if (pullDistance > threshold || didHapticForCurrentDrag) && !hasTriggered {
-                            hasTriggered = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        if hasCrossedThresholdThisDrag && !hasTriggered {
+                            DispatchQueue.main.async {
+                                hasTriggered = true
+                                onProgress(1.0)
                                 onTrigger()
                             }
                         }
-                        lastDistanceBeforeRelease = pullDistance
+                        DispatchQueue.main.async { lastDistanceBeforeRelease = pull }
                     }
                     // While bouncing back, keep reporting progress. Reset only once bounce reaches zero.
                     if !isDragging && pull <= 0 {
-                        pullDistance = 0
+                        DispatchQueue.main.async { pullDistance = 0 }
                         if hasTriggered {
                             // If the action triggered, keep progress at 1 until we fully settle, then reset.
-                            onProgress(1)
+                            DispatchQueue.main.async {
+                                onProgress(1)
+                            }
                         } else {
-                            onProgress(0)
+                            DispatchQueue.main.async {
+                                onProgress(0)
+                            }
                         }
-                        hasTriggered = false
-                        didHapticForCurrentDrag = false
+                        DispatchQueue.main.async {
+                            hasTriggered = false
+                            hasCrossedThresholdThisDrag = false
+                        }
                     }
-                    wasDragging = isDragging
+                    DispatchQueue.main.async { wasDragging = isDragging }
                 }
                 .frame(height: 0)
                 
@@ -145,7 +159,7 @@ struct PullActionScrollView<Content: View>: View {
                     content()
                 }
             }
-            .background(Color(.secondarySystemBackground))
+            .background(Color(.systemGroupedBackground))
         }
         .scrollBounceBehavior(.always)
     }
@@ -181,10 +195,10 @@ struct AddCircle: View {
                     let opacity = (progress == 0) ? 0 : phase
                     view.opacity(opacity)
                 } animation: { _ in
-                    .easeOut(duration: 0.35)
+                    .easeOut(duration: 0.25)
                 }
                 .scaleEffect(rippleScale)
-                .animation(.easeOut(duration: 0.7), value: rippleScale)
+                .animation(.easeOut(duration: 0.5), value: rippleScale)
                 .transaction { tx in
                     if progress == 0 {
                         tx.animation = nil
