@@ -18,55 +18,57 @@ struct BrewsView: View {
     
     var body: some View {
         NavigationStack(path: $path) {
-            PullActionScrollView(threshold: 100, onTrigger: {
-                showingLogBrew = true
-            }, onProgress: { progress in
-                pullProgress = progress
-            }) {
-                if brews.isEmpty {
-                    VStack {
-                        Spacer(minLength: 48)
-                        ContentUnavailableView(
-                            label: {
-                                Label("No brews", systemImage: "cup.and.saucer.fill")
-                                    .foregroundColor(Color(.secondaryLabel))
-                            },
-                            description: {
-                                Text("Log a brew to get started")
-                                    .foregroundColor(Color(.tertiaryLabel))
-                            },
-                            actions: {
-                                Button("Log brew") {
-                                    showingLogBrew.toggle()
+            GeometryReader { proxy in
+                PullActionScrollView(threshold: 100, onTrigger: {
+                    showingLogBrew = true
+                }, onProgress: { progress in
+                    pullProgress = progress
+                }) {
+                    if brews.isEmpty {
+                        VStack {
+                            Spacer()
+                            ContentUnavailableView(
+                                label: {
+                                    Label("No brews", systemImage: "cup.and.saucer.fill")
+                                        .foregroundColor(Color(.secondaryLabel))
+                                },
+                                description: {
+                                    Text("Log a brew to get started")
+                                        .foregroundColor(Color(.tertiaryLabel))
+                                },
+                                actions: {
+                                    Button("Log brew") {
+                                        showingLogBrew.toggle()
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .bold()
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .bold()
-                            }
-                        )
-                        Spacer(minLength: 200)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .background(Color(.systemGroupedBackground))
-                } else {
-                    List{
-                        ForEach(brews) { brew in
-                            BrewRowView(brew: brew, onDelete: {
-                                context.delete(brew)
-                            }, onEdit: {
-                                editingBrew = brew
-                            })
-                            .onTapGesture {
-                                path.append(.brewDetail(brew: brew))
+                            )
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                        .background(Color(.systemGroupedBackground))
+                    } else {
+                        List{
+                            ForEach(brews) { brew in
+                                BrewRowView(brew: brew, onDelete: {
+                                    context.delete(brew)
+                                }, onEdit: {
+                                    editingBrew = brew
+                                })
+                                .onTapGesture {
+                                    path.append(.brewDetail(brew: brew))
+                                }
                             }
                         }
+                        .contentMargins(.top, 8)
+                        .scrollDisabled(true)
+                        .frame(height: CGFloat((40 + brews.count * 66)), alignment: .top)
+                        .animation(.default, value:  brews.count)
                     }
-                    .contentMargins(.top, 8)
-                    .scrollDisabled(true)
-                    .frame(height: CGFloat((40 + brews.count * 66)), alignment: .top)
-                    .animation(.default, value:  brews.count)
                 }
             }
-            .animation(.default, value: brews.count)
             .background(Color(.secondarySystemBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -109,11 +111,11 @@ struct BrewsView: View {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Bean.self, Brew.self, configurations: config)
     
-    // Add mock data to the container
-    let mockBrews = createMockBrews()
-    for brew in mockBrews {
-        container.mainContext.insert(brew)
-    }
+     // Add mock data to the container
+     let mockBrews = createMockBrews()
+     for brew in mockBrews {
+     container.mainContext.insert(brew)
+     }
     
     return BrewsView()
         .modelContainer(container)
