@@ -104,13 +104,17 @@ struct AddBeansView: View {
                             }
                         } label: {
                             HStack{
-                                Image("scan.beanbag")
-                                Text("Scan bean bag")
+                                if (!scanning) {
+                                    Image("scan.beanbag")
+                                        .font(.system(size: 18))
+                                }
+                                Text(scanning ? "Scanning..." : "Scan bean bag")
                                     .fontWeight(.medium)
                             }
                             .padding(.vertical, 4)
                             .padding(.horizontal, 8)
                         }
+                        .disabled(scanning)
                         .foregroundColor(.primary)
                         .buttonStyle(.bordered)
                         .fullScreenCover(isPresented: $showCamera) {
@@ -144,6 +148,7 @@ struct AddBeansView: View {
                             }) {
                                 HStack{
                                     Image(systemName: "trash")
+                                        .font(.system(size: 18))
                                     Text("Remove photo")
                                         .fontWeight(.medium)
                                 }
