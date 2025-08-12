@@ -73,6 +73,7 @@ struct PullActionScrollView<Content: View>: View {
     let threshold: CGFloat
     let onTrigger: () -> Void
     let onProgress: (Double) -> Void
+    let isEnabled: () -> Bool
     @ViewBuilder var content: () -> Content
 
     @State private var pullDistance: CGFloat = 0
@@ -86,11 +87,13 @@ struct PullActionScrollView<Content: View>: View {
         threshold: CGFloat,
         onTrigger: @escaping () -> Void,
         onProgress: @escaping (Double) -> Void = { _ in },
+        isEnabled: @escaping () -> Bool = { true },
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.threshold = threshold
         self.onTrigger = onTrigger
         self.onProgress = onProgress
+        self.isEnabled = isEnabled
         self.content = content
     }
 
@@ -99,6 +102,19 @@ struct PullActionScrollView<Content: View>: View {
             VStack(spacing: 0) {
                 // Observer must be inside ScrollView content so it can find the UIScrollView ancestor
                 ScrollViewOffsetObserver { contentOffset, adjustedTop, isDragging in
+                    // If disabled, reset and ignore events
+                    if !isEnabled() {
+                        if pullDistance != 0 || hasTriggered || hasCrossedThresholdThisDrag {
+                            DispatchQueue.main.async {
+                                pullDistance = 0
+                                hasTriggered = false
+                                hasCrossedThresholdThisDrag = false
+                                onProgress(0)
+                            }
+                        }
+                        DispatchQueue.main.async { wasDragging = isDragging }
+                        return
+                    }
                     let pull = max(0, -(contentOffset.y + adjustedTop))
                     let previousPull = pullDistance
                     // Detect drag start: reset crossing state

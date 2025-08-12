@@ -149,11 +149,13 @@ struct BeanDetailView: View {
                         actions: {
                             Button("Log brew") {
                                 showingLogBrew.toggle()
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                             }
                             .buttonStyle(.borderedProminent)
                             .bold()
                         }
                     )
+                    .padding(.top, 88)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
                 }

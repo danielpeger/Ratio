@@ -26,7 +26,6 @@ struct BrewsView: View {
                 }) {
                     if brews.isEmpty {
                         VStack {
-                            Spacer()
                             ContentUnavailableView(
                                 label: {
                                     Label("No brews", systemImage: "cup.and.saucer.fill")
@@ -45,9 +44,8 @@ struct BrewsView: View {
                                     .bold()
                                 }
                             )
-                            Spacer()
                         }
-                        .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height - 60)
                         .background(Color(.systemGroupedBackground))
                     } else {
                         List{
@@ -69,17 +67,16 @@ struct BrewsView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    ZStack {
-                        Button(action: {
-                            showingLogBrew.toggle()
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        }) {
-                            AddCircle(progress: $pullProgress)
-                        }
-                        .labelStyle(.iconOnly)
+                    Button(action: {
+                        showingLogBrew.toggle()
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    }) {
+                        AddCircle(progress: $pullProgress)
                     }
+                    .labelStyle(.iconOnly)
                 }
             }
             .navigationTitle("Brews")
@@ -110,11 +107,12 @@ struct BrewsView: View {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Bean.self, Brew.self, configurations: config)
     
+    /*
      // Add mock data to the container
      let mockBrews = createMockBrews()
      for brew in mockBrews {
      container.mainContext.insert(brew)
-     }
+     }*/
     
     return BrewsView()
         .modelContainer(container)
