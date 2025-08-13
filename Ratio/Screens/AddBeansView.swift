@@ -139,7 +139,7 @@ struct AddBeansView: View {
                             }
                         }
                         
-                        if beanImageData != nil {
+                        if beanImageData != nil && !scanning {
                             Button(role: .destructive ,action: {
                                 beanImageData = nil
                                 pickedPhoto = nil

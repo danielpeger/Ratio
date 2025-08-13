@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AudioToolbox
 
 struct BrewRowView: View {
     let brew: Brew
@@ -50,12 +51,14 @@ struct BrewRowView: View {
                         withAnimation {
                             bean.unpinAllBrews()
                         }
+                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     }
                 } else {
                     Button("Pin", systemImage: "pin") {
                         withAnimation {
                             bean.pinBrew(brew)
                         }
+                        AudioServicesPlaySystemSound(SystemSoundID(1396))
                     }
                 }
             }
@@ -83,6 +86,7 @@ struct BrewRowView: View {
                         withAnimation {
                             bean.unpinAllBrews()
                         }
+                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     }
                     .tint(Color.red.secondary)
                 } else {
@@ -90,6 +94,7 @@ struct BrewRowView: View {
                         withAnimation {
                             bean.pinBrew(brew)
                         }
+                        AudioServicesPlaySystemSound(SystemSoundID(1396))
                     }
                     .tint(Color.red.secondary)
                 }

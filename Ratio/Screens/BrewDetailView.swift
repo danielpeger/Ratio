@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Flow
+import AudioToolbox
 
 struct BrewDetailView: View {
     var brew: Brew
@@ -113,8 +114,10 @@ struct BrewDetailView: View {
                     Button("Pin brew", systemImage: brew.pinned ? "pin.fill" : "pin", action: {
                         if brew.pinned {
                             bean.unpinAllBrews()
+                            AudioServicesPlaySystemSound(SystemSoundID(1397))
                         } else {
                             bean.pinBrew(brew)
+                            AudioServicesPlaySystemSound(SystemSoundID(1396))
                         }
                         
                         // Add haptic feedback
