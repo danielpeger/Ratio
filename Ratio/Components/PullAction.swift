@@ -11,31 +11,31 @@ import UIKit
 // MARK: - UIKit bridge to observe UIScrollView contentOffset (includes rubber-band bounce)
 private struct ScrollViewOffsetObserver: UIViewRepresentable {
     var onChange: (_ contentOffset: CGPoint, _ adjustedInsetTop: CGFloat, _ isDragging: Bool) -> Void
-
+    
     func makeUIView(context: Context) -> ObserverView {
         let v = ObserverView()
         v.onChange = onChange
         return v
     }
-
+    
     func updateUIView(_ uiView: ObserverView, context: Context) {}
-
+    
     final class ObserverView: UIView {
         var onChange: ((_ contentOffset: CGPoint, _ adjustedInsetTop: CGFloat, _ isDragging: Bool) -> Void)?
         weak var scrollView: UIScrollView?
         private var contentOffsetObservation: NSKeyValueObservation?
         private var draggingObservation: NSKeyValueObservation?
-
+        
         override func didMoveToSuperview() {
             super.didMoveToSuperview()
             attachIfNeeded()
         }
-
+        
         override func didMoveToWindow() {
             super.didMoveToWindow()
             attachIfNeeded()
         }
-
+        
         private func attachIfNeeded() {
             guard scrollView == nil else { return }
             var current: UIView? = self
@@ -48,7 +48,7 @@ private struct ScrollViewOffsetObserver: UIViewRepresentable {
                 current = view
             }
         }
-
+        
         private func observe(_ sv: UIScrollView) {
             contentOffsetObservation = sv.observe(\.contentOffset, options: [.new]) { [weak self] scroll, change in
                 guard let self, let newValue = change.newValue else { return }
@@ -59,7 +59,7 @@ private struct ScrollViewOffsetObserver: UIViewRepresentable {
                 self.onChange?(scroll.contentOffset, scroll.adjustedContentInset.top, isDragging)
             }
         }
-
+        
         deinit {
             contentOffsetObservation = nil
             draggingObservation = nil
@@ -73,102 +73,89 @@ struct PullActionScrollView<Content: View>: View {
     let threshold: CGFloat
     let onTrigger: () -> Void
     let onProgress: (Double) -> Void
-    let isEnabled: () -> Bool
+    @Environment(\.isSearching) private var isSearching
     @ViewBuilder var content: () -> Content
-
+    
     @State private var pullDistance: CGFloat = 0
     @State private var lastDistanceBeforeRelease: CGFloat = 0
     @State private var hasTriggered = false
     @State private var hasCrossedThresholdThisDrag = false
     @State private var wasDragging = false
-
+    
     // No named coordinate space needed anymore
     init(
         threshold: CGFloat,
         onTrigger: @escaping () -> Void,
         onProgress: @escaping (Double) -> Void = { _ in },
-        isEnabled: @escaping () -> Bool = { true },
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.threshold = threshold
         self.onTrigger = onTrigger
         self.onProgress = onProgress
-        self.isEnabled = isEnabled
         self.content = content
     }
-
+    
     var body: some View {
-        ScrollView {
+        ScrollView {            
             VStack(spacing: 0) {
-                // Observer must be inside ScrollView content so it can find the UIScrollView ancestor
-                ScrollViewOffsetObserver { contentOffset, adjustedTop, isDragging in
-                    // If disabled, reset and ignore events
-                    if !isEnabled() {
-                        if pullDistance != 0 || hasTriggered || hasCrossedThresholdThisDrag {
+                if !isSearching {
+                    // Observer must be inside ScrollView content so it can find the UIScrollView ancestor
+                    ScrollViewOffsetObserver { contentOffset, adjustedTop, isDragging in
+                        let pull = max(0, -(contentOffset.y + adjustedTop))
+                        let previousPull = pullDistance
+                        // Detect drag start: reset crossing state
+                        if isDragging && !wasDragging {
+                            DispatchQueue.main.async { hasCrossedThresholdThisDrag = false }
+                        }
+                        if pullDistance != pull {
+                            let didCrossNow = isDragging && !hasCrossedThresholdThisDrag && previousPull < threshold && pull >= threshold
+                            if didCrossNow {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                DispatchQueue.main.async {
+                                    hasCrossedThresholdThisDrag = true
+                                    onProgress(1.0)
+                                }
+                            } else if isDragging && hasCrossedThresholdThisDrag {
+                                DispatchQueue.main.async { onProgress(1.0) }
+                            } else {
+                                let normalized = min(max(Double(pull / threshold), 0), 0.999)
+                                DispatchQueue.main.async { onProgress(normalized) }
+                            }
+                            DispatchQueue.main.async { pullDistance = pull }
+                        }
+                        // On release, decide whether to trigger based on threshold or haptic
+                        if !isDragging && wasDragging {
+                            if hasCrossedThresholdThisDrag && !hasTriggered {
+                                DispatchQueue.main.async {
+                                    hasTriggered = true
+                                    onProgress(1.0)
+                                    onTrigger()
+                                }
+                            }
+                            DispatchQueue.main.async { lastDistanceBeforeRelease = pull }
+                        }
+                        // While bouncing back, keep reporting progress. Reset only once bounce reaches zero.
+                        if !isDragging && pull <= 0 {
+                            DispatchQueue.main.async { pullDistance = 0 }
+                            if hasTriggered {
+                                // If the action triggered, keep progress at 1 until we fully settle, then reset.
+                                DispatchQueue.main.async {
+                                    onProgress(1)
+                                }
+                            } else {
+                                DispatchQueue.main.async {
+                                    onProgress(0)
+                                }
+                            }
                             DispatchQueue.main.async {
-                                pullDistance = 0
                                 hasTriggered = false
                                 hasCrossedThresholdThisDrag = false
-                                onProgress(0)
                             }
                         }
                         DispatchQueue.main.async { wasDragging = isDragging }
-                        return
                     }
-                    let pull = max(0, -(contentOffset.y + adjustedTop))
-                    let previousPull = pullDistance
-                    // Detect drag start: reset crossing state
-                    if isDragging && !wasDragging {
-                        DispatchQueue.main.async { hasCrossedThresholdThisDrag = false }
-                    }
-                    if pullDistance != pull {
-                        let didCrossNow = isDragging && !hasCrossedThresholdThisDrag && previousPull < threshold && pull >= threshold
-                        if didCrossNow {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            DispatchQueue.main.async {
-                                hasCrossedThresholdThisDrag = true
-                                onProgress(1.0)
-                            }
-                        } else if isDragging && hasCrossedThresholdThisDrag {
-                            DispatchQueue.main.async { onProgress(1.0) }
-                        } else {
-                            let normalized = min(max(Double(pull / threshold), 0), 0.999)
-                            DispatchQueue.main.async { onProgress(normalized) }
-                        }
-                        DispatchQueue.main.async { pullDistance = pull }
-                    }
-                    // On release, decide whether to trigger based on threshold or haptic
-                    if !isDragging && wasDragging {
-                        if hasCrossedThresholdThisDrag && !hasTriggered {
-                            DispatchQueue.main.async {
-                                hasTriggered = true
-                                onProgress(1.0)
-                                onTrigger()
-                            }
-                        }
-                        DispatchQueue.main.async { lastDistanceBeforeRelease = pull }
-                    }
-                    // While bouncing back, keep reporting progress. Reset only once bounce reaches zero.
-                    if !isDragging && pull <= 0 {
-                        DispatchQueue.main.async { pullDistance = 0 }
-                        if hasTriggered {
-                            // If the action triggered, keep progress at 1 until we fully settle, then reset.
-                            DispatchQueue.main.async {
-                                onProgress(1)
-                            }
-                        } else {
-                            DispatchQueue.main.async {
-                                onProgress(0)
-                            }
-                        }
-                        DispatchQueue.main.async {
-                            hasTriggered = false
-                            hasCrossedThresholdThisDrag = false
-                        }
-                    }
-                    DispatchQueue.main.async { wasDragging = isDragging }
+                    .frame(height: 0)
                 }
-                .frame(height: 0)
                 
                 // Main content
                 LazyVStack(spacing: 0) {
@@ -189,7 +176,7 @@ struct AddCircle: View {
     
     var body: some View {
         let size = max(0, progress) * 32
-
+        
         ZStack {
             Image(systemName: "plus")
                 .foregroundStyle(.accent)
@@ -211,7 +198,7 @@ struct AddCircle: View {
                     let opacity = (progress == 0) ? 0 : phase
                     view.opacity(opacity)
                 } animation: { _ in
-                    .easeOut(duration: 0.25)
+                        .easeOut(duration: 0.25)
                 }
                 .scaleEffect(rippleScale)
                 .animation(.easeOut(duration: 0.5), value: rippleScale)

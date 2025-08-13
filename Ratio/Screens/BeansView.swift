@@ -2,7 +2,7 @@
 //  BeansView.swift
 //  Ratio
 //
-//  Created by Daniel Péger on 2025. 07. 10..
+//  Created by Daniel Péger on 2025. 07. 10.
 //
 
 import SwiftUI
@@ -15,8 +15,6 @@ struct BeansView: View {
     @State private var searchText = ""
     @State private var selectedFilter: StockFilter = .inStock
     @State var pullProgress: Double = 0
-    // Detect if user is searching (keyboard is visible) to disable pull to add
-    @State private var isKeyboardVisible: Bool = false
     @Environment(\.modelContext) private var context
     @Query(sort: \Bean.creationDate, order: .reverse) private var beans: [Bean]
     
@@ -47,7 +45,7 @@ struct BeansView: View {
                     showingAddBeans = true
                 }, onProgress: { progress in
                     pullProgress = progress
-                }, isEnabled: { !isKeyboardVisible && searchText.isEmpty }) {
+                }) {
                     VStack {
                         Picker("Stock Filter", selection: $selectedFilter) {
                             ForEach(StockFilter.allCases) { filter in
@@ -151,12 +149,6 @@ struct BeansView: View {
             if newValue == false {
                 pullProgress = 0
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            isKeyboardVisible = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            isKeyboardVisible = false
         }
     }
 }
