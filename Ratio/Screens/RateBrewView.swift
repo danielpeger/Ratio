@@ -53,16 +53,12 @@ struct RateBrewView: View {
                     onSave?()
                     if isEditing {
                         if (originalRating != .good) && (rating == .good) {
-                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                            AudioServicesPlaySystemSound(SystemSoundID(1428))
                             navigateToYay = true
                         } else {
                             onDismiss?()
                         }
                     } else {
                         if rating == .good {
-                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                            AudioServicesPlaySystemSound(SystemSoundID(1428))
                             navigateToYay = true
                         } else {
                             onDismiss?()
@@ -80,6 +76,12 @@ struct RateBrewView: View {
                     onDismiss?()
                 }
             )
+        }
+        .onChange(of: navigateToYay) { _, newValue in
+            if newValue == true {
+                AudioServicesPlaySystemSound(SystemSoundID(1428))
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }
         }
     }
 }

@@ -176,14 +176,13 @@ struct LogBrewView: View {
             .listSectionSpacing(16)
             .navigationTitle(brew == nil ? "Log brew" : "Edit brew")
             .navigationBarTitleDisplayMode(.inline)
-            .onChange(of: brewBean) { _ in
+            .onChange(of: brewBean) { _, newValue in
                 applyTemplateForSelectedBeanIfNeeded()
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         dismiss()
-                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -237,9 +236,6 @@ struct LogBrewView: View {
                     },
                     onDismiss: {
                         dismiss()
-                        let notificationFeedback = UINotificationFeedbackGenerator()
-                        notificationFeedback.notificationOccurred(.success)
-                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     },
                     onYayPinToggle: {
                         if let brew = createdBrew {

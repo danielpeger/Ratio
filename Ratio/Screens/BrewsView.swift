@@ -22,7 +22,6 @@ struct BrewsView: View {
             GeometryReader { proxy in
                 PullActionScrollView(threshold: 100, onTrigger: {
                     showingLogBrew = true
-                    AudioServicesPlaySystemSound(SystemSoundID(1396))
                 }, onProgress: { progress in
                     pullProgress = progress
                 }) {
@@ -40,8 +39,6 @@ struct BrewsView: View {
                                 actions: {
                                     Button("Log brew") {
                                         showingLogBrew = true
-                                        AudioServicesPlaySystemSound(SystemSoundID(1396))
-                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                     }
                                     .buttonStyle(.borderedProminent)
                                     .bold()
@@ -75,8 +72,6 @@ struct BrewsView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
                         showingLogBrew = true
-                        AudioServicesPlaySystemSound(SystemSoundID(1396))
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     }) {
                         AddCircle(progress: $pullProgress)
                     }
@@ -100,7 +95,12 @@ struct BrewsView: View {
             LogBrewView(brew: brew)
         }
         .onChange(of: showingLogBrew) { _, newValue in
-            if newValue == false {
+            if newValue == true {
+                AudioServicesPlaySystemSound(SystemSoundID(1371))
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            } else {
+                AudioServicesPlaySystemSound(SystemSoundID(1397))
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 pullProgress = 0
             }
         }
@@ -111,12 +111,11 @@ struct BrewsView: View {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Bean.self, Brew.self, configurations: config)
     
-    /*
      // Add mock data to the container
      let mockBrews = createMockBrews()
      for brew in mockBrews {
      container.mainContext.insert(brew)
-     }*/
+     }
     
     return BrewsView()
         .modelContainer(container)

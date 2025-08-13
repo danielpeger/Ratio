@@ -194,7 +194,6 @@ struct AddBeansView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         dismiss()
-                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -220,7 +219,6 @@ struct AddBeansView: View {
                             notificationFeedback.notificationOccurred(.success)
                         }
                         dismiss()
-                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     }
                     .disabled(beanName.isEmpty)
                 }
