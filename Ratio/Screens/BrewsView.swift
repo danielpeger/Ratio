@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import AudioToolbox
 
 struct BrewsView: View {
     @Environment(\.modelContext) private var context
@@ -21,6 +22,7 @@ struct BrewsView: View {
             GeometryReader { proxy in
                 PullActionScrollView(threshold: 100, onTrigger: {
                     showingLogBrew = true
+                    AudioServicesPlaySystemSound(SystemSoundID(1396))
                 }, onProgress: { progress in
                     pullProgress = progress
                 }) {
@@ -37,7 +39,8 @@ struct BrewsView: View {
                                 },
                                 actions: {
                                     Button("Log brew") {
-                                        showingLogBrew.toggle()
+                                        showingLogBrew = true
+                                        AudioServicesPlaySystemSound(SystemSoundID(1396))
                                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                     }
                                     .buttonStyle(.borderedProminent)
@@ -71,7 +74,8 @@ struct BrewsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
-                        showingLogBrew.toggle()
+                        showingLogBrew = true
+                        AudioServicesPlaySystemSound(SystemSoundID(1396))
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     }) {
                         AddCircle(progress: $pullProgress)

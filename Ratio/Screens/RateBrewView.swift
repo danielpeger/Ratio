@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Flow
+import AudioToolbox
 
 struct RateBrewView: View {
     @Binding var rating: Rating
@@ -52,12 +53,16 @@ struct RateBrewView: View {
                     onSave?()
                     if isEditing {
                         if (originalRating != .good) && (rating == .good) {
+                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                            AudioServicesPlaySystemSound(SystemSoundID(1428))
                             navigateToYay = true
                         } else {
                             onDismiss?()
                         }
                     } else {
                         if rating == .good {
+                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                            AudioServicesPlaySystemSound(SystemSoundID(1428))
                             navigateToYay = true
                         } else {
                             onDismiss?()

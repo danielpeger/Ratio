@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import AudioToolbox
 
 struct LogBrewView: View {
     @Environment(\.dismiss) var dismiss
@@ -182,6 +183,7 @@ struct LogBrewView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         dismiss()
+                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -235,10 +237,9 @@ struct LogBrewView: View {
                     },
                     onDismiss: {
                         dismiss()
-                        
-                        // Add haptic feedback
                         let notificationFeedback = UINotificationFeedbackGenerator()
                         notificationFeedback.notificationOccurred(.success)
+                        AudioServicesPlaySystemSound(SystemSoundID(1397))
                     },
                     onYayPinToggle: {
                         if let brew = createdBrew {

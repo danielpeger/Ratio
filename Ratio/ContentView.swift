@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AudioToolbox
 
 enum Screen: Hashable {
     case beans
@@ -17,6 +18,7 @@ enum Screen: Hashable {
 struct ContentView: View {
     
     var body: some View {
+       // SystemSoundsTesterView()
         TabView {
             BeansView()
                 .tabItem {
@@ -29,6 +31,53 @@ struct ContentView: View {
                     Text("Brews")
                 }
         }
+    }
+}
+
+struct SystemSoundsTesterView: View {
+    private let soundRange = 1000...1587
+    @State private var previewSoundId: Int = 1018
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    Text("ID: \(previewSoundId)")
+                        .monospacedDigit()
+                    Spacer()
+                    Button("Play") {
+                        play(id: previewSoundId)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+                
+                List(soundRange, id: \.self) { id in
+                    HStack {
+                        Text("\(id)")
+                            .monospacedDigit()
+                        Spacer()
+                        Button("Play") {
+                            previewSoundId = id
+                            play(id: id)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        previewSoundId = id
+                        play(id: id)
+                    }
+                }
+                .listStyle(.plain)
+            }
+            .navigationTitle("System Sounds")
+        }
+    }
+    
+    private func play(id: Int) {
+        let soundId = SystemSoundID(id)
+        AudioServicesPlaySystemSound(soundId)
     }
 }
 
