@@ -101,7 +101,9 @@ struct BrewsView: View {
             } else {
                 AudioServicesPlaySystemSound(SystemSoundID(1397))
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                pullProgress = 0
+                withAnimation {
+                    pullProgress = 0
+                }
             }
         }
     }

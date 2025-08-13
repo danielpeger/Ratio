@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import AudioToolbox
 
 struct BeansView: View {
     @State private var path = [Screen]()
@@ -103,8 +104,7 @@ struct BeansView: View {
                                 actions: {
                                     if beans.isEmpty {
                                         Button("Add beans") {
-                                            showingAddBeans.toggle()
-                                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                            showingAddBeans = true
                                         }
                                         .buttonStyle(.borderedProminent)
                                         .bold()
@@ -146,8 +146,15 @@ struct BeansView: View {
             AddBeansView(bean: bean)
         }
         .onChange(of: showingAddBeans) { _, newValue in
-            if newValue == false {
-                pullProgress = 0
+            if newValue == true {
+                AudioServicesPlaySystemSound(SystemSoundID(1371))
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            } else {
+                AudioServicesPlaySystemSound(SystemSoundID(1397))
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                withAnimation {
+                    pullProgress = 0
+                }
             }
         }
     }

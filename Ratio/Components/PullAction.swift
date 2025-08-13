@@ -81,6 +81,7 @@ struct PullActionScrollView<Content: View>: View {
     @State private var hasTriggered = false
     @State private var hasCrossedThresholdThisDrag = false
     @State private var wasDragging = false
+    @State private var isHoldingAtOne = false
     
     // No named coordinate space needed anymore
     init(
@@ -103,9 +104,13 @@ struct PullActionScrollView<Content: View>: View {
                     ScrollViewOffsetObserver { contentOffset, adjustedTop, isDragging in
                         let pull = max(0, -(contentOffset.y + adjustedTop))
                         let previousPull = pullDistance
-                        // Detect drag start: reset crossing state
+                        // Detect drag start: reset crossing state and allow next trigger; stop holding 1
                         if isDragging && !wasDragging {
-                            DispatchQueue.main.async { hasCrossedThresholdThisDrag = false }
+                            DispatchQueue.main.async {
+                                hasCrossedThresholdThisDrag = false
+                                hasTriggered = false
+                                isHoldingAtOne = false
+                            }
                         }
                         if pullDistance != pull {
                             let didCrossNow = isDragging && !hasCrossedThresholdThisDrag && previousPull < threshold && pull >= threshold
@@ -115,7 +120,8 @@ struct PullActionScrollView<Content: View>: View {
                                     hasCrossedThresholdThisDrag = true
                                     onProgress(1.0)
                                 }
-                            } else if isDragging && hasCrossedThresholdThisDrag {
+                            } else if (!isDragging && isHoldingAtOne) || (isDragging && hasCrossedThresholdThisDrag) {
+                                // Keep progress pinned to 1 during post-trigger bounce, and while dragging after threshold
                                 DispatchQueue.main.async { onProgress(1.0) }
                             } else {
                                 let normalized = min(max(Double(pull / threshold), 0), 0.999)
@@ -127,9 +133,10 @@ struct PullActionScrollView<Content: View>: View {
                         if !isDragging && wasDragging {
                             if hasCrossedThresholdThisDrag && !hasTriggered {
                                 DispatchQueue.main.async {
-                                    hasTriggered = true
-                                    onProgress(1.0)
-                                    onTrigger()
+                                hasTriggered = true
+                                isHoldingAtOne = true
+                                onProgress(1.0)
+                                onTrigger()
                                 }
                             }
                             DispatchQueue.main.async { lastDistanceBeforeRelease = pull }
@@ -148,8 +155,9 @@ struct PullActionScrollView<Content: View>: View {
                                 }
                             }
                             DispatchQueue.main.async {
-                                hasTriggered = false
                                 hasCrossedThresholdThisDrag = false
+                                // Allow next trigger while still visually holding progress at 1
+                                hasTriggered = false
                             }
                         }
                         DispatchQueue.main.async { wasDragging = isDragging }
