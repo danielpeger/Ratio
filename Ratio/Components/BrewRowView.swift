@@ -77,11 +77,6 @@ struct BrewRowView: View {
                 }
             }
             
-            Button("Edit", systemImage: "pencil") {
-                onEdit?()
-            }
-            .tint(Color(.systemGray2))
-            
             if let bean = brew.bean {
                 if(brew.pinned) {
                     Button("Unpin", systemImage: "pin.slash.fill") {
@@ -89,16 +84,21 @@ struct BrewRowView: View {
                             bean.unpinAllBrews()
                         }
                     }
-                    .tint(.indigo)
+                    .tint(Color.red.secondary)
                 } else {
                     Button("Pin", systemImage: "pin") {
                         withAnimation {
                             bean.pinBrew(brew)
                         }
                     }
-                    .tint(.indigo)
+                    .tint(Color.red.secondary)
                 }
             }
+            
+            Button("Edit", systemImage: "pencil") {
+                onEdit?()
+            }
+            .tint(Color(.systemGray2))
         }
     }
 }

@@ -66,7 +66,7 @@ struct AddBeansView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
+                VStack(spacing: 16) {
                     HStack {
                         Spacer()
                         VStack(spacing: 20) {
@@ -87,11 +87,7 @@ struct AddBeansView: View {
                         }
                         Spacer()
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 2, trailing: 0))
-                }
-                
-                Section {
+
                     VStack(spacing: 8) {
                         Menu {
                             Button {
@@ -161,9 +157,10 @@ struct AddBeansView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    
                 }
+                .listRowBackground(Color.clear)
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))    
                 
                 Section {
                     TextField("Name", text: $beanName)
@@ -190,7 +187,7 @@ struct AddBeansView: View {
                     Toggle("In stock", isOn: $beanInStock)
                 }
             }
-            .listSectionSpacing(24)
+            .listSectionSpacing(32)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
