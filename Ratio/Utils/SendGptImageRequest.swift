@@ -33,7 +33,7 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?
         return
     }
 
-    let instruction = "First, decide if the image provided is a coffee bean bag label. If you're not at least 99% sure it is, return null for all values. If you're sure it is a bean bag, extract information from it: name, roaster, origin, processing. Choose the origin and processing values from the allowed lists in the provided schema. If you don't recognise a value, use null."
+    let instruction = "First, decide if the image provided is a coffee bean bag label. If you're not at least 99% sure it is, return null for all values. If you're sure it is a bean bag, extract information from it: name, roaster, origin, processing. Don't add commentary in the name and roaster fields, just the extracted value or null if not sure. Choose the origin and processing values from the allowed lists in the provided schema. If you don't recognise a value, use null."
 
     // Build data URI for the image
     let mimeType = guessMimeType(for: imageData)
