@@ -19,6 +19,7 @@ struct ContentView: View {
     
     var body: some View {
        // SystemSoundsTesterView()
+        
         TabView {
             BeansView()
                 .tabItem {

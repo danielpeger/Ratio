@@ -67,6 +67,7 @@ struct BeansView: View {
                                         bean.inStock.toggle()
                                     }, onDelete: {
                                         context.delete(bean)
+                                        AudioServicesPlaySystemSound(SystemSoundID(1018))
                                     }, onEdit: {
                                         editingBean = bean
                                     })
@@ -107,7 +108,7 @@ struct BeansView: View {
                                             showingAddBeans = true
                                         }
                                         .buttonStyle(.borderedProminent)
-                                        .bold()
+                                        .fontWeight(.medium)
                                     }
                                 }
                             )
@@ -147,10 +148,8 @@ struct BeansView: View {
         }
         .onChange(of: showingAddBeans) { _, newValue in
             if newValue == true {
-                AudioServicesPlaySystemSound(SystemSoundID(1371))
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             } else {
-                AudioServicesPlaySystemSound(SystemSoundID(1397))
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 withAnimation {
                     pullProgress = 0

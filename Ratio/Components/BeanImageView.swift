@@ -101,7 +101,7 @@ struct BeanImageView: View {
                         }
                     }
                     .padding(16)
-                    .fontWeight(.semibold)
+                    .fontWeight(.medium)
                     .foregroundStyle(.white)
                 }
                 .onAppear {
@@ -149,7 +149,7 @@ struct BeanImageView: View {
                         }
                     }
                     .padding(16)
-                    .fontWeight(.semibold)
+                    .fontWeight(.medium)
                     .foregroundStyle(.white)
                 }
                 .onAppear {

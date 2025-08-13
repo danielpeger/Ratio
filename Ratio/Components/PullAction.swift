@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import AudioToolbox
 
 // MARK: - UIKit bridge to observe UIScrollView contentOffset (includes rubber-band bounce)
 private struct ScrollViewOffsetObserver: UIViewRepresentable {
@@ -115,6 +116,7 @@ struct PullActionScrollView<Content: View>: View {
                         if pullDistance != pull {
                             let didCrossNow = isDragging && !hasCrossedThresholdThisDrag && previousPull < threshold && pull >= threshold
                             if didCrossNow {
+                                AudioServicesPlaySystemSound(SystemSoundID(1157))
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 DispatchQueue.main.async {
                                     hasCrossedThresholdThisDrag = true

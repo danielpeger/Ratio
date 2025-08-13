@@ -31,6 +31,7 @@ struct AddBeansView: View {
     @State private var scanningError = false
     @State private var scanningSucceded = false
     @State private var scanningFailed = false
+    @State private var scanSoundTimer: DispatchSourceTimer? = nil
     
     @Query private var beans: [Bean]
 
@@ -206,10 +207,6 @@ struct AddBeansView: View {
                             bean.inStock = beanInStock
                             bean.imageColor = beanImageColor
                             bean.imageData = beanImageData
-                            
-                            // Add haptic feedback
-                            let notificationFeedback = UINotificationFeedbackGenerator()
-                            notificationFeedback.notificationOccurred(.success)
                         } else {
                             let newBean = Bean(name: beanName, roaster: beanRoaster, origin: beanOrigin, processing: beanProcessing, inStock: beanInStock, imageColor: beanImageColor, imageData: beanImageData)
                             context.insert(newBean)
@@ -219,6 +216,8 @@ struct AddBeansView: View {
                             notificationFeedback.notificationOccurred(.success)
                         }
                         dismiss()
+                        AudioServicesPlaySystemSound(SystemSoundID(1570))
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                     }
                     .disabled(beanName.isEmpty)
                 }
@@ -250,6 +249,16 @@ struct AddBeansView: View {
                 Alert(title: Text("Error scanning image"), message: Text("Ratio couldn't scan your image for some reason."), dismissButton: .default(Text("OK")))
             }
         }
+        .onChange(of: scanning) { _, isNowScanning in
+            if isNowScanning {
+                startScanSoundTimer()
+            } else {
+                stopScanSoundTimer()
+            }
+        }
+        .onDisappear {
+            stopScanSoundTimer()
+        }
     }
     
     private func scanBagImage(imageData: Data) {
@@ -266,14 +275,36 @@ struct AddBeansView: View {
                 let hasAny = (parsed.name != nil) || (parsed.roaster != nil) || (parsed.origin != nil) || (parsed.processing != nil)
                 if hasAny {
                     self.scanningSucceded = true
+                    AudioServicesPlaySystemSound(SystemSoundID(1504))
                 } else {
                     self.scanningFailed = true
+                    AudioServicesPlaySystemSound(SystemSoundID(1053))
                 }
             } else {
                 self.scanningError = true
                 self.scanning = false
             }
         }
+    }
+
+    private func startScanSoundTimer() {
+        stopScanSoundTimer()
+        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+        timer.schedule(deadline: .now(), repeating: 1.7)
+        timer.setEventHandler {
+            if self.scanning {
+                AudioServicesPlaySystemSound(SystemSoundID(1117))
+            } else {
+                self.stopScanSoundTimer()
+            }
+        }
+        timer.resume()
+        scanSoundTimer = timer
+    }
+
+    private func stopScanSoundTimer() {
+        scanSoundTimer?.cancel()
+        scanSoundTimer = nil
     }
 }
 

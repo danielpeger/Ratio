@@ -30,6 +30,7 @@ struct LogBrewView: View {
     @State private var createdBrew: Brew? = nil
 
     @State private var navigateToRateBrew = false
+    @State private var saved = false
 
     // Initialize the view with the following logic:
     // - if you're editing a brew, then the edited brew's settings
@@ -233,9 +234,14 @@ struct LogBrewView: View {
                             context.insert(newBrew)
                             createdBrew = newBrew
                         }
+                        saved = true
                     },
                     onDismiss: {
                         dismiss()
+                        if saved {
+                            AudioServicesPlaySystemSound(SystemSoundID(1570))
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        }
                     },
                     onYayPinToggle: {
                         if let brew = createdBrew {

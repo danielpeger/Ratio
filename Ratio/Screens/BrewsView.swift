@@ -41,7 +41,7 @@ struct BrewsView: View {
                                         showingLogBrew = true
                                     }
                                     .buttonStyle(.borderedProminent)
-                                    .bold()
+                                    .fontWeight(.medium)
                                 }
                             )
                         }
@@ -52,6 +52,7 @@ struct BrewsView: View {
                             ForEach(brews) { brew in
                                 BrewRowView(brew: brew, onDelete: {
                                     context.delete(brew)
+                                    AudioServicesPlaySystemSound(SystemSoundID(1018))
                                 }, onEdit: {
                                     editingBrew = brew
                                 })
@@ -96,10 +97,8 @@ struct BrewsView: View {
         }
         .onChange(of: showingLogBrew) { _, newValue in
             if newValue == true {
-                AudioServicesPlaySystemSound(SystemSoundID(1371))
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             } else {
-                AudioServicesPlaySystemSound(SystemSoundID(1397))
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 withAnimation {
                     pullProgress = 0

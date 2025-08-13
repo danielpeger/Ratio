@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import AudioToolbox
 
 struct CustomLabel: LabelStyle {
     var spacing: Double = 0.0
@@ -125,6 +126,7 @@ struct BeanDetailView: View {
                             ForEach(beanBrews) { brew in
                                 BrewRowView(brew: brew, showBean: false, onDelete: {
                                     context.delete(brew)
+                                    AudioServicesPlaySystemSound(SystemSoundID(1018))
                                 }, onEdit: {
                                     editingBrew = brew
                                 })
@@ -152,7 +154,7 @@ struct BeanDetailView: View {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                             }
                             .buttonStyle(.borderedProminent)
-                            .bold()
+                            .fontWeight(.medium)
                         }
                     )
                     .padding(.top, 88)

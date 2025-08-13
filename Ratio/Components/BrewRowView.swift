@@ -33,12 +33,12 @@ struct BrewRowView: View {
             HStack(spacing: 8) {
                 if(brew.pinned) {
                     Image(systemName: "pin.fill")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.accent)
                 }
                 // NavigationLink-style chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(.tertiaryLabel))
             }
         }

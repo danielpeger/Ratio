@@ -15,9 +15,10 @@ struct YayView: View {
     var onDone: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 32) {
             Image(systemName: "heart.fill")
                 .font(.system(size: 120))
+                .symbolEffect(.bounce.up.byLayer, options: .repeat(.periodic(delay: 1.2)))
             VStack(spacing: 16) {
                 Text("Yay, you've brewed a great coffee!")
                     .font(.largeTitle)
@@ -44,7 +45,7 @@ struct YayView: View {
                     onPinToggle?()
                 }) {
                     Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
-                        .fontWeight(.bold)
+                        .fontWeight(.medium)
                         .foregroundColor(.accent)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(14)
