@@ -22,12 +22,7 @@ struct CustomLabel: LabelStyle {
 
 struct SectionHeader: View {
     let title: String
-    let systemImage: String?
-    
-    init(_ title: String, systemImage: String? = nil) {
-        self.title = title
-        self.systemImage = systemImage
-    }
+    var systemImage: String? = nil
     
     var body: some View {
         HStack {
@@ -57,6 +52,8 @@ struct BeanDetailView: View {
     @State private var showingLogBrew = false
     @State private var editingBrew: Brew? = nil
     @State private var editingBean: Bean? = nil
+    @State var pullProgress: Double = 0
+    
     
     // Query brews for this specific bean to ensure automatic updates
     @Query(sort: \Brew.creationDate, order: .reverse) private var brews: [Brew]
@@ -79,119 +76,134 @@ struct BeanDetailView: View {
         let detailOrigin = bean.origin == .notSet ? nil : bean.origin?.rawValue
         let detailProcessing = bean.processing == .notSet ? nil : bean.processing?.rawValue
         let details = [detailRoaster, detailOrigin, detailProcessing].compactMap { $0 }
-        
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                VStack(spacing: 32) {
-                    VStack {
-                        BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData)
-                        VStack(spacing: 4) {
-                            Text(bean.name)
-                                .font(.largeTitle)
-                                .bold()
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .truncationMode(.tail)
-                            
-                            if !details.isEmpty {
-                                Text(details.joined(separator: ", "))
-                                    .foregroundColor(.secondary)
+    
+        GeometryReader { proxy in
+            PullActionScrollView(threshold: 100, onTrigger: {
+                showingLogBrew = true
+            }, onProgress: { progress in
+                pullProgress = progress
+            }) {
+                LazyVStack(spacing: 16) {
+                    VStack(spacing: 32) {
+                        VStack {
+                            BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData)
+                            VStack(spacing: 4) {
+                                Text(bean.name)
+                                    .font(.largeTitle)
+                                    .bold()
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)
                                     .truncationMode(.tail)
+                                
+                                if !details.isEmpty {
+                                    Text(details.joined(separator: ", "))
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .lineLimit(2)
+                                        .truncationMode(.tail)
+                                }
                             }
                         }
-                    }
-                    .padding(.top, 32)
-                    .padding(.horizontal, 16)
-                    
-                    if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
-                        let isPinned = bean.pinnedBrew != nil
-                        VStack(spacing: 0) {
-                            SectionHeader(isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
+                        .padding(.top, 32)
+                        .padding(.horizontal, 16)
+                        
+                        if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
+                            let isPinned = bean.pinnedBrew != nil
                             VStack(spacing: 0) {
-                                BrewCardView(brew: featuredBrew, showPills: !isPinned)
-                                    .padding(16)
-                            }
-                            .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
-                            .cornerRadius(9)
-                            .padding(.horizontal, 16)
-                        }
-                    }
-                }
-                
-                if !beanBrews.isEmpty {
-                    List{
-                        Section(header: Text("Brews")) {
-                            ForEach(beanBrews) { brew in
-                                BrewRowView(brew: brew, showBean: false, onDelete: {
-                                    context.delete(brew)
-                                    AudioServicesPlaySystemSound(SystemSoundID(1018))
-                                }, onEdit: {
-                                    editingBrew = brew
-                                })
-                                .onTapGesture { handleBrewTap(brew) }
+                                SectionHeader(title: isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
+                                VStack(spacing: 0) {
+                                    BrewCardView(brew: featuredBrew, showPills: !isPinned)
+                                        .padding(16)
+                                }
+                                .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
+                                .cornerRadius(9)
+                                .padding(.horizontal, 16)
                             }
                         }
                     }
-                    .scrollDisabled(true)
-                    .frame(height: CGFloat((40 + beanBrews.count * 66)), alignment: .top)
-                    .animation(.default, value:  beanBrews.count)
-                } else {
-                    ContentUnavailableView(
-                        label: {
-                            Text("No brews")
-                                .bold()
-                                .foregroundColor(Color(.secondaryLabel))
-                        },
-                        description: {
-                            Text("Log a brew to get started")
-                                .foregroundColor(Color(.tertiaryLabel))
-                        },
-                        actions: {
-                            Button("Log brew") {
-                                showingLogBrew.toggle()
-                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    
+                    if !beanBrews.isEmpty {
+                        List{
+                            Section(header: Text("Brews")) {
+                                ForEach(beanBrews) { brew in
+                                    BrewRowView(brew: brew, showBean: false, onDelete: {
+                                        context.delete(brew)
+                                        AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                    }, onEdit: {
+                                        editingBrew = brew
+                                    })
+                                    .onTapGesture { handleBrewTap(brew) }
+                                }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .fontWeight(.medium)
                         }
-                    )
-                    .padding(.top, 88)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
+                        .scrollDisabled(true)
+                        .frame(height: CGFloat((40 + beanBrews.count * 66)), alignment: .top)
+                        .animation(.default, value:  beanBrews.count)
+                    } else {
+                        ContentUnavailableView(
+                            label: {
+                                Text("No brews")
+                                    .bold()
+                                    .foregroundColor(Color(.secondaryLabel))
+                            },
+                            description: {
+                                Text("Log a brew to get started")
+                                    .foregroundColor(Color(.tertiaryLabel))
+                            },
+                            actions: {
+                                Button("Log brew") {
+                                    showingLogBrew.toggle()
+                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .fontWeight(.medium)
+                            }
+                        )
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height - 280)
+                    }
+                }
+                .padding(.bottom, 32)
+                .sheet(isPresented: $showingLogBrew) {
+                    LogBrewView(initialBean: bean)
+                }
+                .sheet(item: $editingBrew) { brew in
+                    LogBrewView(brew: brew)
+                }
+                .sheet(item: $editingBean) { bean in
+                    AddBeansView(bean: bean)
+                }
+                .navigationTitle(bean.name)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Edit bean", systemImage: "pencil", action: {
+                            editingBean = bean
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        })
+                        .labelStyle(.iconOnly)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: {
+                            showingLogBrew = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            
+                        }) {
+                            AddCircle(progress: $pullProgress)
+                        }
+                        .labelStyle(.iconOnly)
+                    }
+                }
+                .onChange(of: showingLogBrew) { _, newValue in
+                    if newValue == false {
+                        withAnimation {
+                            pullProgress = 0
+                        }
+                    }
                 }
             }
-            .padding(.bottom, 32)
-            .sheet(isPresented: $showingLogBrew) {
-                LogBrewView(initialBean: bean)
-            }
-            .sheet(item: $editingBrew) { brew in
-                LogBrewView(brew: brew)
-            }
-            .sheet(item: $editingBean) { bean in
-                AddBeansView(bean: bean)
-            }
-            .navigationTitle(bean.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Edit bean", systemImage: "pencil", action: {
-                        editingBean = bean
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    })
-                    .labelStyle(.iconOnly)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Log brew", systemImage: "plus", action: {
-                        showingLogBrew = true
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    })
-                    .labelStyle(.iconOnly)
-                }
-            }
+            .background(Color(.systemGroupedBackground))
         }
-        .background(Color(.systemGroupedBackground))
+        
     }
 }
 
