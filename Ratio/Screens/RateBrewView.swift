@@ -15,6 +15,7 @@ struct RateBrewView: View {
     @Binding var tips: [Bool?]
     @Binding var notes: String?
     @Binding var pinned: Bool
+    @Binding var yayHasBeenShown: Bool
 
     var isPinnable: Bool
     // Edit flow controls
@@ -54,12 +55,14 @@ struct RateBrewView: View {
                     if isEditing {
                         if (originalRating != .good) && (rating == .good) {
                             navigateToYay = true
+                            yayHasBeenShown = true
                         } else {
                             onDismiss?()
                         }
                     } else {
                         if rating == .good {
                             navigateToYay = true
+                            yayHasBeenShown = true
                         } else {
                             onDismiss?()
                         }
@@ -189,13 +192,15 @@ private struct NotesSection: View {
     @Previewable @State var previewTips: [Bool?] = [nil, nil, nil]
     @Previewable @State var previewNotes: String? = "Test note"
     @Previewable @State var previewPinned: Bool = false
+    @Previewable @State var previewYayHasBeenShown: Bool = false
     
-    return RateBrewView(
+    RateBrewView(
         rating: $previewRating,
         tastes: $previewTastes,
         tips: $previewTips,
         notes: $previewNotes,
         pinned: $previewPinned,
+        yayHasBeenShown: $previewYayHasBeenShown,
         isPinnable: true
     )
 }

@@ -31,6 +31,7 @@ struct LogBrewView: View {
 
     @State private var navigateToRateBrew = false
     @State private var saved = false
+    @State private var yayHasBeenShown = false
 
     // Initialize the view with the following logic:
     // - if you're editing a brew, then the edited brew's settings
@@ -199,6 +200,7 @@ struct LogBrewView: View {
                     tips: $brewTips,
                     notes: $brewNotes,
                     pinned: $brewPinned,
+                    yayHasBeenShown: $yayHasBeenShown,
                     isPinnable: (brewBean != nil),
                     isEditing: brew != nil,
                     originalRating: brew?.rating,
@@ -238,7 +240,7 @@ struct LogBrewView: View {
                     },
                     onDismiss: {
                         dismiss()
-                        if saved {
+                        if saved && !yayHasBeenShown {
                             AudioServicesPlaySystemSound(SystemSoundID(1570))
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
