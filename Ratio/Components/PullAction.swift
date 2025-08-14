@@ -174,6 +174,26 @@ struct PullActionScrollView<Content: View>: View {
             .background(Color(.systemGroupedBackground))
         }
         .scrollBounceBehavior(.always)
+        .onDisappear {
+            // Reset held state and visual progress when navigating away (e.g., switching tabs)
+            DispatchQueue.main.async {
+                isHoldingAtOne = false
+                hasTriggered = false
+                hasCrossedThresholdThisDrag = false
+                wasDragging = false
+                pullDistance = 0
+                lastDistanceBeforeRelease = 0
+                onProgress(0)
+            }
+        }
+        .onAppear {
+            // Ensure we don't remain visually at 1 after returning
+            DispatchQueue.main.async {
+                isHoldingAtOne = false
+                hasTriggered = false
+                onProgress(0)
+            }
+        }
     }
 }
 
