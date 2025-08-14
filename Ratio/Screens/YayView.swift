@@ -49,12 +49,10 @@ struct YayView: View {
                         .foregroundColor(.accent)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white)
-                        )
-                        .contentShape(RoundedRectangle(cornerRadius: 12))
+                        .background(.white)
+                        .contentShape(Capsule())
                 }
+                .clipShape(Capsule())
                 .buttonStyle(.plain)
             }
         }
@@ -63,7 +61,7 @@ struct YayView: View {
         .padding(.horizontal, 24)
         .padding(.top, 56)
         .padding(.bottom, 32)
-        .background(.accent)
+        .background(Color.red.gradient)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
@@ -72,7 +70,7 @@ struct YayView: View {
             }
         }
         // Make navigation bar items (including Back) white for this screen
-        .toolbarBackground(Color.accentColor, for: .navigationBar)
+        .toolbarBackground(Color("RedGradientTopColor"), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .tint(.white)
