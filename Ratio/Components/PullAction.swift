@@ -74,6 +74,7 @@ struct PullActionScrollView<Content: View>: View {
     let threshold: CGFloat
     let onTrigger: () -> Void
     let onProgress: (Double) -> Void
+    var isEnabled: Bool = true
     @Environment(\.isSearching) private var isSearching
     @ViewBuilder var content: () -> Content
     
@@ -84,23 +85,24 @@ struct PullActionScrollView<Content: View>: View {
     @State private var wasDragging = false
     @State private var isHoldingAtOne = false
     
-    // No named coordinate space needed anymore
     init(
         threshold: CGFloat,
         onTrigger: @escaping () -> Void,
         onProgress: @escaping (Double) -> Void = { _ in },
+        isEnabled: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.threshold = threshold
         self.onTrigger = onTrigger
         self.onProgress = onProgress
+        self.isEnabled = isEnabled
         self.content = content
     }
     
     var body: some View {
         ScrollView {            
             VStack(spacing: 0) {
-                if !isSearching {
+                if !isSearching && isEnabled {
                     // Observer must be inside ScrollView content so it can find the UIScrollView ancestor
                     ScrollViewOffsetObserver { contentOffset, adjustedTop, isDragging in
                         let pull = max(0, -(contentOffset.y + adjustedTop))

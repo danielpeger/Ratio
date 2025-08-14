@@ -82,7 +82,7 @@ struct BeanDetailView: View {
                 showingLogBrew = true
             }, onProgress: { progress in
                 pullProgress = progress
-            }) {
+            }, isEnabled: bean.inStock) {
                 LazyVStack(spacing: 16) {
                     VStack(spacing: 32) {
                         VStack {
@@ -106,6 +106,27 @@ struct BeanDetailView: View {
                         }
                         .padding(.top, 32)
                         .padding(.horizontal, 16)
+                        
+                        if !beanBrews.isEmpty && !bean.inStock {
+                            ContentUnavailableView(
+                                label: {
+                                    Text("Bean currently out of stock. Mark as in stock to log brews.")
+                                        .foregroundColor(Color(.secondaryLabel))
+                                        .font(.body)
+                                        .fontWeight(.regular)
+                                        .padding(.bottom, 8)
+                                },
+                                actions: {
+                                    Button("Mark as in stock") {
+                                        bean.inStock = true
+                                        AudioServicesPlaySystemSound(SystemSoundID(1570))
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .fontWeight(.medium)
+                                }
+                            )
+                        }
                         
                         if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
                             let isPinned = bean.pinnedBrew != nil
@@ -147,16 +168,26 @@ struct BeanDetailView: View {
                                     .foregroundColor(Color(.secondaryLabel))
                             },
                             description: {
-                                Text("Log a brew to get started")
+                                Text(bean.inStock ? "Log a brew to get started" : "Mark as in stock to log brews")
                                     .foregroundColor(Color(.tertiaryLabel))
                             },
                             actions: {
-                                Button("Log brew") {
-                                    showingLogBrew.toggle()
-                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                if bean.inStock {
+                                    Button("Log brew") {
+                                        showingLogBrew = true
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .fontWeight(.medium)
+                                } else {
+                                    Button("Mark as in stock") {
+                                        bean.inStock = true
+                                        AudioServicesPlaySystemSound(SystemSoundID(1570))
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .fontWeight(.medium)
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .fontWeight(.medium)
                             }
                         )
                         .frame(maxWidth: .infinity, minHeight: proxy.size.height - 280)
@@ -182,15 +213,17 @@ struct BeanDetailView: View {
                         })
                         .labelStyle(.iconOnly)
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: {
-                            showingLogBrew = true
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            
-                        }) {
-                            AddCircle(progress: $pullProgress)
+                    if bean.inStock {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(action: {
+                                showingLogBrew = true
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                
+                            }) {
+                                AddCircle(progress: $pullProgress)
+                            }
+                            .labelStyle(.iconOnly)
                         }
-                        .labelStyle(.iconOnly)
                     }
                 }
                 .onChange(of: showingLogBrew) { _, newValue in
