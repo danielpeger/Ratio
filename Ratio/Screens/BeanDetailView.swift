@@ -178,20 +178,14 @@ struct BeanDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Edit bean", systemImage: "pencil", action: {
                         editingBean = bean
-                        
-                        // Add haptic feedback
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                        impactFeedback.impactOccurred()
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     })
                     .labelStyle(.iconOnly)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Log brew", systemImage: "plus", action: {
                         showingLogBrew = true
-                        
-                        // Add haptic feedback
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                        impactFeedback.impactOccurred()
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     })
                     .labelStyle(.iconOnly)
                 }

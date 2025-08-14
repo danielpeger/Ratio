@@ -106,6 +106,7 @@ struct BeansView: View {
                                     if beans.isEmpty {
                                         Button("Add beans") {
                                             showingAddBeans = true
+                                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                         }
                                         .buttonStyle(.borderedProminent)
                                         .fontWeight(.medium)
@@ -121,7 +122,7 @@ struct BeansView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
-                        showingAddBeans.toggle()
+                        showingAddBeans = true
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     }) {
                         AddCircle(progress: $pullProgress)
@@ -148,10 +149,7 @@ struct BeansView: View {
             AddBeansView(bean: bean)
         }
         .onChange(of: showingAddBeans) { _, newValue in
-            if newValue == true {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            } else {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            if newValue == false {
                 withAnimation {
                     pullProgress = 0
                 }

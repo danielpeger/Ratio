@@ -114,10 +114,10 @@ struct BrewDetailView: View {
                     Button("Pin brew", systemImage: brew.pinned ? "pin.fill" : "pin", action: {
                         if brew.pinned {
                             bean.unpinAllBrews()
-                            AudioServicesPlaySystemSound(SystemSoundID(1396))
+                            AudioServicesPlaySystemSound(SystemSoundID(1374))
                         } else {
                             bean.pinBrew(brew)
-                            AudioServicesPlaySystemSound(SystemSoundID(1397))
+                            AudioServicesPlaySystemSound(SystemSoundID(1373))
                         }
                         
                         // Add haptic feedback

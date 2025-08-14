@@ -51,14 +51,14 @@ struct BrewRowView: View {
                         withAnimation {
                             bean.unpinAllBrews()
                         }
-                        AudioServicesPlaySystemSound(SystemSoundID(1396))
+                        AudioServicesPlaySystemSound(SystemSoundID(1374))
                     }
                 } else {
                     Button("Pin", systemImage: "pin") {
                         withAnimation {
                             bean.pinBrew(brew)
                         }
-                        AudioServicesPlaySystemSound(SystemSoundID(1397))
+                        AudioServicesPlaySystemSound(SystemSoundID(1373))
                     }
                 }
             }
@@ -86,7 +86,7 @@ struct BrewRowView: View {
                         withAnimation {
                             bean.unpinAllBrews()
                         }
-                        AudioServicesPlaySystemSound(SystemSoundID(1396))
+                        AudioServicesPlaySystemSound(SystemSoundID(1374))
                     }
                     .tint(Color.red.secondary)
                 } else {
@@ -94,7 +94,7 @@ struct BrewRowView: View {
                         withAnimation {
                             bean.pinBrew(brew)
                         }
-                        AudioServicesPlaySystemSound(SystemSoundID(1397))
+                        AudioServicesPlaySystemSound(SystemSoundID(1373))
                     }
                     .tint(Color.red.secondary)
                 }

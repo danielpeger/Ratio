@@ -116,7 +116,7 @@ struct PullActionScrollView<Content: View>: View {
                         if pullDistance != pull {
                             let didCrossNow = isDragging && !hasCrossedThresholdThisDrag && previousPull < threshold && pull >= threshold
                             if didCrossNow {
-                                AudioServicesPlaySystemSound(SystemSoundID(1157))
+                                AudioServicesPlaySystemSound(SystemSoundID(1397))
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 DispatchQueue.main.async {
                                     hasCrossedThresholdThisDrag = true

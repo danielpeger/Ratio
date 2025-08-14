@@ -39,6 +39,7 @@ struct BrewsView: View {
                                 actions: {
                                     Button("Log brew") {
                                         showingLogBrew = true
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                     }
                                     .buttonStyle(.borderedProminent)
                                     .fontWeight(.medium)
@@ -73,6 +74,8 @@ struct BrewsView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
                         showingLogBrew = true
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
                     }) {
                         AddCircle(progress: $pullProgress)
                     }
@@ -97,10 +100,7 @@ struct BrewsView: View {
             LogBrewView(brew: brew)
         }
         .onChange(of: showingLogBrew) { _, newValue in
-            if newValue == true {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            } else {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            if newValue == false {
                 withAnimation {
                     pullProgress = 0
                 }

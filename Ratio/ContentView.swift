@@ -18,8 +18,7 @@ enum Screen: Hashable {
 struct ContentView: View {
     
     var body: some View {
-       // SystemSoundsTesterView()
-        
+      // SystemSoundsTesterView()
         TabView {
             BeansView()
                 .tabItem {
