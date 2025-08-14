@@ -146,19 +146,18 @@ struct PullActionScrollView<Content: View>: View {
                         // While bouncing back, keep reporting progress. Reset only once bounce reaches zero.
                         if !isDragging && pull <= 0 {
                             DispatchQueue.main.async { pullDistance = 0 }
-                            if hasTriggered {
-                                // If the action triggered, keep progress at 1 until we fully settle, then reset.
-                                DispatchQueue.main.async {
-                                    onProgress(1)
-                                }
+                            // If we are holding at one (i.e., after a trigger), do NOT emit 0 here.
+                            // This avoids rapid 1 -> 0 -> 1 flips at offset 0 which cause the AddCircle to flicker.
+                            if isHoldingAtOne || hasTriggered {
+                                DispatchQueue.main.async { onProgress(1) }
                             } else {
-                                DispatchQueue.main.async {
-                                    onProgress(0)
-                                }
+                                DispatchQueue.main.async { onProgress(0) }
                             }
                             DispatchQueue.main.async {
                                 hasCrossedThresholdThisDrag = false
-                                // Allow next trigger while still visually holding progress at 1
+                                // Allow next trigger while still visually holding progress at 1.
+                                // Keep isHoldingAtOne until the next drag begins (where we reset it),
+                                // so the visual stays stable at rest.
                                 hasTriggered = false
                             }
                         }
