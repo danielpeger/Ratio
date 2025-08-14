@@ -140,6 +140,7 @@ struct BeanDetailView: View {
                                 .cornerRadius(9)
                                 .padding(.horizontal, 16)
                             }
+                            .onTapGesture { handleBrewTap(featuredBrew) }
                         }
                     }
                     
