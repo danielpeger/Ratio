@@ -87,7 +87,7 @@ struct BeanDetailView: View {
                         BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData)
                         VStack(spacing: 4) {
                             Text(bean.name)
-                                .font(.title)
+                                .font(.largeTitle)
                                 .bold()
                                 .multilineTextAlignment(.center)
                                 .lineLimit(2)

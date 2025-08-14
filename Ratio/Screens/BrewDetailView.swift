@@ -23,7 +23,7 @@ struct BrewDetailView: View {
                     BrewImageView(rating: brew.rating, size: .large, brightBackground: true)
                     VStack(spacing: 4) {
                         Text(formatRelativeDate(brew.creationDate))
-                            .font(.title)
+                            .font(.largeTitle)
                             .bold()
                             .multilineTextAlignment(.center)
                         if let bean = brew.bean {
@@ -114,10 +114,10 @@ struct BrewDetailView: View {
                     Button("Pin brew", systemImage: brew.pinned ? "pin.fill" : "pin", action: {
                         if brew.pinned {
                             bean.unpinAllBrews()
-                            AudioServicesPlaySystemSound(SystemSoundID(1397))
+                            AudioServicesPlaySystemSound(SystemSoundID(1396))
                         } else {
                             bean.pinBrew(brew)
-                            AudioServicesPlaySystemSound(SystemSoundID(1396))
+                            AudioServicesPlaySystemSound(SystemSoundID(1397))
                         }
                         
                         // Add haptic feedback

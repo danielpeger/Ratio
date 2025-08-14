@@ -130,6 +130,7 @@ struct BeansView: View {
                 }
             }
             .navigationTitle("Beans")
+            .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Screen.self) { screen in
                 if case let .beanDetail(bean) = screen {
                     BeanDetailView(bean: bean, path: $path)

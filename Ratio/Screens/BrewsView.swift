@@ -80,6 +80,7 @@ struct BrewsView: View {
                 }
             }
             .navigationTitle("Brews")
+            .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Screen.self) { screen in
                 if case let .beanDetail(bean) = screen {
                     BeanDetailView(bean: bean, path: $path)
