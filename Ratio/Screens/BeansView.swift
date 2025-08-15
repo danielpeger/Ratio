@@ -16,12 +16,13 @@ struct BeansView: View {
     @State private var searchText = ""
     @State private var selectedFilter: StockFilter = .inStock
     @State var pullProgress: Double = 0
+    @State private var filteredBeansCache: [Bean] = []
     @State private var beanPendingDeletion: Bean? = nil
     @State private var showDeleteAlert: Bool = false
     @Environment(\.modelContext) private var context
     @Query(sort: \Bean.creationDate, order: .reverse) private var beans: [Bean]
     
-    var filteredBeans: [Bean] {
+    private func computeFilteredBeans() -> [Bean] {
         let stockFiltered = beans.filter { bean in
             selectedFilter == .inStock ? bean.inStock : !bean.inStock
         }
@@ -59,32 +60,31 @@ struct BeansView: View {
                         .padding(.horizontal)
                         .padding(.bottom, 8)
                         
-                        if(!filteredBeans.isEmpty){
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: 12),
-                                GridItem(.flexible(), spacing: 12)
-                            ], spacing: 12) {
-                                ForEach(filteredBeans) { bean in
-                                    BeanCardView(bean: bean, onToggleStock: {
-                                        bean.inStock.toggle()
+                        if(!filteredBeansCache.isEmpty){
+                            BeansGridView(
+                                beans: filteredBeansCache,
+                                onToggleStock: { bean in
+                                    bean.inStock.toggle()
+                                    AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                    filteredBeansCache = computeFilteredBeans()
+                                },
+                                onDelete: { bean in
+                                    if let brews = bean.brews, !brews.isEmpty {
+                                        beanPendingDeletion = bean
+                                        showDeleteAlert = true
+                                    } else {
+                                        context.delete(bean)
                                         AudioServicesPlaySystemSound(SystemSoundID(1018))
-                                    }, onDelete: {
-                                         if let brews = bean.brews, !brews.isEmpty {
-                                             beanPendingDeletion = bean
-                                             showDeleteAlert = true
-                                         } else {
-                                             context.delete(bean)
-                                             AudioServicesPlaySystemSound(SystemSoundID(1018))
-                                         }
-                                    }, onEdit: {
-                                        editingBean = bean
-                                    })
-                                    .animation(.default, value: filteredBeans.count)
-                                    .onTapGesture {
-                                        path.append(.beanDetail(bean: bean))
+                                        filteredBeansCache = computeFilteredBeans()
                                     }
+                                },
+                                onEdit: { bean in
+                                    editingBean = bean
+                                },
+                                onTap: { bean in
+                                    path.append(.beanDetail(bean: bean))
                                 }
-                            }
+                            )
                             .padding([.horizontal, .bottom], 16)
                         } else {
                             ContentUnavailableView(
@@ -125,6 +125,11 @@ struct BeansView: View {
                         }
                     }
                 }
+                .onAppear { filteredBeansCache = computeFilteredBeans() }
+                .onChange(of: beans.count) { _, _ in filteredBeansCache = computeFilteredBeans() }
+                .onChange(of: beans.map(\.inStock)) { _, _ in filteredBeansCache = computeFilteredBeans() }
+                .onChange(of: selectedFilter) { _, _ in filteredBeansCache = computeFilteredBeans() }
+                .onChange(of: searchText) { _, _ in filteredBeansCache = computeFilteredBeans() }
             }
             .background(Color(.systemGroupedBackground))
             .toolbar {
@@ -139,7 +144,6 @@ struct BeansView: View {
                 }
             }
             .navigationTitle("Beans")
-            .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Screen.self) { screen in
                 if case let .beanDetail(bean) = screen {
                     BeanDetailView(bean: bean, path: $path)
@@ -154,6 +158,7 @@ struct BeansView: View {
                     if let beanToDelete = beanPendingDeletion {
                         context.delete(beanToDelete)
                         AudioServicesPlaySystemSound(SystemSoundID(1018))
+                        filteredBeansCache = computeFilteredBeans()
                     }
                     beanPendingDeletion = nil
                 }
@@ -166,6 +171,38 @@ struct BeansView: View {
         })
         .sheet(item: $editingBean) { bean in
             AddBeansView(bean: bean)
+        }
+    }
+}
+
+private struct BeansGridView: View, Equatable {
+    var beans: [Bean]
+    var onToggleStock: (Bean) -> Void
+    var onDelete: (Bean) -> Void
+    var onEdit: (Bean) -> Void
+    var onTap: (Bean) -> Void
+
+    static func == (lhs: BeansGridView, rhs: BeansGridView) -> Bool {
+        let lhsIds = lhs.beans.map { $0.id }
+        let rhsIds = rhs.beans.map { $0.id }
+        return lhsIds == rhsIds
+    }
+
+    var body: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
+        ], spacing: 12) {
+            ForEach(beans) { bean in
+                BeanCardView(
+                    bean: bean,
+                    onToggleStock: { onToggleStock(bean) },
+                    onDelete: { onDelete(bean) },
+                    onEdit: { onEdit(bean) }
+                )
+                .animation(.default, value: beans.count)
+                .onTapGesture { onTap(bean) }
+            }
         }
     }
 }
