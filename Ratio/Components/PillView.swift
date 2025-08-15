@@ -7,22 +7,11 @@
 
 import SwiftUI
 
-struct SelectedBackgroundModifier: ViewModifier {
-    let selected: Bool
-    
-    func body(content: Content) -> some View {
-        if selected {
-            content.background(Color.accent.quaternary)
-        } else {
-            content
-        }
-    }
-}
-
 struct PillView: View {
     var text: String
     var large: Bool = false
     var selected: Bool = false
+    var highlighted: Bool = false
     
     var body: some View {
         HStack {
@@ -32,12 +21,11 @@ struct PillView: View {
                 .padding(.horizontal, large ? 16 : 12)
                 .padding(.vertical, large ? 9 : 4)
         }
-        .modifier(SelectedBackgroundModifier(selected: selected))
-        .background(selected ? Color.clear : Color(.systemGroupedBackground))
+        .background(selected || highlighted ? Color("QuaternaryAccentColor") : Color(.systemGroupedBackground))
         .cornerRadius(100)
         .overlay(
             RoundedRectangle(cornerRadius: 100)
-                .stroke(selected ? Color.accent : Color.clear)
+                .strokeBorder(selected ? Color.accent : Color.clear)
         )
         .fixedSize(horizontal: true, vertical: false)
     }

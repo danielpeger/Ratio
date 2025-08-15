@@ -45,7 +45,7 @@
      // Create brews with direct references to the beans
      let brews = [
          // Recent brews with varying times
-        Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.sweet, .balanced, .creamy], tips: [true, false, nil], notes: "This is a note", bean: beans[0], creationDate: createDate(year: 2025, month: 7, day: 31, hour: 8, minute: 30), pinned: false),
+        Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.sweet, .balanced, .creamy], tips: [true, false, nil], notes: "This is a note", bean: beans[0], creationDate: createDate(year: 2025, month: 7, day: 31, hour: 8, minute: 30), pinned: true),
          Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: beans[1], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15), pinned: false),
          
          // Last week with different times
@@ -60,6 +60,13 @@
      ]
      
      // The relationships are already established when creating brews with bean parameter
+     // Mirror relationships for previews so helpers like pinnedBrew work
+     beans[0].brews = [brews[0]]
+     beans[1].brews = [brews[1]]
+     beans[2].brews = [brews[2]]
+     beans[5].brews = [brews[3]]
+     beans[6].brews = [brews[4]]
+     beans[7].brews = [brews[5]]
      return beans
  }
  

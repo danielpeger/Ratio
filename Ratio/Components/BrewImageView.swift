@@ -48,7 +48,7 @@ struct BrewImageView: View {
             if(selected) {
                 Circle()
                     .fill(Color.accent.quaternary)
-                    .stroke(Color.accent)
+                    .strokeBorder(Color.accent)
                     .frame(width: frameSize, height: frameSize)
             } else {
                 Circle()

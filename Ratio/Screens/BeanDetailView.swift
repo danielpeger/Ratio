@@ -23,6 +23,7 @@ struct CustomLabel: LabelStyle {
 struct SectionHeader: View {
     let title: String
     var systemImage: String? = nil
+    var reducedPadding: Bool = false
     
     var body: some View {
         HStack {
@@ -38,7 +39,7 @@ struct SectionHeader: View {
         .font(.system(size: 13))
         .foregroundColor(.secondary)
         .textCase(.uppercase)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, reducedPadding ? 16 : 32)
         .padding(.bottom, 7)
     }
 }
@@ -104,7 +105,8 @@ struct BeanDetailView: View {
                                 }
                             }
                         }
-                        .padding(.top, 32)
+                        .padding(.top, 40)
+                        .padding(.bottom, 12)
                         .padding(.horizontal, 16)
                         
                         if !beanBrews.isEmpty && !bean.inStock {
@@ -132,13 +134,8 @@ struct BeanDetailView: View {
                             let isPinned = bean.pinnedBrew != nil
                             VStack(spacing: 0) {
                                 SectionHeader(title: isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
-                                VStack(spacing: 0) {
-                                    BrewCardView(brew: featuredBrew, showPills: !isPinned)
-                                        .padding(16)
-                                }
-                                .background(Color(.secondarySystemGroupedBackground)) // ensure white on light mode to match design
-                                .cornerRadius(9)
-                                .padding(.horizontal, 16)
+                                BrewCardView(brew: featuredBrew, showPills: !isPinned)
+                                    .padding(.horizontal, 16)
                             }
                             .onTapGesture { handleBrewTap(featuredBrew) }
                         }
@@ -159,7 +156,7 @@ struct BeanDetailView: View {
                             }
                         }
                         .scrollDisabled(true)
-                        .frame(height: CGFloat((40 + beanBrews.count * 66)), alignment: .top)
+                        .frame(height: CGFloat(40 + beanBrews.count * 67), alignment: .top)
                         .animation(.default, value:  beanBrews.count)
                     } else {
                         ContentUnavailableView(
@@ -191,7 +188,7 @@ struct BeanDetailView: View {
                                 }
                             }
                         )
-                        .frame(maxWidth: .infinity, minHeight: proxy.size.height - 280)
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height - 310)
                     }
                 }
                 .padding(.bottom, 32)

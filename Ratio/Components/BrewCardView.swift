@@ -17,29 +17,35 @@ private enum BrewCardStyle {
 struct BrewCardView: View {
     var brew: Brew
     var showPills: Bool = true
-
+    
     @State private var displayBrew: Brew
-
+    
     init(brew: Brew, showPills: Bool = true) {
         self.brew = brew
         self.showPills = showPills
         self._displayBrew = State(initialValue: brew)
     }
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            MetricsRow(brew: displayBrew)
+            MetricsRow(brew: displayBrew, highlighted: brew.pinned)
                 .padding(.horizontal, BrewCardStyle.metricsHorizontalPadding)
-
-            if (displayBrew.tasteArray.count + displayBrew.tipArray.count) > 0 {
-                PillsSection(
-                    taste: displayBrew.tasteArray.map { $0.rawValue },
-                    tips: displayBrew.tipArray.map { $0.rawValue },
-                    showPills: showPills,
-                    staggerDelay: BrewCardStyle.staggerDelay
-                )
-            }
+            
+            PillsSection(
+                taste: displayBrew.tasteArray.map { $0.rawValue },
+                tips: displayBrew.tipArray.map { $0.rawValue },
+                showPills: showPills,
+                staggerDelay: BrewCardStyle.staggerDelay,
+                highlighted: brew.pinned
+            )
         }
+        .padding(16)
+        .background(brew.pinned ? Color("QuaternaryAccentColor") : Color(.secondarySystemGroupedBackground))
+        .cornerRadius(9)
+        .overlay(
+            RoundedRectangle(cornerRadius: 9)
+                .strokeBorder(brew.pinned ? Color.accent : Color.clear)
+        )
         .onChange(of: brew) { _, newBrew in
             withAnimation {
                 displayBrew = newBrew
@@ -50,21 +56,23 @@ struct BrewCardView: View {
 
 private struct MetricsRow: View {
     let brew: Brew
+    var highlighted = false
+
     var body: some View {
         HStack {
-            MetricItem(title: "Dose", value: "\(brew.dose)g", numericValue: Double(brew.dose))
+            MetricItem(title: "Dose", value: "\(brew.dose)g", numericValue: Double(brew.dose), highlighted: highlighted)
             Spacer()
             Divider()
             Spacer()
-            MetricItem(title: "Grind", value: "\(brew.grind)", numericValue: Double(brew.grind))
+            MetricItem(title: "Grind", value: "\(brew.grind)", numericValue: Double(brew.grind), highlighted: highlighted)
             Spacer()
             Divider()
             Spacer()
-            MetricItem(title: "Yield", value: "\(brew.yield)g", numericValue: Double(brew.yield))
+            MetricItem(title: "Yield", value: "\(brew.yield)g", numericValue: Double(brew.yield), highlighted: highlighted)
             Spacer()
             Divider()
             Spacer()
-            MetricItem(title: "Time", value: "\(brew.time)s", numericValue: Double(brew.time))
+            MetricItem(title: "Time", value: "\(brew.time)s", numericValue: Double(brew.time), highlighted: highlighted)
         }
     }
 }
@@ -73,11 +81,14 @@ private struct MetricItem: View {
     let title: String
     let value: String
     let numericValue: Double?
+    var highlighted = false
+    
     var body: some View {
         VStack {
             Text(title)
+                .foregroundStyle(highlighted ? Color("IncreasedContrastAccentColor") : .primary)
             NumericText(text: value, numericValue: numericValue)
-                .foregroundColor(.secondary)
+                .foregroundStyle(highlighted ? .accent : .secondary)
         }
     }
 }
@@ -87,6 +98,7 @@ private struct PillsSection: View {
     let tipsInput: [String]
     let showPills: Bool
     let staggerDelay: Double
+    let highlighted: Bool
 
     // Snapshot states for animating out pills
     @State private var localTaste: [String] = []
@@ -97,16 +109,20 @@ private struct PillsSection: View {
     // This cancels stale scheduled inserts/removes when state flips quickly
     @State private var animationToken = UUID()
 
-    init(taste: [String], tips: [String], showPills: Bool, staggerDelay: Double) {
+    init(taste: [String], tips: [String], showPills: Bool, staggerDelay: Double, highlighted: Bool) {
         self.tasteInput = taste
         self.tipsInput = tips
         self.showPills = showPills
         self.staggerDelay = staggerDelay
+        self.highlighted = highlighted
         _localTaste = State(initialValue: taste)
         _localTips = State(initialValue: tips)
     }
 
-    private var itemCount: Int { localTaste.count + localTips.count + 1 } // +1 for divider index 0
+    private var itemCount: Int {
+        // Return 0 when there are no pills; otherwise include +1 for the divider at index 0
+        (localTaste.isEmpty && localTips.isEmpty) ? 0 : (localTaste.count + localTips.count + 1)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -118,14 +134,14 @@ private struct PillsSection: View {
             HFlow {
                 ForEach(Array(localTaste.enumerated()), id: \.element) { index, taste in
                     if visibleItemIndices.contains(index + 1) {
-                        PillView(text: taste)
+                        PillView(text: taste, highlighted: highlighted)
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
                 ForEach(Array(localTips.enumerated()), id: \.element) { index, tip in
                     let tipIndex = localTaste.count + index + 1
                     if visibleItemIndices.contains(tipIndex) {
-                        PillView(text: tip)
+                        PillView(text: tip, highlighted: highlighted)
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
@@ -210,8 +226,7 @@ private struct PillsSection: View {
     if let fifthBrew = createMockBrews().dropFirst(4).first {
         LazyVStack {
             BrewCardView(brew: fifthBrew, showPills: showPillsInPreview)
-                .background(.white)
-                .padding(20)
+                .padding(16)
         }
         .background(Color(.systemGroupedBackground))
         Button("Toggle pills"){

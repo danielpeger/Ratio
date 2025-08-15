@@ -238,7 +238,7 @@ struct AddCircle: View {
         }
         .overlay {
             Circle()
-                .stroke(.red, lineWidth: 0.5)
+                .strokeBorder(.red, lineWidth: 0.5)
                 .phaseAnimator([0.0, 1.0, 0.0], trigger: rippleTrigger) { view, phase in
                     let opacity = (progress == 0) ? 0 : phase
                     view.opacity(opacity)

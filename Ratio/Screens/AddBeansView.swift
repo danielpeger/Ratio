@@ -41,15 +41,15 @@ struct AddBeansView: View {
             beans.compactMap { $0.roaster?.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }
             )
-        ).sorted()
+    ).sorted()
     }
-
+    
     enum Field: Hashable { case name, roaster, none }
     @FocusState private var focusedField: Field?
-
+    
     private var filteredRoasters: [String] {
-    guard !beanRoaster.isEmpty else { return uniqueRoasters }
-    return uniqueRoasters.filter { $0.localizedCaseInsensitiveContains(beanRoaster) }
+        guard !beanRoaster.isEmpty else { return uniqueRoasters }
+        return uniqueRoasters.filter { $0.localizedCaseInsensitiveContains(beanRoaster) }
     }
     
     init(bean: Bean? = nil) {

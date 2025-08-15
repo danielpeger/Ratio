@@ -67,6 +67,7 @@ struct BeansView: View {
                                 ForEach(filteredBeans) { bean in
                                     BeanCardView(bean: bean, onToggleStock: {
                                         bean.inStock.toggle()
+                                        AudioServicesPlaySystemSound(SystemSoundID(1018))
                                     }, onDelete: {
                                          if let brews = bean.brews, !brews.isEmpty {
                                              beanPendingDeletion = bean

@@ -9,6 +9,28 @@ import SwiftUI
 import SwiftData
 import AudioToolbox
 
+struct TipsPills: View {
+    var brew: Brew
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack{
+                Spacer(minLength: 32)
+                if let doseMore = brew.tips[0] {
+                    PillView(text: "dose \(doseMore ? "more" : "less") than \(brew.dose)g", selected: true)
+                }
+                if let grindFiner = brew.tips[1] {
+                    PillView(text: "grind \(grindFiner ? "finer" : "coarser") than \(brew.grind)", selected: true)
+                }
+                if let yieldMore = brew.tips[2] {
+                    PillView(text: "yield \(yieldMore ? "more" : "less") than \(brew.yield)g", selected: true)
+                }
+                Spacer(minLength: 32)
+            }
+        }
+    }
+}
+
 struct LogBrewView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var context
@@ -106,76 +128,98 @@ struct LogBrewView: View {
             resetToDefaults()
         }
     }
-
+    
     var body: some View {
         NavigationStack {
-            if let pinnedBrew = brewBean?.pinnedBrew {
-                BrewCardView(brew: pinnedBrew, showPills: false)
+            ScrollView {
+                VStack(spacing: 0) {
+                    if let bean = brewBean, let template = Self.templateBrew(for: bean) {
+                        VStack(spacing: 0) {
+                            SectionHeader(
+                                title: template.pinned ? "Pinned brew" : "Tips from last brew",
+                                systemImage: template.pinned ? "pin.fill" : nil,
+                            )
+                            if template.pinned {
+                                LazyVStack(spacing: 0) {
+                                    BrewCardView(brew: template, showPills: false)
+                                        .padding(.horizontal, 16)
+                                }
+                            } else {
+                                TipsPills(brew: template)
+                            }
+                        }
+                        .padding(.top, 16)
+                        .padding(.bottom, 8)
+                    }
+                    Form {
+                        Section {
+                            Picker("Beans", selection: $brewBean) {
+                                Text("Not set").tag(nil as Bean?)
+                                ForEach(beans.filter { $0.inStock }) { bean in
+                                    Text(bean.name).tag(bean as Bean?)
+                                }
+                            }
+                        }
+                        Section {
+                            Stepper(
+                                value: $brewDose,
+                                in: 1...50,
+                            ) {
+                                HStack{
+                                    Text("Dose")
+                                    Spacer()
+                                    NumericText(text: "\(brewDose)g", numericValue: Double(brewDose))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        Section {
+                            Stepper(
+                                value: $brewGrind,
+                                in: 1...100,
+                            ) {
+                                HStack{
+                                    Text("Grind")
+                                    Spacer()
+                                    NumericText(text: "\(brewGrind)", numericValue: Double(brewGrind))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        Section {
+                            Stepper(
+                                value: $brewYield,
+                                in: 1...100,
+                            ) {
+                                HStack{
+                                    Text("Yield")
+                                    Spacer()
+                                    NumericText(text: "\(brewYield)g", numericValue: Double(brewYield))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        Section {
+                            Stepper(
+                                value: $brewTime,
+                                in: 1...120,
+                            ) {
+                                HStack{
+                                    Text("Time")
+                                    Spacer()
+                                    NumericText(text: "\(brewTime)s", numericValue: Double(brewTime))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    .scrollDisabled(true)
+                    .frame(height: CGFloat(320), alignment: .top)
+                    .contentMargins(.top, 16)
+                    .listSectionSpacing(16)
+                }
             }
-            Form {
-                Section {
-                    Picker("Beans", selection: $brewBean) {
-                        Text("Not set").tag(nil as Bean?)
-                        ForEach(beans.filter { $0.inStock }) { bean in
-                            Text(bean.name).tag(bean as Bean?)
-                        }
-                    }
-                }
-                Section {
-                    Stepper(
-                        value: $brewDose,
-                        in: 1...50,
-                    ) {
-                        HStack{
-                            Text("Dose")
-                            Spacer()
-                            NumericText(text: "\(brewDose)g", numericValue: Double(brewDose))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                Section {
-                    Stepper(
-                        value: $brewGrind,
-                        in: 1...100,
-                    ) {
-                        HStack{
-                            Text("Grind")
-                            Spacer()
-                            NumericText(text: "\(brewGrind)", numericValue: Double(brewGrind))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                Section {
-                    Stepper(
-                        value: $brewYield,
-                        in: 1...100,
-                    ) {
-                        HStack{
-                            Text("Yield")
-                            Spacer()
-                            NumericText(text: "\(brewYield)g", numericValue: Double(brewYield))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                Section {
-                    Stepper(
-                        value: $brewTime,
-                        in: 1...120,
-                    ) {
-                        HStack{
-                            Text("Time")
-                            Spacer()
-                            NumericText(text: "\(brewTime)s", numericValue: Double(brewTime))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-            .contentMargins(.top, 16)
-            .listSectionSpacing(16)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(brew == nil ? "Log brew" : "Edit brew")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: brewBean) { _, newValue in
@@ -258,5 +302,12 @@ struct LogBrewView: View {
 }
 
 #Preview {
-   LogBrewView()
+    let container: ModelContainer = {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: Bean.self, Brew.self, configurations: config)
+    }()
+    let beans = createMockBeans()
+    beans.forEach { container.mainContext.insert($0) }
+    return LogBrewView()
+        .modelContainer(container)
 }
