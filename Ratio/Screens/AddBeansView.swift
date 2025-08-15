@@ -230,9 +230,9 @@ struct AddBeansView: View {
                                     } label: {
                                         Text(suggestion)
                                             .font(.callout)
-                                            .padding(.vertical, 6)
-                                            .padding(.horizontal, 10)
-                                            .background(.thinMaterial, in: Capsule())
+                                            .padding(.vertical, 8)
+                                            .padding(.horizontal, 12)
+                                            .background(.ultraThinMaterial, in: Capsule())
                                     }
                                     .buttonStyle(.plain)
                                 }
