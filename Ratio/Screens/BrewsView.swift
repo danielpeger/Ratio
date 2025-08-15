@@ -24,7 +24,7 @@ struct BrewsView: View {
                     showingLogBrew = true
                 }, onProgress: { progress in
                     pullProgress = progress
-                }) {
+                }, isEnabled: !showingLogBrew) {
                     if brews.isEmpty {
                         VStack {
                             ContentUnavailableView(
@@ -98,13 +98,6 @@ struct BrewsView: View {
         }
         .sheet(item: $editingBrew) { brew in
             LogBrewView(brew: brew)
-        }
-        .onChange(of: showingLogBrew) { _, newValue in
-            if newValue == false {
-                withAnimation {
-                    pullProgress = 0
-                }
-            }
         }
     }
 }

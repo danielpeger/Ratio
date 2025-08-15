@@ -82,7 +82,7 @@ struct BeanDetailView: View {
                 showingLogBrew = true
             }, onProgress: { progress in
                 pullProgress = progress
-            }, isEnabled: bean.inStock) {
+            }, isEnabled: bean.inStock && !showingLogBrew) {
                 LazyVStack(spacing: 16) {
                     VStack(spacing: 32) {
                         VStack {
@@ -224,13 +224,6 @@ struct BeanDetailView: View {
                                 AddCircle(progress: $pullProgress)
                             }
                             .labelStyle(.iconOnly)
-                        }
-                    }
-                }
-                .onChange(of: showingLogBrew) { _, newValue in
-                    if newValue == false {
-                        withAnimation {
-                            pullProgress = 0
                         }
                     }
                 }

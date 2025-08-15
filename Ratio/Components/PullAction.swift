@@ -176,6 +176,20 @@ struct PullActionScrollView<Content: View>: View {
             .background(Color(.systemGroupedBackground))
         }
         .scrollBounceBehavior(.always)
+        .onChange(of: isEnabled) { _, _ in
+            // When enabling/disabling (e.g., presenting/dismissing sheets), clear hold state and reset progress
+            DispatchQueue.main.async {
+                withAnimation{
+                    isHoldingAtOne = false
+                    hasTriggered = false
+                    hasCrossedThresholdThisDrag = false
+                    wasDragging = false
+                    pullDistance = 0
+                    lastDistanceBeforeRelease = 0
+                    onProgress(0)
+                }
+            }
+        }
         .onDisappear {
             // Reset held state and visual progress when navigating away (e.g., switching tabs)
             DispatchQueue.main.async {

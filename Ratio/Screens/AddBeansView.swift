@@ -247,6 +247,9 @@ struct AddBeansView: View {
             .alert(isPresented: $scanningError) {
                 Alert(title: Text("Error scanning image"), message: Text("Ratio couldn't scan your image for some reason."), dismissButton: .default(Text("OK")))
             }
+            .onAppear {
+                focusedField = .name 
+            }
         }
         .onChange(of: scanning) { _, isNowScanning in
             if isNowScanning {
@@ -257,6 +260,7 @@ struct AddBeansView: View {
         }
         .onDisappear {
             stopScanSoundTimer()
+            focusedField = .none
         }
     }
     

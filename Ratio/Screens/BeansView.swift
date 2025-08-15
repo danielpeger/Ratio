@@ -16,6 +16,8 @@ struct BeansView: View {
     @State private var searchText = ""
     @State private var selectedFilter: StockFilter = .inStock
     @State var pullProgress: Double = 0
+    @State private var beanPendingDeletion: Bean? = nil
+    @State private var showDeleteAlert: Bool = false
     @Environment(\.modelContext) private var context
     @Query(sort: \Bean.creationDate, order: .reverse) private var beans: [Bean]
     
@@ -46,7 +48,7 @@ struct BeansView: View {
                     showingAddBeans = true
                 }, onProgress: { progress in
                     pullProgress = progress
-                }) {
+                }, isEnabled: !showingAddBeans) {
                     VStack {
                         Picker("Stock Filter", selection: $selectedFilter) {
                             ForEach(StockFilter.allCases) { filter in
@@ -66,8 +68,13 @@ struct BeansView: View {
                                     BeanCardView(bean: bean, onToggleStock: {
                                         bean.inStock.toggle()
                                     }, onDelete: {
-                                        context.delete(bean)
-                                        AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                         if let brews = bean.brews, !brews.isEmpty {
+                                             beanPendingDeletion = bean
+                                             showDeleteAlert = true
+                                         } else {
+                                             context.delete(bean)
+                                             AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                         }
                                     }, onEdit: {
                                         editingBean = bean
                                     })
@@ -141,19 +148,23 @@ struct BeansView: View {
                 }
             }
             .searchable(text: $searchText)
+            .alert("Delete bean?", isPresented: $showDeleteAlert) {
+                Button("Delete", role: .destructive) {
+                    if let beanToDelete = beanPendingDeletion {
+                        context.delete(beanToDelete)
+                        AudioServicesPlaySystemSound(SystemSoundID(1018))
+                    }
+                    beanPendingDeletion = nil
+                }
+            } message: {
+                Text("Deleting this bean will also delete all of its brews.")
+            }
         }
         .sheet(isPresented: $showingAddBeans, content: {
             AddBeansView()
         })
         .sheet(item: $editingBean) { bean in
             AddBeansView(bean: bean)
-        }
-        .onChange(of: showingAddBeans) { _, newValue in
-            if newValue == false {
-                withAnimation {
-                    pullProgress = 0
-                }
-            }
         }
     }
 }
