@@ -11,6 +11,7 @@ struct BeanImageView: View {
     var color: ImageColor?
     var large: Bool = false
     var imageData: Data? = nil
+    var groupedBgIcon: Bool = false
     private let scanning: Binding<Bool>?
     private let scanningSucceded: Binding<Bool>?
     private let scanningFailed: Binding<Bool>?
@@ -19,6 +20,7 @@ struct BeanImageView: View {
         color: ImageColor? = nil,
         large: Bool = false,
         imageData: Data? = nil,
+        groupedBgIcon: Bool = false,
         scanning: Binding<Bool>? = nil,
         scanningSucceded: Binding<Bool>? = nil,
         scanningFailed: Binding<Bool>? = nil
@@ -26,6 +28,7 @@ struct BeanImageView: View {
         self.color = color
         self.large = large
         self.imageData = imageData
+        self.groupedBgIcon = groupedBgIcon
         self.scanning = scanning
         self.scanningSucceded = scanningSucceded
         self.scanningFailed = scanningFailed
@@ -54,7 +57,7 @@ struct BeanImageView: View {
                         .fill((color ?? .red).color.gradient)
                         .frame(width: large ? 120 : 44, height: large ? 120 : 44)
                     Image("beanbag")
-                        .foregroundColor(Color(.tertiarySystemBackground))
+                        .foregroundColor(groupedBgIcon ? Color(.systemGroupedBackground) : Color(.tertiarySystemBackground))
                         .font(.system(size: large ? 65 : 24))
                 }
             }

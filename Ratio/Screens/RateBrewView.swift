@@ -26,6 +26,8 @@ struct RateBrewView: View {
     var onYayPinToggle: (() -> Void)?
     
     @State private var navigateToYay = false
+    @State private var manualTipSet: [Bool] = [false, false, false]
+    @State private var manualTipValue: [Bool?] = [nil, nil, nil]
     
     // Hack to animate rating text with numeric transition
     var ratingDouble: Double {
@@ -41,7 +43,16 @@ struct RateBrewView: View {
         Form {
             RatingSection(rating: $rating)
             TasteSection(tastes: $tastes)
-            TipsSection(tips: $tips, tipsCount: tipsCount)
+            TipsSection(
+                tips: $tips,
+                tipsCount: tipsCount,
+                onTipChanged: { index, newValue in
+                    if newValue != nil {
+                        manualTipSet[index] = true
+                        manualTipValue[index] = newValue
+                    }
+                }
+            )
             NotesSection(notes: $notes)
         }
         .contentMargins(.top, 16)
@@ -86,6 +97,17 @@ struct RateBrewView: View {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             }
         }
+        .onChange(of: tastes) { _, _ in
+            applyTasteBasedTips()
+        }
+        .onAppear {
+            // Treat pre-filled tips as manually set to avoid overriding user choices
+            for i in 0..<min(tips.count, manualTipSet.count) {
+                if tips[i] != nil { manualTipSet[i] = true }
+                manualTipValue[i] = tips.indices.contains(i) ? tips[i] : nil
+            }
+            applyTasteBasedTips()
+        }
     }
 }
 
@@ -112,6 +134,7 @@ private struct RatingSection: View {
                     }
                 }
                 .padding(.vertical, 8)
+                .padding(.horizontal, 8)
             }
         }
     }
@@ -149,6 +172,7 @@ private struct TasteSection: View {
 private struct TipsSection: View {
     @Binding var tips: [Bool?]
     let tipsCount: Int
+    var onTipChanged: (_ index: Int, _ newValue: Bool?) -> Void
     var body: some View {
         Section {
             VStack(alignment: .leading) {
@@ -160,13 +184,86 @@ private struct TipsSection: View {
                         .contentTransition(.numericText(value: Double(tipsCount)))
                 }
                 VStack(spacing: 12) {
-                    TipPickerView(tip: $tips[0], trueOption: .doseMore, falseOption: .doseLess)
-                    TipPickerView(tip: $tips[1], trueOption: .grindFiner, falseOption: .grindCoarser)
-                    TipPickerView(tip: $tips[2], trueOption: .yieldMore, falseOption: .yieldLess)
+                    TipPickerView(tip: $tips[0], trueOption: .doseMore, falseOption: .doseLess, onUserChange: { onTipChanged(0, $0) })
+                    TipPickerView(tip: $tips[1], trueOption: .grindFiner, falseOption: .grindCoarser, onUserChange: { onTipChanged(1, $0) })
+                    TipPickerView(tip: $tips[2], trueOption: .yieldMore, falseOption: .yieldLess, onUserChange: { onTipChanged(2, $0) })
                 }
                 .padding(.vertical, 8)
             }
         }
+    }
+}
+
+// MARK: - Taste-based tip derivation
+private extension RateBrewView {
+    func applyTasteBasedTips() {
+        // Only apply to grind (index 1) and yield (index 2)
+        let grindIndex = 1
+        let yieldIndex = 2
+
+        // Locks: do not set grind when .creamy, do not set yield when .sweet
+        let lockGrind = tastes.contains(.creamy)
+        let lockYield = tastes.contains(.sweet)
+
+        // Conflicts on each axis
+        let wateryOrThin = tastes.contains(.watery) || tastes.contains(.thin)
+        let thickOrMuddled = tastes.contains(.thick) || tastes.contains(.muddled)
+        let sour = tastes.contains(.sour)
+        let bitter = tastes.contains(.bitter)
+        let salty = tastes.contains(.salty)
+        let grindConflict = (wateryOrThin && thickOrMuddled) || (salty && thickOrMuddled)
+        let yieldConflict = (sour && bitter) || (salty && bitter)
+
+        // Build suggestions per rules
+        var grindSuggestion: Bool? = nil
+        var yieldSuggestion: Bool? = nil
+        if wateryOrThin { grindSuggestion = true }
+        if thickOrMuddled { grindSuggestion = false }
+        if sour { yieldSuggestion = true }
+        if bitter { yieldSuggestion = false }
+        if salty {
+            grindSuggestion = true
+            yieldSuggestion = true
+        }
+
+        func applyAxis(index: Int, suggested: Bool?, locked: Bool, conflict: Bool) {
+            guard tips.indices.contains(index) else { return }
+            if locked {
+                let target = manualTipValue.indices.contains(index) ? manualTipValue[index] : nil
+                if tips[index] != target {
+                    withAnimation { tips[index] = target }
+                }
+                return
+            }
+
+            if conflict {
+                // Reset to previous manual selection if exists, else nil
+                let target = manualTipValue.indices.contains(index) ? manualTipValue[index] : nil
+                if tips[index] != target {
+                    withAnimation { tips[index] = target }
+                }
+                return
+            }
+
+            // If current value is nil, apply suggestion even if previously manual
+            if tips[index] == nil {
+                if tips[index] != suggested {
+                    withAnimation { tips[index] = suggested }
+                }
+                return
+            }
+
+            // If not manually set, follow suggestion (including clearing to nil)
+            if manualTipSet.indices.contains(index), !manualTipSet[index] {
+                if tips[index] != suggested {
+                    withAnimation { tips[index] = suggested }
+                }
+            }
+            // Else: manually set and non-nil -> leave as is
+        }
+
+        applyAxis(index: grindIndex, suggested: grindSuggestion, locked: lockGrind, conflict: grindConflict)
+        applyAxis(index: yieldIndex, suggested: yieldSuggestion, locked: lockYield, conflict: yieldConflict)
     }
 }
 

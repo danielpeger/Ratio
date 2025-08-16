@@ -87,7 +87,7 @@ struct BeanDetailView: View {
                 LazyVStack(spacing: 16) {
                     VStack(spacing: 32) {
                         VStack {
-                            BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData)
+                            BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData, groupedBgIcon: true)
                             VStack(spacing: 4) {
                                 Text(bean.name)
                                     .font(.largeTitle)
@@ -243,7 +243,7 @@ private struct BeanDetailPreviewWrapper: View {
         for bean in beans { container.mainContext.insert(bean) }
         
         let brew1 = Brew(dose: 17, grind: 58, yield: 48, time: 30, rating: .neutral, tastes: [.balanced], tips: [nil, true, nil], notes: nil, bean: beans[2], pinned: false)
-        let brew2 = Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.thin, .thick, .bitter, .creamy, .harsh, .burnt, .tasteless, .sweet, .balanced], tips: [true, true, true], notes: "Great shot", bean: beans[2], pinned: false)
+        let brew2 = Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.thin, .thick, .bitter, .creamy, .muddled, .watery, .sweet, .balanced], tips: [true, true, true], notes: "Great shot", bean: beans[2], pinned: false)
         container.mainContext.insert(brew1)
         container.mainContext.insert(brew2)
     }

@@ -11,17 +11,16 @@ import SwiftData
 enum Taste: String, Codable, Hashable, CaseIterable, Identifiable {
     var id: Self { self }
     
-    case tasteless = "tasteless"
+    case watery = "watery"
     case thin = "thin"
-    case harsh = "harsh"
     case sour = "sour"
     case salty = "salty"
     case balanced = "balanced"
     case sweet = "sweet"
     case creamy = "creamy"
-    case thick = "thick"
     case bitter = "bitter"
-    case burnt = "burnt"
+    case thick = "thick"
+    case muddled = "muddled"
 }
 
 enum Rating: String, Codable, Hashable, CaseIterable, Identifiable {

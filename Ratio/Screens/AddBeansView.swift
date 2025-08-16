@@ -70,7 +70,7 @@ struct AddBeansView: View {
                     HStack {
                         Spacer()
                         VStack(spacing: 20) {
-                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData, scanning: $scanning, scanningSucceded: $scanningSucceded, scanningFailed: $scanningFailed)
+                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData,groupedBgIcon: true, scanning: $scanning, scanningSucceded: $scanningSucceded, scanningFailed: $scanningFailed)
                             if beanImageData == nil {
                                 HStack(spacing: 16) {
                                     ForEach(ImageColor.allCases, id: \.self) { color in

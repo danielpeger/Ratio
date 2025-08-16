@@ -24,6 +24,7 @@ struct TipPickerView: View {
     @Binding var tip: Bool?
     var trueOption: Tip
     var falseOption: Tip
+    var onUserChange: ((Bool?) -> Void)? = nil
     
     var body: some View {
         HStack(spacing: 4) {
@@ -35,6 +36,7 @@ struct TipPickerView: View {
                         } else {
                             tip = true
                         }
+                        onUserChange?(tip)
                     }
                 }
                 
@@ -49,6 +51,7 @@ struct TipPickerView: View {
                         } else {
                             tip = false
                         }
+                        onUserChange?(tip)
                     }
                 }
         }

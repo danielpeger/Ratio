@@ -49,7 +49,7 @@
          Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: beans[1], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15), pinned: false),
          
          // Last week with different times
-         Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.tasteless], tips: [false, nil, false], notes: "This is a note", bean: beans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45), pinned: false),
+         Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.watery], tips: [false, nil, false], notes: "This is a note", bean: beans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45), pinned: false),
          
          // Last month with evening times
          Brew(dose: 16, grind: 50, yield: 48, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: beans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0), pinned: false),

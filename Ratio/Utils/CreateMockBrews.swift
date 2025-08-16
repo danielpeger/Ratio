@@ -29,11 +29,11 @@ import Foundation
         Brew(dose: 18, grind: 55, yield: 55, time: 38, rating: .neutral, tastes: [.thin, .balanced], tips: [true, nil, nil], notes: "This is a second note", bean: mockBeans[0], creationDate: createDate(year: 2025, month: 7, day: 29, hour: 14, minute: 15), pinned: false),
         
         // Last week with different times - some with beans, some without
-        Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.tasteless], tips: [false, nil, false], notes: "This is a note", bean: mockBeans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45), pinned: false),
-        Brew(dose: 15, grind: 45, yield: 45, time: 28, rating: .good, tastes: [.sweet, .harsh], tips: [true, true, nil], notes: "Perfect morning brew", creationDate: createDate(year: 2025, month: 1, day: 8, hour: 16, minute: 20), pinned: false),
+        Brew(dose: 7, grind: 40, yield: 50, time: 45, rating: .bad, tastes: [.watery], tips: [false, nil, false], notes: "This is a note", bean: mockBeans[2], creationDate: createDate(year: 2025, month: 1, day: 10, hour: 7, minute: 45), pinned: false),
+        Brew(dose: 15, grind: 45, yield: 45, time: 28, rating: .good, tastes: [.sweet], tips: [true, true, nil], notes: "Perfect morning brew", creationDate: createDate(year: 2025, month: 1, day: 8, hour: 16, minute: 20), pinned: false),
         
         // Last month with evening times - some with beans, some without
-        Brew(dose: 20, grind: 65, yield: 60, time: 35, rating: .bad, tastes: [.bitter, .burnt], tips: [false, false, true], notes: "Too coarse grind, over-extracted", creationDate: createDate(year: 2024, month: 12, day: 20, hour: 19, minute: 30), pinned: false),
+        Brew(dose: 20, grind: 65, yield: 60, time: 35, rating: .bad, tastes: [.bitter, .muddled], tips: [false, false, true], notes: "Too coarse grind, over-extracted", creationDate: createDate(year: 2024, month: 12, day: 20, hour: 19, minute: 30), pinned: false),
         Brew(dose: 16, grind: 50, yield: 48, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: mockBeans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0), pinned: false),
         
         // Last year with various times - some with beans, some without
