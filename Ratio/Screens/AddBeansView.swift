@@ -106,7 +106,7 @@ struct AddBeansView: View {
                                     Image("scan.beanbag")
                                         .font(.system(size: 18))
                                 }
-                                Text(scanning ? "Scanning..." : "Scan bean bag")
+                                Text(scanning ? "Scanning..." : "Scan bag")
                                     .fontWeight(.medium)
                             }
                             .padding(.vertical, 4)

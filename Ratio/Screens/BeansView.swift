@@ -85,7 +85,8 @@ struct BeansView: View {
                                     path.append(.beanDetail(bean: bean))
                                 }
                             )
-                            .padding([.horizontal, .bottom], 16)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 32)
                         } else {
                             ContentUnavailableView(
                                 label: {

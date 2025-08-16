@@ -13,7 +13,7 @@ struct RateBrewView: View {
     @Binding var rating: Rating
     @Binding var tastes: Set<Taste>
     @Binding var tips: [Bool?]
-    @Binding var notes: String?
+    @Binding var notes: String
     @Binding var pinned: Bool
     @Binding var yayHasBeenShown: Bool
 
@@ -29,6 +29,8 @@ struct RateBrewView: View {
     @State private var manualTipSet: [Bool] = [false, false, false]
     @State private var manualTipValue: [Bool?] = [nil, nil, nil]
     
+    @FocusState private var notesFocused: Bool
+    
     // Hack to animate rating text with numeric transition
     var ratingDouble: Double {
         return rating == .bad ? 1 : rating == .neutral ? 2 : 3
@@ -40,28 +42,49 @@ struct RateBrewView: View {
     }
     
     var body: some View {
-        Form {
-            RatingSection(rating: $rating)
-            TasteSection(tastes: $tastes)
-            TipsSection(
-                tips: $tips,
-                tipsCount: tipsCount,
-                onTipChanged: { index, newValue in
-                    if newValue != nil {
-                        manualTipSet[index] = true
-                        manualTipValue[index] = newValue
-                    } else {
-                        // When cleared to nil manually, treat as not manually set so taste logic can apply again
-                        manualTipSet[index] = false
-                        // Last manual becomes nil for conflict/lock restoration
-                        manualTipValue[index] = nil
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 16) {
+                    RatingSection(rating: $rating)
+                    TasteSection(tastes: $tastes)
+                    TipsSection(
+                        tips: $tips,
+                        tipsCount: tipsCount,
+                        onTipChanged: { index, newValue in
+                            if newValue != nil {
+                                manualTipSet[index] = true
+                                manualTipValue[index] = newValue
+                            } else {
+                                // When cleared to nil manually, treat as not manually set so taste logic can apply again
+                                manualTipSet[index] = false
+                                // Last manual becomes nil for conflict/lock restoration
+                                manualTipValue[index] = nil
+                            }
+                        }
+                    )
+                    NotesSection(notes: $notes, notesFocused: $notesFocused)
+                    Color.clear
+                        .frame(height: 0)
+                        .id("notes-bottom-anchor")
+                }
+                .padding(.vertical, 16)
+            }
+            .background(Color(.systemGroupedBackground))
+            .onChange(of: notes) { _, _ in
+                if notesFocused {
+                    DispatchQueue.main.async {
+                        withAnimation { proxy.scrollTo("notes-bottom-anchor", anchor: .bottom) }
                     }
                 }
-            )
-            NotesSection(notes: $notes)
+            }
+            .onChange(of: notesFocused) { _, focused in
+                if focused {
+                    DispatchQueue.main.async {
+                        withAnimation { proxy.scrollTo("notes-bottom-anchor", anchor: .bottom) }
+                    }
+                }
+            }
         }
-        .contentMargins(.top, 16)
-        .listSectionSpacing(16)
         .navigationTitle("Rate brew")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -83,6 +106,12 @@ struct RateBrewView: View {
                             onDismiss?()
                         }
                     }
+                }
+            }
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    notesFocused = false
                 }
             }
         }
@@ -111,7 +140,9 @@ struct RateBrewView: View {
                 if tips[i] != nil { manualTipSet[i] = true }
                 manualTipValue[i] = tips.indices.contains(i) ? tips[i] : nil
             }
-            applyTasteBasedTips()
+            if !isEditing {
+                applyTasteBasedTips()
+            }
         }
     }
 }
@@ -120,35 +151,40 @@ private struct RatingSection: View {
     @Binding var rating: Rating
     private var ratingDouble: Double { rating == .bad ? 1 : rating == .neutral ? 2 : 3 }
     var body: some View {
-        Section {
             VStack {
-                HStack{
-                    Text("Rating")
-                    Spacer()
-                    Text(rating == .bad ? "Bad" : rating == .neutral ? "Okay" : "Great")
-                        .foregroundColor(.secondary)
-                        .contentTransition(.numericText(value: ratingDouble))
-                }
-                HStack{
-                    ForEach(Rating.allCases, id: \.self) { option in
-                        BrewImageView(rating: option, size: .medium, selected: rating == option)
-                            .onTapGesture {
-                                withAnimation { rating = option }
-                            }
-                        if option != Rating.allCases.last { Spacer() }
+                VStack{
+                    HStack{
+                        Text("Rating")
+                        Spacer()
+                        Text(rating == .bad ? "Bad" : rating == .neutral ? "Okay" : "Great")
+                            .foregroundColor(.secondary)
+                            .contentTransition(.numericText(value: ratingDouble))
                     }
+                    HStack{
+                        ForEach(Rating.allCases, id: \.self) { option in
+                            BrewImageView(rating: option, size: .medium, selected: rating == option)
+                                .onTapGesture {
+                                    withAnimation { rating = option }
+                                }
+                            if option != Rating.allCases.last { Spacer() }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 8)
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 9))
             }
-        }
+            .padding(.horizontal, 16)
     }
 }
 
 private struct TasteSection: View {
     @Binding var tastes: Set<Taste>
     var body: some View {
-        Section {
+        VStack {
             VStack(alignment: .leading) {
                 HStack{
                     Text("Taste")
@@ -170,7 +206,12 @@ private struct TasteSection: View {
                 }
                 .padding(.vertical, 8)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
         }
+        .padding(.horizontal, 16)
     }
 }
 
@@ -179,7 +220,7 @@ private struct TipsSection: View {
     let tipsCount: Int
     var onTipChanged: (_ index: Int, _ newValue: Bool?) -> Void
     var body: some View {
-        Section {
+        VStack {
             VStack(alignment: .leading) {
                 HStack {
                     Text("Tips for next brew")
@@ -195,7 +236,12 @@ private struct TipsSection: View {
                 }
                 .padding(.vertical, 8)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
         }
+        .padding(.horizontal, 16)
     }
 }
 
@@ -273,18 +319,21 @@ private extension RateBrewView {
 }
 
 private struct NotesSection: View {
-    @Binding var notes: String?
+    @Binding var notes: String
+    var notesFocused: FocusState<Bool>.Binding
+    
     var body: some View {
-        Section {
+        VStack {
             VStack(alignment: .leading) {
-                Text("Notes")
-                let notesBinding = Binding<String>(
-                    get: { notes ?? "" },
-                    set: { notes = $0.isEmpty ? nil : $0 }
-                )
-                TextEditor(text: notesBinding)
+                TextField("Notes", text: $notes,  axis: .vertical)
+                    .focused(notesFocused, equals: true)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
         }
+        .padding(.horizontal, 16)
     }
 }
 
@@ -292,7 +341,7 @@ private struct NotesSection: View {
     @Previewable @State var previewRating: Rating = .neutral
     @Previewable @State var previewTastes: Set<Taste> = []
     @Previewable @State var previewTips: [Bool?] = [nil, nil, nil]
-    @Previewable @State var previewNotes: String? = "Test note"
+    @Previewable @State var previewNotes: String = "Test note"
     @Previewable @State var previewPinned: Bool = false
     @Previewable @State var previewYayHasBeenShown: Bool = false
     

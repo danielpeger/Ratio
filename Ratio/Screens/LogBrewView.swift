@@ -47,7 +47,7 @@ struct LogBrewView: View {
     @State private var brewRating: Rating = .neutral
     @State private var brewTastes: Set<Taste> = []
     @State private var brewTips: [Bool?] = [nil, nil, nil]
-    @State private var brewNotes: String?
+    @State private var brewNotes: String
     @State private var brewPinned: Bool = false
     @State private var createdBrew: Brew? = nil
 
@@ -74,7 +74,7 @@ struct LogBrewView: View {
             self._brewRating = State(initialValue: editingBrew.rating)
             self._brewTastes = State(initialValue: editingBrew.tastes)
             self._brewTips = State(initialValue: editingBrew.tips)
-            self._brewNotes = State(initialValue: editingBrew.notes)
+            self._brewNotes = State(initialValue: editingBrew.notes ?? "")
             self._brewPinned = State(initialValue: editingBrew.pinned)
         } else {
             // Creating: prefer template from initial bean (pinned > latest) else defaults
@@ -89,7 +89,7 @@ struct LogBrewView: View {
             self._brewRating = State(initialValue: .neutral)
             self._brewTastes = State(initialValue: [])
             self._brewTips = State(initialValue: [nil, nil, nil])
-            self._brewNotes = State(initialValue: nil)
+            self._brewNotes = State(initialValue: "")
             self._brewPinned = State(initialValue: false)
         }
     }
@@ -133,7 +133,11 @@ struct LogBrewView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    if let bean = brewBean, let template = Self.templateBrew(for: bean) {
+                    let isCreating = (brew == nil)
+                    let templateForSelectedBean: Brew? = brewBean.flatMap { Self.templateBrew(for: $0) }
+                    let shouldShowTemplate = isCreating && (templateForSelectedBean.map { $0.pinned || !$0.tipArray.isEmpty } ?? false)
+
+                    if shouldShowTemplate, let template = templateForSelectedBean {
                         VStack(spacing: 0) {
                             SectionHeader(
                                 title: template.pinned ? "Pinned brew" : "Tips from last brew",
