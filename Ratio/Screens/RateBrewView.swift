@@ -50,6 +50,11 @@ struct RateBrewView: View {
                     if newValue != nil {
                         manualTipSet[index] = true
                         manualTipValue[index] = newValue
+                    } else {
+                        // When cleared to nil manually, treat as not manually set so taste logic can apply again
+                        manualTipSet[index] = false
+                        // Last manual becomes nil for conflict/lock restoration
+                        manualTipValue[index] = nil
                     }
                 }
             )
