@@ -75,6 +75,8 @@ struct PullActionScrollView<Content: View>: View {
     let onTrigger: () -> Void
     let onProgress: (Double) -> Void
     var isEnabled: Bool = true
+    // When this changes, the ScrollView will be torn down and rebuilt, avoiding stale internal state
+    var rebuildKey: AnyHashable? = nil
     @Environment(\.isSearching) private var isSearching
     @ViewBuilder var content: () -> Content
     
@@ -90,12 +92,14 @@ struct PullActionScrollView<Content: View>: View {
         onTrigger: @escaping () -> Void,
         onProgress: @escaping (Double) -> Void = { _ in },
         isEnabled: Bool = true,
+        rebuildKey: AnyHashable? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.threshold = threshold
         self.onTrigger = onTrigger
         self.onProgress = onProgress
         self.isEnabled = isEnabled
+        self.rebuildKey = rebuildKey
         self.content = content
     }
     
@@ -175,6 +179,7 @@ struct PullActionScrollView<Content: View>: View {
             }
             .background(Color(.systemGroupedBackground))
         }
+        .id(rebuildKey)
         .scrollBounceBehavior(.always)
         .onChange(of: isEnabled) { _, _ in
             // When enabling/disabling (e.g., presenting/dismissing sheets), clear hold state and reset progress

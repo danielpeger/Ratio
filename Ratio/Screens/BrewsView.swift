@@ -24,7 +24,7 @@ struct BrewsView: View {
                     showingLogBrew = true
                 }, onProgress: { progress in
                     pullProgress = progress
-                }, isEnabled: !showingLogBrew) {
+                }, isEnabled: !showingLogBrew, rebuildKey: brews.isEmpty ? "empty" : "list") {
                     if brews.isEmpty {
                         VStack {
                             ContentUnavailableView(
@@ -54,6 +54,7 @@ struct BrewsView: View {
                                 BrewRowView(brew: brew, onDelete: {
                                     context.delete(brew)
                                     AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                    try? context.save()
                                 }, onEdit: {
                                     editingBrew = brew
                                 })
