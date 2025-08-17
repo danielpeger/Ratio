@@ -54,7 +54,6 @@ struct BrewsView: View {
                                 BrewRowView(brew: brew, onDelete: {
                                     context.delete(brew)
                                     AudioServicesPlaySystemSound(SystemSoundID(1018))
-                                    try? context.save()
                                 }, onEdit: {
                                     editingBrew = brew
                                 })
