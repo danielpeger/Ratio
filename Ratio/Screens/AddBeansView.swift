@@ -15,6 +15,7 @@ struct AddBeansView: View {
     @Environment(\.modelContext) private var context
     
     var bean: Bean?
+    var onDelete: (() -> Void)? = nil
     
     @State private var beanName: String = ""
     @State private var beanRoaster: String = ""
@@ -32,6 +33,9 @@ struct AddBeansView: View {
     @State private var scanningSucceded = false
     @State private var scanningFailed = false
     @State private var scanSoundTimer: DispatchSourceTimer? = nil
+    
+    @State private var showDeleteAlert: Bool = false
+    @State private var beanPendingDeletion: Bean? = nil
     
     @Query private var beans: [Bean]
 
@@ -52,8 +56,9 @@ struct AddBeansView: View {
         return uniqueRoasters.filter { $0.localizedCaseInsensitiveContains(beanRoaster) }
     }
     
-    init(bean: Bean? = nil) {
+    init(bean: Bean? = nil, onDelete: (() -> Void)? = nil) {
         self.bean = bean
+        self.onDelete = onDelete
         _beanName = State(initialValue: bean?.name ?? "")
         _beanRoaster = State(initialValue: bean?.roaster ?? "")
         _beanOrigin = State(initialValue: bean?.origin ?? .notSet)
@@ -172,7 +177,7 @@ struct AddBeansView: View {
                         .focused($focusedField, equals: .roaster)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled(true)
-                        .onSubmit { focusedField = .none }
+                        .onSubmit { focusedField = nil }
                     Picker("Origin", selection: $beanOrigin) {
                         ForEach(Origin.allCases) { origin in
                             Text(origin.rawValue)
@@ -187,6 +192,24 @@ struct AddBeansView: View {
                 
                 Section {
                     Toggle("In stock", isOn: $beanInStock)
+                }
+                
+                if let bean = bean {
+                    Section {
+                        Button(role: .destructive) {
+                            if let brews = bean.brews, !brews.isEmpty {
+                                beanPendingDeletion = bean
+                                showDeleteAlert = true
+                            } else {
+                                context.delete(bean)
+                                AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                onDelete?()
+                                dismiss()
+                            }
+                        } label: {
+                            Label("Delete bean", systemImage: "trash")
+                        }
+                    }
                 }
             }
             .listSectionSpacing(32)
@@ -251,6 +274,19 @@ struct AddBeansView: View {
                 focusedField = .name 
             }
         }
+        .alert("Delete bean?", isPresented: $showDeleteAlert) {
+            Button("Delete", role: .destructive) {
+                if let beanToDelete = beanPendingDeletion {
+                    context.delete(beanToDelete)
+                    AudioServicesPlaySystemSound(SystemSoundID(1018))
+                    onDelete?()
+                    dismiss()
+                }
+                beanPendingDeletion = nil
+            }
+        } message: {
+            Text("Deleting this bean will also delete all of its brews.")
+        }
         .onChange(of: scanning) { _, isNowScanning in
             if isNowScanning {
                 startScanSoundTimer()
@@ -260,7 +296,7 @@ struct AddBeansView: View {
         }
         .onDisappear {
             stopScanSoundTimer()
-            focusedField = .none
+            focusedField = nil
         }
     }
     

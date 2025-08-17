@@ -21,7 +21,7 @@ struct BeansView: View {
     @State private var showDeleteAlert: Bool = false
     @Environment(\.modelContext) private var context
     @Query(sort: \Bean.creationDate, order: .reverse) private var beans: [Bean]
-    
+
     private func computeFilteredBeans() -> [Bean] {
         let stockFiltered = beans.filter { bean in
             selectedFilter == .inStock ? bean.inStock : !bean.inStock

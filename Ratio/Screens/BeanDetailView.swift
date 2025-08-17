@@ -156,7 +156,7 @@ struct BeanDetailView: View {
                             }
                         }
                         .scrollDisabled(true)
-                        .frame(height: CGFloat(40 + beanBrews.count * 67), alignment: .top)
+                        .frame(height: CGFloat(40 + beanBrews.count * 66), alignment: .top)
                         .animation(.default, value:  beanBrews.count)
                     } else {
                         ContentUnavailableView(
@@ -199,7 +199,9 @@ struct BeanDetailView: View {
                     LogBrewView(brew: brew)
                 }
                 .sheet(item: $editingBean) { bean in
-                    AddBeansView(bean: bean)
+                    AddBeansView(bean: bean, onDelete: {
+                        path = []
+                    })
                 }
                 .navigationTitle(bean.name)
                 .navigationBarTitleDisplayMode(.inline)

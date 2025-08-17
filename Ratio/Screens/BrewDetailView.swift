@@ -174,7 +174,9 @@ struct BrewDetailView: View {
         .navigationTitle("Brew")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $editingBrew) { brew in
-            LogBrewView(brew: brew)
+            LogBrewView(brew: brew, onDelete: {
+                path.removeLast()
+            })
         }
     }
 }

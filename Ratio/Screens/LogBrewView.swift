@@ -38,6 +38,7 @@ struct LogBrewView: View {
     
     var brew: Brew?
     var initialBean: Bean?
+    var onDelete: (() -> Void)? = nil
     
     @State private var brewBean: Bean?
     @State private var brewDose: Int = 18
@@ -67,9 +68,10 @@ struct LogBrewView: View {
     // - otherwise if the selected bean has a pinned brew, then the pinned brew's settings
     // - otherwise if the selected bean has any brews, then the latest brew's settings
     // - otherwise the default settings (18,15,36,28)
-    init(brew: Brew? = nil, initialBean: Bean? = nil) {
+    init(brew: Brew? = nil, initialBean: Bean? = nil, onDelete: (() -> Void)? = nil) {
         self.brew = brew
         self.initialBean = initialBean
+        self.onDelete = onDelete
 
         if let editingBrew = brew {
             // Editing: pre-fill with the existing brew completely
@@ -168,6 +170,7 @@ struct LogBrewView: View {
                         grindPickerRow
                         yieldPickerRow
                         timePickerRow
+                        deleteRow
                     }
                 }
             }
@@ -389,6 +392,28 @@ extension LogBrewView {
             .clipShape(RoundedRectangle(cornerRadius: 9))
         }
         .padding(.horizontal, 16)
+    }
+    
+    @ViewBuilder
+    private var deleteRow: some View {
+        if let brew = brew {
+            Button(role: .destructive) {
+                context.delete(brew)
+                onDelete?()
+                AudioServicesPlaySystemSound(SystemSoundID(1018))
+                dismiss()
+            } label: {
+                Label("Delete brew", systemImage: "trash")
+                    .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+        }
     }
 }
 
