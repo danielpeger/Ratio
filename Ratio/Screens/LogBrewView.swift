@@ -55,6 +55,13 @@ struct LogBrewView: View {
     @State private var saved = false
     @State private var yayHasBeenShown = false
 
+    // Precomputed ranges to simplify type-checking
+    private let doseValues = Array(1...50)
+    private let grindValues = Array(1...100)
+    private let yieldValues = Array(1...100)
+    private let timeValues = Array(1...120)
+    private var inStockBeans: [Bean] { beans.filter { $0.inStock } }
+
     // Initialize the view with the following logic:
     // - if you're editing a brew, then the edited brew's settings
     // - otherwise if the selected bean has a pinned brew, then the pinned brew's settings
@@ -79,7 +86,7 @@ struct LogBrewView: View {
         } else {
             // Creating: prefer template from initial bean (pinned > latest) else defaults
             let source: Brew? = initialBean.flatMap { Self.templateBrew(for: $0) }
-
+            
             self._brewBean = State(initialValue: initialBean)
             self._brewDose = State(initialValue: source?.dose ?? 18)
             self._brewGrind = State(initialValue: source?.grind ?? 15)
@@ -93,28 +100,28 @@ struct LogBrewView: View {
             self._brewPinned = State(initialValue: false)
         }
     }
-
+    
     // MARK: - Helpers (templates and defaults)
     private static func templateBrew(for bean: Bean) -> Brew? {
         if let pinned = bean.pinnedBrew { return pinned }
         // fallback to latest brew by creationDate
         return bean.brews?.sorted(by: { $0.creationDate > $1.creationDate }).first
     }
-
+    
     private func applyTemplate(from source: Brew) {
         brewDose = source.dose
         brewGrind = source.grind
         brewYield = source.yield
         brewTime = source.time
     }
-
+    
     private func resetToDefaults() {
         brewDose = 18
         brewGrind = 15
         brewYield = 36
         brewTime = 28
     }
-
+    
     private func applyTemplateForSelectedBeanIfNeeded() {
         // Do not override values while editing an existing brew
         guard brew == nil else { return }
@@ -136,7 +143,7 @@ struct LogBrewView: View {
                     let isCreating = (brew == nil)
                     let templateForSelectedBean: Brew? = brewBean.flatMap { Self.templateBrew(for: $0) }
                     let shouldShowTemplate = isCreating && (templateForSelectedBean.map { $0.pinned || !$0.tipArray.isEmpty } ?? false)
-
+                    
                     if shouldShowTemplate, let template = templateForSelectedBean {
                         VStack(spacing: 0) {
                             SectionHeader(
@@ -155,72 +162,13 @@ struct LogBrewView: View {
                         .padding(.top, 16)
                         .padding(.bottom, 8)
                     }
-                    Form {
-                        Section {
-                            Picker("Beans", selection: $brewBean) {
-                                Text("Not set").tag(nil as Bean?)
-                                ForEach(beans.filter { $0.inStock }) { bean in
-                                    Text(bean.name).tag(bean as Bean?)
-                                }
-                            }
-                        }
-                        Section {
-                            Stepper(
-                                value: $brewDose,
-                                in: 1...50,
-                            ) {
-                                HStack{
-                                    Text("Dose")
-                                    Spacer()
-                                    NumericText(text: "\(brewDose)g", numericValue: Double(brewDose))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        Section {
-                            Stepper(
-                                value: $brewGrind,
-                                in: 1...100,
-                            ) {
-                                HStack{
-                                    Text("Grind")
-                                    Spacer()
-                                    NumericText(text: "\(brewGrind)", numericValue: Double(brewGrind))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        Section {
-                            Stepper(
-                                value: $brewYield,
-                                in: 1...100,
-                            ) {
-                                HStack{
-                                    Text("Yield")
-                                    Spacer()
-                                    NumericText(text: "\(brewYield)g", numericValue: Double(brewYield))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        Section {
-                            Stepper(
-                                value: $brewTime,
-                                in: 1...120,
-                            ) {
-                                HStack{
-                                    Text("Time")
-                                    Spacer()
-                                    NumericText(text: "\(brewTime)s", numericValue: Double(brewTime))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
+                    VStack(spacing: 16) {
+                        beanPickerRow
+                        dosePickerRow
+                        grindPickerRow
+                        yieldPickerRow
+                        timePickerRow
                     }
-                    .scrollDisabled(true)
-                    .frame(height: CGFloat(320), alignment: .top)
-                    .contentMargins(.top, 16)
-                    .listSectionSpacing(16)
                 }
             }
             .background(Color(.systemGroupedBackground))
@@ -294,14 +242,152 @@ struct LogBrewView: View {
                         }
                     },
                     onYayPinToggle: {
-                        if let brew = createdBrew {
-                            brew.pinned.toggle()
+                        if let bean = brewBean, let brew = createdBrew {
+                            if brew.pinned {
+                                bean.unpinAllBrews()
+                            } else {
+                                bean.pinBrew(brew)
+                            }
                             try? context.save()
                         }
                     }
                 )
             }
         }
+    }
+}
+
+// MARK: - Extracted Rows
+extension LogBrewView {
+    @ViewBuilder
+    private var beanPickerRow: some View {
+        VStack {
+            HStack {
+                Text("Beans")
+                Spacer()
+                Picker("Beans", selection: $brewBean) {
+                    Text("Not set").tag(nil as Bean?)
+                    ForEach(inStockBeans) { bean in
+                        Text(bean.name).tag(bean as Bean?)
+                    }
+                }
+                
+            }
+            .padding(.leading, 16)
+            .padding(.trailing, 4)
+            .padding(.vertical, 8)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+    }
+
+    @ViewBuilder
+    private var dosePickerRow: some View {
+        VStack {
+            VStack {
+                HStack {
+                    Text("Dose")
+                    Spacer()
+                    NumericText(text: "\(brewDose)g", numericValue: Double(brewDose))
+                        .foregroundColor(.secondary)
+                }
+                Picker(selection: $brewDose) {
+                    ForEach(doseValues, id: \.self) { value in
+                        Text("\(value)g").tag(value)
+                    }
+                } label: {
+                    Text("Dose")
+                }
+                .pickerStyle(.wheel)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .padding(.horizontal, 16)
+    }
+
+    @ViewBuilder
+    private var grindPickerRow: some View {
+        VStack {
+            VStack {
+                HStack {
+                    Text("Grind")
+                    Spacer()
+                    NumericText(text: "\(brewGrind)", numericValue: Double(brewGrind))
+                        .foregroundColor(.secondary)
+                }
+                Picker(selection: $brewGrind) {
+                    ForEach(grindValues, id: \.self) { value in
+                        Text("\(value)").tag(value)
+                    }
+                } label: {
+                    Text("Grind")
+                }                .pickerStyle(.wheel)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .padding(.horizontal, 16)
+    }
+
+    @ViewBuilder
+    private var yieldPickerRow: some View {
+        VStack {
+            VStack {
+                HStack {
+                    Text("Yield")
+                    Spacer()
+                    NumericText(text: "\(brewYield)g", numericValue: Double(brewYield))
+                        .foregroundColor(.secondary)
+                }
+                Picker(selection: $brewYield) {
+                    ForEach(yieldValues, id: \.self) { value in
+                        Text("\(value)g").tag(value)
+                    }
+                } label: {
+                    Text("Yield")
+                }
+                .pickerStyle(.wheel)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .padding(.horizontal, 16)
+    }
+    
+    @ViewBuilder
+    private var timePickerRow: some View {
+        VStack {
+            VStack {
+                HStack {
+                    Text("Time")
+                    Spacer()
+                    NumericText(text: "\(brewTime)s", numericValue: Double(brewTime))
+                        .foregroundColor(.secondary)
+                }
+                Picker(selection: $brewTime) {
+                    ForEach(timeValues, id: \.self) { value in
+                        Text("\(value)s").tag(value)
+                    }
+                } label: {
+                    Text("Time")
+                }
+                .pickerStyle(.wheel)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .padding(.horizontal, 16)
     }
 }
 

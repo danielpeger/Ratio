@@ -33,8 +33,8 @@ import Foundation
         Brew(dose: 15, grind: 45, yield: 45, time: 28, rating: .good, tastes: [.sweet], tips: [true, true, nil], notes: "Perfect morning brew", creationDate: createDate(year: 2025, month: 1, day: 8, hour: 16, minute: 20), pinned: false),
         
         // Last month with evening times - some with beans, some without
-        Brew(dose: 20, grind: 65, yield: 60, time: 35, rating: .bad, tastes: [.bitter, .muddled], tips: [false, false, true], notes: "Too coarse grind, over-extracted", creationDate: createDate(year: 2024, month: 12, day: 20, hour: 19, minute: 30), pinned: false),
-        Brew(dose: 16, grind: 50, yield: 48, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: mockBeans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0), pinned: false),
+        Brew(dose: 20, grind: 65, yield: 40, time: 35, rating: .bad, tastes: [.bitter, .muddled], tips: [false, false, true], notes: "Too coarse grind, over-extracted", creationDate: createDate(year: 2024, month: 12, day: 20, hour: 19, minute: 30), pinned: false),
+        Brew(dose: 16, grind: 50, yield: 20, time: 30, rating: .neutral, tastes: [.balanced, .thick, .creamy], tips: [nil, true, nil], notes: "Decent but could be better", bean: mockBeans[5], creationDate: createDate(year: 2024, month: 12, day: 15, hour: 9, minute: 0), pinned: false),
         
         // Last year with various times - some with beans, some without
         Brew(dose: 18, grind: 58, yield: 54, time: 33, rating: .good, tastes: [.balanced, .sweet], tips: [true, true, true], notes: "Great balance of flavors", bean: mockBeans[6], creationDate: createDate(year: 2024, month: 7, day: 22, hour: 11, minute: 45), pinned: false),

@@ -6,19 +6,25 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct YayView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var pinned: Bool
     
     var isPinnable: Bool
     var onPinToggle: (() -> Void)?
     var onDone: (() -> Void)?
+    
+    @State private var hapticTimer: Timer? = nil
+    private let effectRepeatDelay: TimeInterval = 1.2
+    @State private var bounceTick: Int = 0
 
     var body: some View {
         VStack(spacing: 32) {
             Image(systemName: "heart.fill")
                 .font(.system(size: 120))
-                .symbolEffect(.bounce.up.byLayer, options: .repeat(.periodic(delay: 1.2)))
+                .symbolEffect(.bounce.up.byLayer, value: bounceTick)
             VStack(spacing: 16) {
                 Text("Yay, you've brewed a great coffee!")
                     .font(.largeTitle)
@@ -27,13 +33,13 @@ struct YayView: View {
                 if isPinnable {
                     Text("Pin it if you'd like to remember it and reproduce it later.")
                         .font(.title3)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color(.systemBackground))
                         .opacity(0.75)
                         .multilineTextAlignment(.center)
                 } else {
                     Text("To save it for later, add it to a bean.")
                         .font(.title3)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color(.systemBackground))
                         .opacity(0.75)
                         .multilineTextAlignment(.center)
                 }
@@ -46,17 +52,17 @@ struct YayView: View {
                 }) {
                     Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
                         .fontWeight(.medium)
-                        .foregroundColor(.accent)
+                        .foregroundStyle(.accent)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(14)
-                        .background(.white)
+                        .background(Color(.systemBackground))
                         .contentShape(Capsule())
                 }
                 .clipShape(Capsule())
                 .buttonStyle(.plain)
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Color(.systemBackground))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding(.horizontal, 24)
         .padding(.top, 56)
@@ -69,12 +75,50 @@ struct YayView: View {
                 }
             }
         }
-        // Make navigation bar items (including Back) white for this screen
+        // Make navigation bar items systemBackground color
         .toolbarBackground(Color("RedGradientTopColor"), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        .tint(.white)
+        .toolbarColorScheme(colorScheme == .dark ? .light : .dark, for: .navigationBar)
+        .tint(.black)
         .animation(.none, value: pinned)
+        .onAppear {
+            // Fire immediately then repeat in sync using the same tick driving the effect
+            tickBounceAndHaptic()
+            startHapticTimer()
+        }
+        .onDisappear {
+            stopHapticTimer()
+        }
+    }
+}
+
+private extension YayView {
+    func startHapticTimer() {
+        stopHapticTimer()
+        hapticTimer = Timer.scheduledTimer(withTimeInterval: effectRepeatDelay, repeats: true) { _ in
+            tickBounceAndHaptic()
+        }
+    }
+    
+    func stopHapticTimer() {
+        hapticTimer?.invalidate()
+        hapticTimer = nil
+    }
+    
+    func playDoubleHaptic() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
+            generator.impactOccurred()
+        }
+    }
+
+    func tickBounceAndHaptic() {
+        withAnimation(.easeInOut(duration: 0.35)) {
+            bounceTick &+= 1
+        }
+        playDoubleHaptic()
     }
 }
 

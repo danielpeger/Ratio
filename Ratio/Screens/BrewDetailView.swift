@@ -16,6 +16,18 @@ struct BrewDetailView: View {
     @State private var navigateToBean = false
     @State private var editingBrew: Brew? = nil
     
+    private var ratioValue: Double { Double(brew.yield) / Double(brew.dose) }
+    private var ratioRounded1: Double { (ratioValue * 10).rounded() / 10 }
+    private var ratioText: String {
+        let isWhole = ratioRounded1.truncatingRemainder(dividingBy: 1) == 0
+        if isWhole {
+            return "1:\(Int(ratioRounded1))"
+        } else {
+            return String(format: "1:%.1f", ratioRounded1)
+        }
+    }
+    private var ratioProgress: Double { min(max(ratioValue, 1) - 1, 4) / 3 }
+
     var body: some View {
         List{
             Section {
@@ -48,26 +60,47 @@ struct BrewDetailView: View {
                 HStack {
                     Text("Dose")
                     Spacer()
-                    Text("\(brew.dose)g")
-                        .foregroundColor(.secondary)
+                    NumericText(text: "\(brew.dose)g", numericValue: Double(brew.dose))
+                        .foregroundStyle(.secondary)
                 }
                 HStack {
                     Text("Grind")
                     Spacer()
-                    Text("\(brew.grind)")
-                        .foregroundColor(.secondary)
+                    NumericText(text: "\(brew.grind)", numericValue: Double(brew.grind))
+                        .foregroundStyle(.secondary)
                 }
                 HStack {
                     Text("Yield")
                     Spacer()
-                    Text("\(brew.yield)g")
-                        .foregroundColor(.secondary)
+                    NumericText(text: "\(brew.yield)g", numericValue: Double(brew.yield))
+                        .foregroundStyle(.secondary)
                 }
                 HStack {
                     Text("Time")
                     Spacer()
-                    Text("\(brew.time)s")
-                        .foregroundColor(.secondary)
+                    NumericText(text: "\(brew.time)s", numericValue: Double(brew.time))
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("Ratio")
+                    Spacer()
+                    HStack (spacing: 4) {
+                        NumericText(text: ratioText, numericValue: ratioValue)
+                            .foregroundStyle(.secondary)
+                        ZStack {
+                            Image("ratio.progress.background")
+                                .font(.system(size: 22))
+                                .foregroundStyle(.secondary)
+                                .offset(x: 0.25, y: -0.25)
+                            Circle()
+                                .trim(from: 0, to: ratioProgress)
+                                .rotation(Angle(degrees: 270))
+                                .stroke(Color("SecondaryOpaque"), lineWidth: 5.5)
+                                .frame(width: 15.5, height: 15.5)
+                                .scaleEffect(x: -1, y: 1)
+                        }
+                        .padding(.trailing, -4)
+                    }
                 }
             }
             Section {
@@ -108,6 +141,7 @@ struct BrewDetailView: View {
             }
         }
         .listSectionSpacing(32)
+        .contentMargins(.bottom, 32)
         .toolbar {
             if let bean = brew.bean {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -147,7 +181,7 @@ struct BrewDetailView: View {
 
 #Preview {
     let path = [Screen]()
-    if let fifthBrew = createMockBrews().dropFirst(5).first {
+    if let fifthBrew = createMockBrews().dropFirst(4).first {
         BrewDetailView(brew: fifthBrew, path: .constant(path))
     }
 }
