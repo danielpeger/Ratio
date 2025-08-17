@@ -129,6 +129,7 @@ struct BeansView: View {
                 .onAppear { filteredBeansCache = computeFilteredBeans() }
                 .onChange(of: beans.count) { _, _ in filteredBeansCache = computeFilteredBeans() }
                 .onChange(of: beans.map(\.inStock)) { _, _ in filteredBeansCache = computeFilteredBeans() }
+                .onChange(of: beans.map { $0.brews?.count ?? 0 }) { _, _ in filteredBeansCache = computeFilteredBeans() }
                 .onChange(of: selectedFilter) { _, _ in filteredBeansCache = computeFilteredBeans() }
                 .onChange(of: searchText) { _, _ in filteredBeansCache = computeFilteredBeans() }
             }
@@ -176,18 +177,12 @@ struct BeansView: View {
     }
 }
 
-private struct BeansGridView: View, Equatable {
+private struct BeansGridView: View {
     var beans: [Bean]
     var onToggleStock: (Bean) -> Void
     var onDelete: (Bean) -> Void
     var onEdit: (Bean) -> Void
     var onTap: (Bean) -> Void
-
-    static func == (lhs: BeansGridView, rhs: BeansGridView) -> Bool {
-        let lhsIds = lhs.beans.map { $0.id }
-        let rhsIds = rhs.beans.map { $0.id }
-        return lhsIds == rhsIds
-    }
 
     var body: some View {
         LazyVGrid(columns: [

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import AudioToolbox
 
 enum Screen: Hashable {
@@ -16,6 +17,8 @@ enum Screen: Hashable {
 }
 
 struct ContentView: View {
+    @Environment(\.modelContext)
+    private var modelContext
     
     var body: some View {
       // SystemSoundsTesterView()
@@ -30,6 +33,9 @@ struct ContentView: View {
                     Image(systemName: "cup.and.saucer")
                     Text("Brews")
                 }
+        }
+        .withUndoRedo { undoManager in
+            modelContext.undoManager = undoManager
         }
     }
 }

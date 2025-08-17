@@ -35,6 +35,7 @@ struct BeanCardView: View {
                     }
                     Image(systemName: "chevron.right")
                         .foregroundColor(Color(UIColor.tertiaryLabel))
+                        .frame(height: 22)
                 }
                 .padding([.top, .trailing], 4)
             }

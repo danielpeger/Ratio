@@ -230,6 +230,7 @@ struct LogBrewView: View {
                                 pinned: brewPinned
                             )
                             context.insert(newBrew)
+                            try? context.save()
                             createdBrew = newBrew
                         }
                         saved = true
