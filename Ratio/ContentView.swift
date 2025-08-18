@@ -19,9 +19,20 @@ enum Screen: Hashable {
 struct ContentView: View {
     @Environment(\.modelContext)
     private var modelContext
-    
+        
     var body: some View {
       // SystemSoundsTesterView()
+        /*
+        VStack {
+            Text(verbatim: "\(value)")
+                .font(.largeTitle.bold())
+                .contentTransition(.numericText(value: value))
+                .animation(.snappy, value: value)
+            WheelPicker(config: config, value: $value)
+                .frame(height: 110)
+        }
+        */
+        
         TabView {
             BeansView()
                 .tabItem {
@@ -37,6 +48,7 @@ struct ContentView: View {
         .withUndoRedo { undoManager in
             modelContext.undoManager = undoManager
         }
+         
     }
 }
 

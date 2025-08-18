@@ -62,7 +62,14 @@ struct LogBrewView: View {
     private let yieldValues = Array(1...100)
     private let timeValues = Array(1...120)
     private var inStockBeans: [Bean] { beans.filter { $0.inStock } }
-
+    
+    @State var config: WheelPicker.Config = .init(
+        count: 10,
+        steps: 10,
+        spacing: 10,
+        multiplier: 10
+    )
+    
     // Initialize the view with the following logic:
     // - if you're editing a brew, then the edited brew's settings
     // - otherwise if the selected bean has a pinned brew, then the pinned brew's settings
@@ -161,8 +168,8 @@ struct LogBrewView: View {
                                 TipsPills(brew: template)
                             }
                         }
-                        .padding(.top, 16)
-                        .padding(.bottom, 8)
+                        .padding(.top, 8)
+                        .padding(.bottom, template.pinned ? 0 : 4)
                     }
                     VStack(spacing: 16) {
                         beanPickerRow
@@ -275,11 +282,10 @@ extension LogBrewView {
                         Text(bean.name).tag(bean as Bean?)
                     }
                 }
-                
             }
             .padding(.leading, 16)
             .padding(.trailing, 4)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 9))
         }
@@ -290,21 +296,20 @@ extension LogBrewView {
     @ViewBuilder
     private var dosePickerRow: some View {
         VStack {
-            VStack {
+            VStack(spacing: 4){
                 HStack {
                     Text("Dose")
                     Spacer()
                     NumericText(text: "\(brewDose)g", numericValue: Double(brewDose))
                         .foregroundColor(.secondary)
+                        .animation(.snappy, value: brewDose)
                 }
-                Picker(selection: $brewDose) {
-                    ForEach(doseValues, id: \.self) { value in
-                        Text("\(value)g").tag(value)
-                    }
-                } label: {
-                    Text("Dose")
-                }
-                .pickerStyle(.wheel)
+                WheelPicker(config: config, value: .init(
+                    get: { CGFloat(brewDose) },
+                    set: { brewDose = Int($0.rounded()) }
+                ))
+                    .frame(height: 100)
+                    .padding(.bottom, 4)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -317,20 +322,20 @@ extension LogBrewView {
     @ViewBuilder
     private var grindPickerRow: some View {
         VStack {
-            VStack {
+            VStack(spacing: 4){
                 HStack {
                     Text("Grind")
                     Spacer()
                     NumericText(text: "\(brewGrind)", numericValue: Double(brewGrind))
+                        .animation(.snappy, value: brewGrind)
                         .foregroundColor(.secondary)
                 }
-                Picker(selection: $brewGrind) {
-                    ForEach(grindValues, id: \.self) { value in
-                        Text("\(value)").tag(value)
-                    }
-                } label: {
-                    Text("Grind")
-                }                .pickerStyle(.wheel)
+                WheelPicker(config: config, value: .init(
+                    get: { CGFloat(brewGrind) },
+                    set: { brewGrind = Int($0.rounded()) }
+                ))
+                    .frame(height: 100)
+                    .padding(.bottom, 4)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -343,21 +348,20 @@ extension LogBrewView {
     @ViewBuilder
     private var yieldPickerRow: some View {
         VStack {
-            VStack {
+            VStack(spacing: 4){
                 HStack {
                     Text("Yield")
                     Spacer()
                     NumericText(text: "\(brewYield)g", numericValue: Double(brewYield))
                         .foregroundColor(.secondary)
+                        .animation(.snappy, value: brewYield)
                 }
-                Picker(selection: $brewYield) {
-                    ForEach(yieldValues, id: \.self) { value in
-                        Text("\(value)g").tag(value)
-                    }
-                } label: {
-                    Text("Yield")
-                }
-                .pickerStyle(.wheel)
+                WheelPicker(config: config, value: .init(
+                    get: { CGFloat(brewYield) },
+                    set: { brewYield = Int($0.rounded()) }
+                ))
+                    .frame(height: 100)
+                    .padding(.bottom, 4)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -370,21 +374,20 @@ extension LogBrewView {
     @ViewBuilder
     private var timePickerRow: some View {
         VStack {
-            VStack {
+            VStack(spacing: 4){
                 HStack {
                     Text("Time")
                     Spacer()
                     NumericText(text: "\(brewTime)s", numericValue: Double(brewTime))
                         .foregroundColor(.secondary)
+                        .animation(.snappy, value: brewTime)
                 }
-                Picker(selection: $brewTime) {
-                    ForEach(timeValues, id: \.self) { value in
-                        Text("\(value)s").tag(value)
-                    }
-                } label: {
-                    Text("Time")
-                }
-                .pickerStyle(.wheel)
+                WheelPicker(config: config, value: .init(
+                    get: { CGFloat(brewTime) },
+                    set: { brewTime = Int($0.rounded()) }
+                ))
+                    .frame(height: 100)
+                    .padding(.bottom, 4)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
