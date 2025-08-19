@@ -18,6 +18,7 @@ struct WheelPicker: View {
         GeometryReader {
             let size = $0.size
             let horizontalPadding = size.width / 2
+            let maxValue = CGFloat(config.count * config.multiplier)
             
             ScrollView(.horizontal) {
                 HStack(spacing: config.spacing) {
@@ -66,10 +67,7 @@ struct WheelPicker: View {
                                     .rotation3DEffect(angle, axis: (x: 0, y: 1, z: 0), anchor: .bottom, perspective: 1)
                                     .scaleEffect(y: clampedScaleY, anchor: .center)
                             }
-                             
                             .animation(.spring(duration: 0.3, bounce: 0.15), value: value)
-
-                            
                     }
                 }
                 .frame(height: size.height)
@@ -95,6 +93,19 @@ struct WheelPicker: View {
                     .padding(.bottom, 10)
             }
              */
+            .simultaneousGesture(
+                SpatialTapGesture()
+                    .onEnded { tap in
+                        let isRightHalf = tap.location.x > 0
+                        withAnimation {
+                            if isRightHalf {
+                                value = min(value + 1, maxValue)
+                            } else {
+                                value = max(value - 1, 0)
+                            }
+                        }
+                    }
+            )
             .safeAreaPadding(.horizontal, horizontalPadding)
             .onAppear {
                 if !isLoaded { isLoaded = true }
