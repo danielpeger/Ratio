@@ -17,7 +17,7 @@ struct PillView: View {
         HStack {
             Text(text)
                 .font(.subheadline)
-                .foregroundColor(selected ? Color("IncreasedContrastAccentColor") : Color(.secondaryLabel))
+                .foregroundColor(selected || highlighted ? Color("IncreasedContrastAccentColor") : Color(.secondaryLabel))
                 .padding(.horizontal, large ? 16 : 12)
                 .padding(.vertical, large ? 9 : 4)
         }

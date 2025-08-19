@@ -15,17 +15,17 @@ struct TipsPills: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack{
-                Spacer(minLength: 32)
+                Spacer(minLength: 16)
                 if let doseMore = brew.tips[0] {
-                    PillView(text: "dose \(doseMore ? "more" : "less") than \(brew.dose)g", selected: true)
+                    PillView(text: "dose \(doseMore ? "more" : "less") than \(brew.dose)g", large: true, selected: true)
                 }
                 if let grindFiner = brew.tips[1] {
-                    PillView(text: "grind \(grindFiner ? "finer" : "coarser") than \(brew.grind)", selected: true)
+                    PillView(text: "grind \(grindFiner ? "finer" : "coarser") than \(brew.grind)", large: true, selected: true)
                 }
                 if let yieldMore = brew.tips[2] {
-                    PillView(text: "yield \(yieldMore ? "more" : "less") than \(brew.yield)g", selected: true)
+                    PillView(text: "yield \(yieldMore ? "more" : "less") than \(brew.yield)g", large: true, selected: true)
                 }
-                Spacer(minLength: 32)
+                Spacer(minLength: 16)
             }
         }
     }
@@ -94,7 +94,7 @@ struct LogBrewView: View {
             self._brewPinned = State(initialValue: editingBrew.pinned)
         } else {
             // Creating: prefer template from initial bean (pinned > latest) else defaults
-            let source: Brew? = initialBean.flatMap { Self.templateBrew(for: $0) }
+            let source: Brew? = initialBean.flatMap { Self.mostRecentBrew(for: $0) }
             
             self._brewBean = State(initialValue: initialBean)
             self._brewDose = State(initialValue: source?.dose ?? 18)
@@ -111,9 +111,7 @@ struct LogBrewView: View {
     }
     
     // MARK: - Helpers (templates and defaults)
-    private static func templateBrew(for bean: Bean) -> Brew? {
-        if let pinned = bean.pinnedBrew { return pinned }
-        // fallback to latest brew by creationDate
+    private static func mostRecentBrew(for bean: Bean) -> Brew? {
         return bean.brews?.sorted(by: { $0.creationDate > $1.creationDate }).first
     }
     
@@ -138,7 +136,7 @@ struct LogBrewView: View {
             resetToDefaults()
             return
         }
-        if let source = Self.templateBrew(for: selectedBean) {
+        if let source = Self.mostRecentBrew(for: selectedBean) {
             applyTemplate(from: source)
         } else {
             resetToDefaults()
@@ -150,26 +148,31 @@ struct LogBrewView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     let isCreating = (brew == nil)
-                    let templateForSelectedBean: Brew? = brewBean.flatMap { Self.templateBrew(for: $0) }
-                    let shouldShowTemplate = isCreating && (templateForSelectedBean.map { $0.pinned || !$0.tipArray.isEmpty } ?? false)
+                    let mostRecentBrewForSelectedBean: Brew? = brewBean.flatMap { Self.mostRecentBrew(for: $0) }
+                    let pinnedBrewForSelectedBean: Brew? = brewBean?.brews?.first(where: { $0.pinned })
+                    let shouldShowPinned = isCreating && pinnedBrewForSelectedBean != nil
+                    let shouldShowTips = isCreating && (mostRecentBrewForSelectedBean.map { !$0.tipArray.isEmpty } ?? false)
                     
-                    if shouldShowTemplate, let template = templateForSelectedBean {
+                    if shouldShowPinned, let pinned = pinnedBrewForSelectedBean {
                         VStack(spacing: 0) {
                             SectionHeader(
-                                title: template.pinned ? "Pinned brew" : "Tips from last brew",
-                                systemImage: template.pinned ? "pin.fill" : nil,
+                                title: "Pinned brew",
+                                systemImage: "pin.fill",
                             )
-                            if template.pinned {
-                                LazyVStack(spacing: 0) {
-                                    BrewCardView(brew: template, showPills: false)
-                                        .padding(.horizontal, 16)
-                                }
-                            } else {
-                                TipsPills(brew: template)
+                            LazyVStack(spacing: 0) {
+                                BrewCardView(brew: pinned, showPills: false)
+                                    .padding(.horizontal, 16)
                             }
                         }
+                        .padding(.vertical, 8)
+                    }
+                    if shouldShowTips, let mostRecent = mostRecentBrewForSelectedBean {
+                        VStack(spacing: 0) {
+                            SectionHeader(title: "Tips from last brew")
+                            TipsPills(brew: mostRecent)
+                        }
                         .padding(.top, 8)
-                        .padding(.bottom, template.pinned ? 0 : 4)
+                        .padding(.bottom, 12)
                     }
                     VStack(spacing: 16) {
                         beanPickerRow
@@ -290,7 +293,7 @@ extension LogBrewView {
             .clipShape(RoundedRectangle(cornerRadius: 9))
         }
         .padding(.horizontal, 16)
-        .padding(.top, 16)
+        .padding(.top, 8)
     }
 
     @ViewBuilder

@@ -134,7 +134,7 @@ struct BeanDetailView: View {
                             let isPinned = bean.pinnedBrew != nil
                             VStack(spacing: 0) {
                                 SectionHeader(title: isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
-                                BrewCardView(brew: featuredBrew, showPills: !isPinned)
+                                BrewCardView(brew: featuredBrew, showPills: true)
                                     .padding(.horizontal, 16)
                             }
                             .onTapGesture { handleBrewTap(featuredBrew) }

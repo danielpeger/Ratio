@@ -63,14 +63,17 @@ private struct MetricsRow: View {
             MetricItem(title: "Dose", value: "\(brew.dose)g", numericValue: Double(brew.dose), highlighted: highlighted)
             Spacer()
             Divider()
+                .overlay(highlighted ? Color(.red) : Color.clear)
             Spacer()
             MetricItem(title: "Grind", value: "\(brew.grind)", numericValue: Double(brew.grind), highlighted: highlighted)
             Spacer()
             Divider()
+                .overlay(highlighted ? Color(.red) : Color.clear)
             Spacer()
             MetricItem(title: "Yield", value: "\(brew.yield)g", numericValue: Double(brew.yield), highlighted: highlighted)
             Spacer()
             Divider()
+                .overlay(highlighted ? Color(.red) : Color.clear)
             Spacer()
             MetricItem(title: "Time", value: "\(brew.time)s", numericValue: Double(brew.time), highlighted: highlighted)
         }
@@ -128,6 +131,7 @@ private struct PillsSection: View {
         VStack(alignment: .leading, spacing: 0) {
             if visibleItemIndices.contains(0) {
                 Divider()
+                    .overlay(highlighted ? Color(.red) : Color.clear)
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .padding(.vertical, BrewCardStyle.verticalPadding)
             }
