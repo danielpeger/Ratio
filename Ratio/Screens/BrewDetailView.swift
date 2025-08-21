@@ -29,119 +29,146 @@ struct BrewDetailView: View {
     private var ratioProgress: Double { min(max(ratioValue, 1) - 1, 4) / 3 }
 
     var body: some View {
-        List{
-            Section {
-                VStack {
-                    BrewImageView(rating: brew.rating, size: .large, brightBackground: true)
-                    VStack(spacing: 4) {
-                        Text(formatRelativeDate(brew.creationDate))
-                            .font(.largeTitle)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                        if let bean = brew.bean {
-                            Text(bean.name)
-                                .foregroundColor(.accent)
-                                .onTapGesture {
-                                    if let previousScreen = path.dropLast().last, case .beanDetail = previousScreen {
-                                        path.removeLast()
-                                    } else {
-                                        path.append(.beanDetail(bean: bean))
+        ScrollView{
+            VStack(alignment: .leading, spacing: 20) {
+                BrewImageView(rating: brew.rating, size: .large, brightBackground: true)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(formatRelativeDate(brew.creationDate))
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    if let bean = brew.bean {
+                        Text(bean.name)
+                            .font(.title3)
+                            .foregroundStyle(.accent)
+                            .onTapGesture {
+                                if let previousScreen = path.dropLast().last, case .beanDetail = previousScreen {
+                                    path.removeLast()
+                                } else {
+                                    path.append(.beanDetail(bean: bean))
+                                }
+                            }
+                        
+                    }
+                }
+            }
+            .padding(.top, 40)
+            .padding(.horizontal, 32)
+            
+            LazyVStack(spacing: 32){
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Dose")
+                            Spacer()
+                            NumericText(text: "\(brew.dose)g", numericValue: Double(brew.dose))
+                                .foregroundStyle(.secondary)
+                                .padding(.trailing, 16)
+                        }
+                        Divider()
+                        HStack {
+                            Text("Grind")
+                            Spacer()
+                            NumericText(text: "\(brew.grind)", numericValue: Double(brew.grind))
+                                .foregroundStyle(.secondary)
+                                .padding(.trailing, 16)
+                        }
+                        Divider()
+                        HStack {
+                            Text("Yield")
+                            Spacer()
+                            NumericText(text: "\(brew.yield)g", numericValue: Double(brew.yield))
+                                .foregroundStyle(.secondary)
+                                .padding(.trailing, 16)
+                        }
+                        Divider()
+                        HStack {
+                            Text("Time")
+                            Spacer()
+                            NumericText(text: "\(brew.time)s", numericValue: Double(brew.time))
+                                .foregroundStyle(.secondary)
+                                .padding(.trailing, 16)
+                        }
+                        Divider()
+                        HStack {
+                            Text("Ratio")
+                            Spacer()
+                            HStack (spacing: 4) {
+                                NumericText(text: ratioText, numericValue: ratioValue)
+                                    .foregroundStyle(.secondary)
+                                ZStack {
+                                    Image("ratio.progress.background")
+                                        .font(.system(size: 22))
+                                        .foregroundStyle(.secondary)
+                                        .offset(x: 0.25, y: -0.25)
+                                    Circle()
+                                        .trim(from: 0, to: ratioProgress)
+                                        .rotation(Angle(degrees: 270))
+                                        .stroke(Color("SecondaryOpaque"), lineWidth: 5.5)
+                                        .frame(width: 15.5, height: 15.5)
+                                        .scaleEffect(x: -1, y: 1)
+                                }
+                                .padding(.trailing, -4)
+                            }
+                            .padding(.trailing, 16)
+                        }
+                    }
+                    .padding(.leading, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                }
+                .padding(.top, 32)
+                .padding(.horizontal, 16)
+                
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if (brew.tasteArray != []) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Taste")
+                                HFlow(spacing: 8) {
+                                    ForEach(brew.tasteArray, id: \.self) { taste in
+                                        PillView(text: taste.rawValue)
                                     }
                                 }
-                            
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
-                .listRowInsets(.init(top: 6, leading: 0, bottom: 12, trailing: 0))
-            }
-            Section {
-                HStack {
-                    Text("Dose")
-                    Spacer()
-                    NumericText(text: "\(brew.dose)g", numericValue: Double(brew.dose))
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("Grind")
-                    Spacer()
-                    NumericText(text: "\(brew.grind)", numericValue: Double(brew.grind))
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("Yield")
-                    Spacer()
-                    NumericText(text: "\(brew.yield)g", numericValue: Double(brew.yield))
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("Time")
-                    Spacer()
-                    NumericText(text: "\(brew.time)s", numericValue: Double(brew.time))
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("Ratio")
-                    Spacer()
-                    HStack (spacing: 4) {
-                        NumericText(text: ratioText, numericValue: ratioValue)
-                            .foregroundStyle(.secondary)
-                        ZStack {
-                            Image("ratio.progress.background")
-                                .font(.system(size: 22))
-                                .foregroundStyle(.secondary)
-                                .offset(x: 0.25, y: -0.25)
-                            Circle()
-                                .trim(from: 0, to: ratioProgress)
-                                .rotation(Angle(degrees: 270))
-                                .stroke(Color("SecondaryOpaque"), lineWidth: 5.5)
-                                .frame(width: 15.5, height: 15.5)
-                                .scaleEffect(x: -1, y: 1)
-                        }
-                        .padding(.trailing, -4)
-                    }
-                }
-            }
-            Section {
-                if (brew.tasteArray != []) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Taste")
-                        HFlow(spacing: 8) {
-                            ForEach(brew.tasteArray, id: \.self) { taste in
-                                PillView(text: taste.rawValue)
+                                .padding(.vertical, 4)
                             }
                         }
-                        .padding(.vertical, 4)
-                    }
-                }
-                
-                if (brew.tipArray != []) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Tips for next brew")
-                        HFlow(spacing: 8) {
-                            ForEach(brew.tipArray, id: \.self) { tip in
-                                PillView(text: tip.rawValue)
+                        Divider()
+                        if (brew.tipArray != []) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Tips for next brew")
+                                HFlow(spacing: 8) {
+                                    ForEach(brew.tipArray, id: \.self) { tip in
+                                        PillView(text: tip.rawValue)
+                                    }
+                                }
+                                .padding(.vertical, 4)
                             }
                         }
-                        .padding(.vertical, 4)
-                    }
-                }
-                
-                if let notes = brew.notes, !notes.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Notes")
+                        Divider()
                         if let notes = brew.notes, !notes.isEmpty {
-                            Text(notes)
-                                .foregroundColor(.secondary)
-                                .padding(.bottom, 8)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Notes")
+                                if let notes = brew.notes, !notes.isEmpty {
+                                    Text(notes)
+                                        .foregroundColor(.secondary)
+                                        .padding(.bottom, 8)
+                                }
+                            }
                         }
                     }
+                    .padding(.leading, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
                 }
+                .padding(.horizontal, 16)
             }
         }
-        .listSectionSpacing(32)
-        .contentMargins(.bottom, 32)
+        .background(Color(.systemGroupedBackground))
         .toolbar {
             if let bean = brew.bean {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -183,7 +210,7 @@ struct BrewDetailView: View {
 
 #Preview {
     let path = [Screen]()
-    if let fifthBrew = createMockBrews().dropFirst(4).first {
+    if let fifthBrew = createMockBrews().dropFirst(1).first {
         BrewDetailView(brew: fifthBrew, path: .constant(path))
     }
 }

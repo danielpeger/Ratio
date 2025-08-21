@@ -162,7 +162,7 @@ private struct RatingSection: View {
                     }
                     HStack{
                         ForEach(Rating.allCases, id: \.self) { option in
-                            BrewImageView(rating: option, size: .medium, selected: rating == option)
+                            BrewImageView(rating: option, size: .medium, selected: rating == option, noBorder: true)
                                 .onTapGesture {
                                     withAnimation { rating = option }
                                 }

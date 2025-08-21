@@ -85,29 +85,32 @@ struct BeanDetailView: View {
                 pullProgress = progress
             }, isEnabled: bean.inStock && !showingLogBrew) {
                 LazyVStack(spacing: 16) {
-                    VStack(spacing: 32) {
-                        VStack {
+                    VStack(alignment: .leading, spacing: 32) {
+                        
+                        VStack(alignment: .leading, spacing: 20) {
                             BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData, groupedBgIcon: true)
-                            VStack(spacing: 4) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text(bean.name)
                                     .font(.largeTitle)
                                     .bold()
-                                    .multilineTextAlignment(.center)
+                                    .multilineTextAlignment(.leading)
                                     .lineLimit(2)
                                     .truncationMode(.tail)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 
                                 if !details.isEmpty {
                                     Text(details.joined(separator: ", "))
+                                        .font(.title3)
                                         .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.center)
+                                        .multilineTextAlignment(.leading)
                                         .lineLimit(2)
                                         .truncationMode(.tail)
                                 }
                             }
                         }
                         .padding(.top, 40)
-                        .padding(.bottom, 12)
-                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
+                        .padding(.horizontal, 32)
                         
                         if !beanBrews.isEmpty && !bean.inStock {
                             ContentUnavailableView(
@@ -244,15 +247,15 @@ private struct BeanDetailPreviewWrapper: View {
         self.beans = createMockBeansWithoutBrews()
         for bean in beans { container.mainContext.insert(bean) }
         
-        let brew1 = Brew(dose: 17, grind: 58, yield: 48, time: 30, rating: .neutral, tastes: [.balanced], tips: [nil, true, nil], notes: nil, bean: beans[2], pinned: false)
-        let brew2 = Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.thin, .thick, .bitter, .creamy, .muddled, .watery, .sweet, .balanced], tips: [true, true, true], notes: "Great shot", bean: beans[2], pinned: false)
+        let brew1 = Brew(dose: 17, grind: 58, yield: 48, time: 30, rating: .neutral, tastes: [.balanced], tips: [nil, true, nil], notes: nil, bean: beans[1], pinned: false)
+        let brew2 = Brew(dose: 18, grind: 60, yield: 50, time: 32, rating: .good, tastes: [.thin, .thick, .bitter, .creamy, .muddled, .watery, .sweet, .balanced], tips: [true, true, true], notes: "Great shot", bean: beans[1], pinned: false)
         container.mainContext.insert(brew1)
         container.mainContext.insert(brew2)
     }
     
     var body: some View {
         NavigationStack {
-            BeanDetailView(bean: beans[2], path: .constant(path))
+            BeanDetailView(bean: beans[1], path: .constant(path))
                 .modelContainer(container)
         }
     }

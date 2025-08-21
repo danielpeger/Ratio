@@ -20,6 +20,7 @@ struct BrewImageView: View {
     var size: ImageSize = .small
     var brightBackground: Bool = false
     var selected: Bool = false
+    var noBorder: Bool = false
     
     private var frameSize: CGFloat {
         switch size {
@@ -51,9 +52,14 @@ struct BrewImageView: View {
                     .strokeBorder(Color.accent)
                     .frame(width: frameSize, height: frameSize)
             } else {
-                Circle()
-                    .fill(brightBackground ? Color(.secondarySystemGroupedBackground) : Color(.systemGroupedBackground))
-                    .frame(width: frameSize, height: frameSize)
+                ZStack {
+                    Circle()
+                        .stroke(noBorder ? Color.clear : Color(.separator), lineWidth: size == .large ? 1.5 : 1)
+                        .fill(brightBackground ? Color(.secondarySystemGroupedBackground) : Color(.systemGroupedBackground))
+                        .shadow(color: size == .large ? .primary.opacity(0.16) : Color.clear, radius: 40, x: 0, y: 4)
+                        .shadow(color: size == .large ? .primary.opacity(0.06) : Color.clear, radius: 4, x: 0, y: 2)
+                        .frame(width: frameSize, height: frameSize)
+                }
             }
             Text(rating.rawValue)
                 .font(.system(size: iconSize))

@@ -46,15 +46,40 @@ struct BeanImageView: View {
     var body: some View {
         ZStack (alignment: .top){
             if let data = imageData, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: large ? 120 : 44, height: large ? 120 : 44)
-                    .clipShape(RoundedRectangle(cornerRadius: large ? 30 : 11))
+                ZStack {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: large ? 120 : 44, height: large ? 120 : 44)
+                        .clipShape(RoundedRectangle(cornerRadius: large ? 30 : 11))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: large ? 30 : 11)
+                                .strokeBorder(Color(.separator), lineWidth: large ? 1.5 : 1)
+                        )
+                        .shadow(color: large ? .primary.opacity(0.2) : Color.clear, radius: 40, x: 0, y: 4)
+                        .shadow(color: large ? .primary.opacity(0.08) : Color.clear, radius: 4, x: 0, y: 2)
+                    RoundedRectangle(cornerRadius: large ? 30 : 11)
+                        .inset(by: large ? 2 : 1.5)
+                        .fill(Color.clear)
+                        .stroke(Gradient(colors: [
+                            .white.opacity(0.4), .clear
+                        ]), lineWidth: large ? 1.5 : 1)
+                        .frame(width: large ? 120 : 44, height: large ? 120 : 44)
+                }
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: large ? 30 : 11)
                         .fill((color ?? .red).color.gradient)
+                        .strokeBorder(Color(.separator), lineWidth: large ? 1.5 : 1)
+                        .frame(width: large ? 120 : 44, height: large ? 120 : 44)
+                        .shadow(color: large ? (color ?? .red).color.opacity(0.3) : Color.clear, radius: 40, x: 0, y: 4)
+                        .shadow(color: large ? (color ?? .red).color.opacity(0.1) : Color.clear, radius: 4, x: 0, y: 2)
+                    RoundedRectangle(cornerRadius: large ? 30 : 11)
+                        .inset(by: large ? 2 : 1.5)
+                        .fill(Color.clear)
+                        .stroke(Gradient(colors: [
+                            .white.opacity(0.4), .clear
+                        ]), lineWidth: large ? 1.5 : 1)
                         .frame(width: large ? 120 : 44, height: large ? 120 : 44)
                     Image("beanbag")
                         .foregroundColor(groupedBgIcon ? Color(.systemGroupedBackground) : Color(.tertiarySystemBackground))
