@@ -123,49 +123,57 @@ struct BrewDetailView: View {
                 .padding(.top, 32)
                 .padding(.horizontal, 16)
                 
-                VStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if (brew.tasteArray != []) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Taste")
-                                HFlow(spacing: 8) {
-                                    ForEach(brew.tasteArray, id: \.self) { taste in
-                                        PillView(text: taste.rawValue)
+                if let notes = brew.notes, !notes.isEmpty || brew.tipArray != [] || brew.tasteArray != [] {
+                    VStack(spacing: 0) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            if (brew.tasteArray != []) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Taste")
+                                    HFlow(spacing: 8) {
+                                        ForEach(brew.tasteArray, id: \.self) { taste in
+                                            PillView(text: taste.rawValue)
+                                        }
                                     }
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.vertical, 4)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                        }
-                        Divider()
-                        if (brew.tipArray != []) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Tips for next brew")
-                                HFlow(spacing: 8) {
-                                    ForEach(brew.tipArray, id: \.self) { tip in
-                                        PillView(text: tip.rawValue)
+                            if brew.tasteArray != [] && ((brew.tipArray != []) || (brew.notes?.isEmpty == false)) {
+                                Divider()
+                            }
+                            if (brew.tipArray != []) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Tips for next brew")
+                                    HFlow(spacing: 8) {
+                                        ForEach(brew.tipArray, id: \.self) { tip in
+                                            PillView(text: tip.rawValue)
+                                        }
                                     }
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.vertical, 4)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                        }
-                        Divider()
-                        if let notes = brew.notes, !notes.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Notes")
-                                if let notes = brew.notes, !notes.isEmpty {
+                            if let notes = brew.notes, !notes.isEmpty, brew.tipArray != [] {
+                                Divider()
+                            }
+                            if let notes = brew.notes, !notes.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Notes")
                                     Text(notes)
                                         .foregroundColor(.secondary)
-                                        .padding(.bottom, 8)
+                                        .padding(.bottom, 4)
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
+                        .padding(.leading, 16)
+                        .padding(.vertical, 12)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 9))
                     }
-                    .padding(.leading, 16)
-                    .padding(.vertical, 12)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 32)
                 }
-                .padding(.horizontal, 16)
             }
         }
         .background(Color(.systemGroupedBackground))
@@ -210,7 +218,7 @@ struct BrewDetailView: View {
 
 #Preview {
     let path = [Screen]()
-    if let fifthBrew = createMockBrews().dropFirst(1).first {
+    if let fifthBrew = createMockBrews().dropFirst(2).first {
         BrewDetailView(brew: fifthBrew, path: .constant(path))
     }
 }

@@ -72,26 +72,23 @@ struct AddBeansView: View {
         NavigationStack {
             Form {
                 VStack(spacing: 16) {
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 20) {
-                            BeanImageView(color: beanImageColor, large: true, imageData: beanImageData,groupedBgIcon: true, scanning: $scanning, scanningSucceded: $scanningSucceded, scanningFailed: $scanningFailed)
-                            if beanImageData == nil {
-                                HStack(spacing: 16) {
-                                    ForEach(ImageColor.allCases, id: \.self) { color in
-                                        ColorSwatchView(
-                                            color: color.color,
-                                            isSelected: beanImageColor == color
-                                        )
-                                        .onTapGesture {
-                                            beanImageColor = color
-                                        }
+                    VStack(spacing: 20) {
+                        BeanImageView(color: beanImageColor, large: true, imageData: beanImageData,groupedBgIcon: true, scanning: $scanning, scanningSucceded: $scanningSucceded, scanningFailed: $scanningFailed)
+                        if beanImageData == nil {
+                            HStack(spacing: 16) {
+                                ForEach(ImageColor.allCases, id: \.self) { color in
+                                    ColorSwatchView(
+                                        color: color.color,
+                                        isSelected: beanImageColor == color
+                                    )
+                                    .onTapGesture {
+                                        beanImageColor = color
                                     }
                                 }
                             }
                         }
-                        Spacer()
                     }
+                    .padding(.top, 32)
 
                     VStack(spacing: 8) {
                         Menu {
@@ -111,7 +108,7 @@ struct AddBeansView: View {
                                     Image("scan.beanbag")
                                         .font(.system(size: 18))
                                 }
-                                Text(scanning ? "Scanning..." : "Scan bag")
+                                Text(scanning ? "Scanning..." : "Scan label")
                                     .fontWeight(.medium)
                             }
                             .padding(.vertical, 4)
@@ -212,6 +209,7 @@ struct AddBeansView: View {
                     }
                 }
             }
+            .contentMargins(.top, 0)
             .listSectionSpacing(32)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

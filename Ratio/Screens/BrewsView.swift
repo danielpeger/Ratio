@@ -63,8 +63,9 @@ struct BrewsView: View {
                             }
                         }
                         .contentMargins(.top, 8)
+                        .contentMargins(.bottom, 32)
                         .scrollDisabled(true)
-                        .frame(height: CGFloat(brews.count * 66 + 8), alignment: .top)
+                        .frame(height: CGFloat(brews.count * 66 + 40), alignment: .top)
                         .animation(.default, value:  brews.count)
                     }
                 }
