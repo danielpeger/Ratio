@@ -33,7 +33,7 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?
         return
     }
 
-    let instruction = "First, decide if the image provided is a coffee bean bag label. If you're not at least 99% sure it is, return null for all values. If you're sure it is a bean bag, extract information that is written on the bag: name, roaster, origin, processing. Only return values that you recognised as text written on the bag label. Don't add commentary, just the extracted text or null. Choose the origin and processing values from the allowed lists in the provided schema. If you don't recognise a value, use null."
+    let instruction = "First, decide if the image provided is a coffee bean bag label with text printed on it. If the image has no text, stop and return null for all values. If the image is not a coffee bean bag label, stop and return null for all values. If you're sure it is a bean bag with text, extract information that is printed on it: name, roaster, origin, processing. Only return values that you recognised as text written on the bag label. Don't add notes or commentary, just the extracted text or null."
 
     // Build data URI for the image
     let mimeType = guessMimeType(for: imageData)
@@ -94,7 +94,6 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?
     let body: [String: Any] = [
         "model": "gpt-5-nano",
         "input": input,
-        "reasoning": ["effort": "minimal"],
         "text": textOptions
     ]
 
@@ -228,7 +227,7 @@ private func normalizeOptional(_ value: String?) -> String? {
     let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty { return nil }
     let lower = trimmed.lowercased()
-    let nullish: Set<String> = ["null", "none", "n/a", "na", "not set", "unknown", ":null", ":null,", ",", ":", "/", "/null"]
+    let nullish: Set<String> = ["null", "none", "n/a", "na", "not set", "unknown", ":null", ":null,", ",", ":", "/", "/null", ":null}", "}", "null}"]
     if nullish.contains(lower) { return nil }
     return trimmed
 }
