@@ -36,6 +36,7 @@ struct AddBeansView: View {
     
     @State private var showDeleteAlert: Bool = false
     @State private var beanPendingDeletion: Bean? = nil
+    @State private var showDiscardAlert: Bool = false
     
     @Query private var beans: [Bean]
 
@@ -54,6 +55,20 @@ struct AddBeansView: View {
     private var filteredRoasters: [String] {
         guard !beanRoaster.isEmpty else { return uniqueRoasters }
         return uniqueRoasters.filter { $0.localizedCaseInsensitiveContains(beanRoaster) }
+    }
+    
+    private func formIsDirty() -> Bool {
+        if bean == nil {
+            return !beanName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                   !beanRoaster.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                   beanOrigin != .notSet ||
+                   beanProcessing != .notSet
+        } else {
+            return beanName != (bean?.name ?? "") ||
+                   beanRoaster != (bean?.roaster ?? "") ||
+                   beanOrigin != (bean?.origin ?? .notSet) ||
+                   beanProcessing != (bean?.processing ?? .notSet)
+        }
     }
     
     init(bean: Bean? = nil, onDelete: (() -> Void)? = nil) {
@@ -214,7 +229,11 @@ struct AddBeansView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        if formIsDirty() {
+                            showDiscardAlert = true
+                        } else {
+                            dismiss()
+                        }
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -263,11 +282,16 @@ struct AddBeansView: View {
                     }
                 }
             }
-            .navigationTitle(bean == nil ? "Add beans" : "Edit beans")
+            .navigationTitle(bean == nil ? "Add bean" : "Edit bean")
             .navigationBarTitleDisplayMode(.inline)
             .alert(isPresented: $scanningError) {
                 Alert(title: Text("Error scanning image"), message: Text("Ratio couldn't scan your image for some reason."), dismissButton: .default(Text("OK")))
             }
+            .alert("Discard edits?", isPresented: $showDiscardAlert) {
+                Button("Discard", role: .destructive) { dismiss() }
+                Button("Don't discard", role: .cancel) { }
+            }
+            .interactiveDismissDisabled(formIsDirty())
             .onAppear {
                 focusedField = .name 
             }
