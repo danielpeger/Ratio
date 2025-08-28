@@ -12,7 +12,7 @@ struct EllipsesSpacer: View {
         GeometryReader { geometry in
             let ellipsesCount = Int(geometry.size.width / 4) // Approximate width per ellipsis
             Text(String(repeating: ".", count: max(1, ellipsesCount)))
-                .foregroundColor(Color(.opaqueSeparator))
+                .foregroundColor(Color(.separator))
                 .frame(maxWidth: .infinity, alignment: .center)
         }
         .frame(height: 8) // Fixed height for the spacer

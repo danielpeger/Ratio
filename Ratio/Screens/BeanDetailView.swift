@@ -77,161 +77,138 @@ struct BeanDetailView: View {
         let detailOrigin = bean.origin == .notSet ? nil : bean.origin?.rawValue
         let detailProcessing = bean.processing == .notSet ? nil : bean.processing?.rawValue
         let details = [detailRoaster, detailOrigin, detailProcessing].compactMap { $0 }
-    
-        GeometryReader { proxy in
-            PullActionScrollView(threshold: 100, onTrigger: {
-                showingLogBrew = true
-            }, onProgress: { progress in
-                pullProgress = progress
-            }, isEnabled: bean.inStock && !showingLogBrew) {
-                LazyVStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 32) {
-                        
-                        VStack(alignment: .leading, spacing: 20) {
-                            BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData, groupedBgIcon: true)
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(bean.name)
-                                    .font(.largeTitle)
-                                    .bold()
+        
+        PullActionScrollView(threshold: 100, onTrigger: {
+            showingLogBrew = true
+        }, onProgress: { progress in
+            pullProgress = progress
+        }, isEnabled: bean.inStock && !showingLogBrew) {
+            LazyVStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 32) {
+                    
+                    VStack(alignment: .leading, spacing: 20) {
+                        BeanImageView(color: bean.imageColor, large: true, imageData: bean.imageData, groupedBgIcon: true)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(bean.name)
+                                .font(.largeTitle)
+                                .bold()
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(2)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            if !details.isEmpty {
+                                Text(details.joined(separator: ", "))
+                                    .font(.title3)
+                                    .foregroundColor(.secondary)
                                     .multilineTextAlignment(.leading)
                                     .lineLimit(2)
                                     .truncationMode(.tail)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                
-                                if !details.isEmpty {
-                                    Text(details.joined(separator: ", "))
-                                        .font(.title3)
-                                        .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.leading)
-                                        .lineLimit(2)
-                                        .truncationMode(.tail)
-                                }
                             }
                         }
-                        .padding(.top, 40)
+                    }
+                    .padding(.top, 40)
+                    .padding(.bottom, 16)
+                    .padding(.horizontal, 32)
+                    
+                    if !beanBrews.isEmpty && !bean.inStock {
+                        LeftAlignedContentUnavailableView {
+                            Text("Bean currently out of stock. Mark as in stock to log brews.")
+                        } actions: {
+                            Button("Mark as in stock") {
+                                bean.inStock = true
+                                AudioServicesPlaySystemSound(SystemSoundID(1570))
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            }
+                        }
                         .padding(.bottom, 16)
-                        .padding(.horizontal, 32)
-                        
-                        if !beanBrews.isEmpty && !bean.inStock {
-                            ContentUnavailableView(
-                                label: {
-                                    Text("Bean currently out of stock. Mark as in stock to log brews.")
-                                        .foregroundColor(Color(.secondaryLabel))
-                                        .font(.body)
-                                        .fontWeight(.regular)
-                                        .padding(.bottom, 8)
-                                },
-                                actions: {
-                                    Button("Mark as in stock") {
-                                        bean.inStock = true
-                                        AudioServicesPlaySystemSound(SystemSoundID(1570))
-                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .fontWeight(.medium)
-                                }
-                            )
-                        }
-                        
-                        if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
-                            let isPinned = bean.pinnedBrew != nil
-                            VStack(spacing: 0) {
-                                SectionHeader(title: isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
-                                BrewCardView(brew: featuredBrew, showPills: true)
-                                    .padding(.horizontal, 16)
-                            }
-                            .onTapGesture { handleBrewTap(featuredBrew) }
-                        }
                     }
                     
-                    if !beanBrews.isEmpty {
-                        List{
-                            Section(header: Text("Brews")) {
-                                ForEach(beanBrews) { brew in
-                                    BrewRowView(brew: brew, showBean: false, onDelete: {
-                                        context.delete(brew)
-                                        AudioServicesPlaySystemSound(SystemSoundID(1018))
-                                    }, onEdit: {
-                                        editingBrew = brew
-                                    })
-                                    .onTapGesture { handleBrewTap(brew) }
-                                }
+                    if let featuredBrew = bean.pinnedBrew ?? beanBrews.first {
+                        let isPinned = bean.pinnedBrew != nil
+                        VStack(spacing: 0) {
+                            SectionHeader(title: isPinned ? "Pinned brew" : "Last brew", systemImage: isPinned ? "pin.fill" : nil)
+                            BrewCardView(brew: featuredBrew, showPills: true)
+                                .padding(.horizontal, 16)
+                        }
+                        .onTapGesture { handleBrewTap(featuredBrew) }
+                    }
+                }
+                
+                if !beanBrews.isEmpty {
+                    List{
+                        Section(header: Text("Brews")) {
+                            ForEach(beanBrews) { brew in
+                                BrewRowView(brew: brew, showBean: false, onDelete: {
+                                    context.delete(brew)
+                                    AudioServicesPlaySystemSound(SystemSoundID(1018))
+                                }, onEdit: {
+                                    editingBrew = brew
+                                })
+                                .onTapGesture { handleBrewTap(brew) }
                             }
                         }
-                        .scrollDisabled(true)
-                        .frame(height: CGFloat(40 + beanBrews.count * 66), alignment: .top)
-                        .animation(.default, value:  beanBrews.count)
-                    } else {
-                        ContentUnavailableView(
-                            label: {
-                                Text("No brews")
-                                    .bold()
-                                    .foregroundColor(Color(.secondaryLabel))
-                            },
-                            description: {
-                                Text(bean.inStock ? "Log a brew to get started" : "Mark as in stock to log brews")
-                                    .foregroundColor(Color(.tertiaryLabel))
-                            },
-                            actions: {
-                                if bean.inStock {
-                                    Button("Log brew") {
-                                        showingLogBrew = true
-                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .fontWeight(.medium)
-                                } else {
-                                    Button("Mark as in stock") {
-                                        bean.inStock = true
-                                        AudioServicesPlaySystemSound(SystemSoundID(1570))
-                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .fontWeight(.medium)
-                                }
-                            }
-                        )
-                        .frame(maxWidth: .infinity, minHeight: proxy.size.height - 310)
                     }
-                }
-                .padding(.bottom, 32)
-                .sheet(isPresented: $showingLogBrew) {
-                    LogBrewView(initialBean: bean)
-                }
-                .sheet(item: $editingBrew) { brew in
-                    LogBrewView(brew: brew)
-                }
-                .sheet(item: $editingBean) { bean in
-                    AddBeansView(bean: bean, onDelete: {
-                        path = []
-                    })
-                }
-                .navigationTitle(bean.name)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Edit bean", systemImage: "pencil", action: {
-                            editingBean = bean
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        })
-                        .labelStyle(.iconOnly)
-                    }
-                    if bean.inStock {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(action: {
+                    .scrollDisabled(true)
+                    .frame(height: CGFloat(40 + beanBrews.count * 66), alignment: .top)
+                    .animation(.default, value:  beanBrews.count)
+                } else {
+                    LeftAlignedContentUnavailableView("No brews") {
+                        Text(bean.inStock ? "Log a brew to get started" : "Mark as in stock to log brews")
+                    } actions: {
+                        if bean.inStock {
+                            Button("Log brew") {
                                 showingLogBrew = true
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                
-                            }) {
-                                AddCircle(progress: $pullProgress)
                             }
-                            .labelStyle(.iconOnly)
+                        } else {
+                            Button("Mark as in stock") {
+                                bean.inStock = true
+                                AudioServicesPlaySystemSound(SystemSoundID(1570))
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            }
                         }
+                    }
+                    .padding(.top, 16)
+                }
+            }
+            .padding(.bottom, 32)
+            .sheet(isPresented: $showingLogBrew) {
+                LogBrewView(initialBean: bean)
+            }
+            .sheet(item: $editingBrew) { brew in
+                LogBrewView(brew: brew)
+            }
+            .sheet(item: $editingBean) { bean in
+                AddBeansView(bean: bean, onDelete: {
+                    path = []
+                })
+            }
+            .navigationTitle(bean.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Edit bean", systemImage: "pencil", action: {
+                        editingBean = bean
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    })
+                    .labelStyle(.iconOnly)
+                }
+                if bean.inStock {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: {
+                            showingLogBrew = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            
+                        }) {
+                            AddCircle(progress: $pullProgress)
+                        }
+                        .labelStyle(.iconOnly)
                     }
                 }
             }
-            .background(Color(.systemGroupedBackground))
         }
+        .background(Color(.systemGroupedBackground))
         
     }
 }

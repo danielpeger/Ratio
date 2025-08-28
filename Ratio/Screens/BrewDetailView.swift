@@ -27,6 +27,17 @@ struct BrewDetailView: View {
         }
     }
     private var ratioProgress: Double { min(max(ratioValue, 1) - 1, 4) / 3 }
+    
+    private var flowValue: Double { Double(brew.yield) / Double(brew.time) }
+    private var flowRounded1: Double { (flowValue * 10).rounded() / 10 }
+    private var flowText: String {
+        let isWhole = flowRounded1.truncatingRemainder(dividingBy: 1) == 0
+        if isWhole {
+            return "\(Int(flowRounded1))g/s"
+        } else {
+            return String(format: "%.1fg/s", flowRounded1)
+        }
+    }
 
     var body: some View {
         ScrollView{
@@ -113,6 +124,14 @@ struct BrewDetailView: View {
                                 .padding(.trailing, -4)
                             }
                             .padding(.trailing, 16)
+                        }
+                        Divider()
+                        HStack {
+                            Text("Flow")
+                            Spacer()
+                            NumericText(text: flowText, numericValue: flowValue)
+                                .foregroundStyle(.secondary)
+                                .padding(.trailing, 16)
                         }
                     }
                     .padding(.leading, 16)

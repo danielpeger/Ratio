@@ -55,17 +55,19 @@ struct BrewImageView: View {
                 ZStack {
                     Circle()
                         .fill(brightBackground ? Color(.secondarySystemGroupedBackground) : Color(.systemGroupedBackground))
-                        .strokeBorder(noBorder ? Color.clear : Color(.separator).opacity(0.7), lineWidth: size == .large ? 1.5 : 1)
+                        .strokeBorder(noBorder ? Color.clear : brightBackground ? Color(.separator).opacity(0.8) : Color(.separator).opacity(0.5), lineWidth: size == .large ? 1.5 : 1)
                         .shadow(color: size == .large ? .primary.opacity(0.12) : Color.clear, radius: 40, x: 0, y: 20)
                         .shadow(color: size == .large ? .primary.opacity(0.04) : Color.clear, radius: 4, x: 0, y: 2)
                         .frame(width: frameSize, height: frameSize)
-                    Circle()
-                        .inset(by: size == .large ? 2 : 1.5)
-                        .fill(Color.clear)
-                        .stroke(Gradient(colors: [
-                            .white.opacity(0.4), .clear
-                        ]), lineWidth: size == .large ? 1.5 : 1)
-                        .frame(width: frameSize, height: frameSize)
+                    if !noBorder {
+                        Circle()
+                            .inset(by: size == .large ? 2 : 1.5)
+                            .fill(Color.clear)
+                            .stroke(Gradient(colors: [
+                                .white.opacity(0.4), .clear
+                            ]), lineWidth: size == .large ? 1.5 : 1)
+                            .frame(width: frameSize, height: frameSize)
+                    }
                 }
             }
             Text(rating.rawValue)

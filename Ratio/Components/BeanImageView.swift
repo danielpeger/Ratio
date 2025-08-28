@@ -54,7 +54,7 @@ struct BeanImageView: View {
                         .clipShape(RoundedRectangle(cornerRadius: large ? 30 : 11))
                         .overlay(
                             RoundedRectangle(cornerRadius: large ? 30 : 11)
-                                .strokeBorder(Color(.separator).opacity(0.7), lineWidth: large ? 1.5 : 1)
+                                .strokeBorder(Color(.separator).opacity(0.8), lineWidth: large ? 1.5 : 1)
                         )
                         .shadow(color: large ? .primary.opacity(0.12) : Color.clear, radius: 40, x: 0, y: 20)
                         .shadow(color: large ? .primary.opacity(0.04) : Color.clear, radius: 4, x: 0, y: 2)
@@ -70,7 +70,7 @@ struct BeanImageView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: large ? 30 : 11)
                         .fill((color ?? .red).color.gradient)
-                        .strokeBorder(Color(.separator).opacity(0.7), lineWidth: large ? 1.5 : 1)
+                        .strokeBorder(Color(.separator).opacity(0.8), lineWidth: large ? 1.5 : 1)
                         .frame(width: large ? 120 : 44, height: large ? 120 : 44)
                         .shadow(color: large ? (color ?? .red).color.opacity(0.24) : Color.clear, radius: 40, x: 0, y: 20)
                         .shadow(color: large ? (color ?? .red).color.opacity(0.08) : Color.clear, radius: 4, x: 0, y: 2)
