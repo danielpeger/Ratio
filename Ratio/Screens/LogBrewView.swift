@@ -35,6 +35,7 @@ struct LogBrewView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var context
     @Query(sort: \Bean.name) private var beans: [Bean]
+    @Query(sort: \Brew.creationDate, order: .reverse) private var allBrews: [Brew]
     
     var brew: Brew?
     var initialBean: Bean?
@@ -149,9 +150,11 @@ struct LogBrewView: View {
                 VStack(spacing: 0) {
                     let isCreating = (brew == nil)
                     let mostRecentBrewForSelectedBean: Brew? = brewBean.flatMap { Self.mostRecentBrew(for: $0) }
+                    let mostRecentNoBeanBrew: Brew? = (brewBean == nil) ? allBrews.first(where: { $0.bean == nil }) : nil
+                    let mostRecentTipsSource: Brew? = mostRecentBrewForSelectedBean ?? mostRecentNoBeanBrew
                     let pinnedBrewForSelectedBean: Brew? = brewBean?.brews?.first(where: { $0.pinned })
                     let shouldShowPinned = isCreating && pinnedBrewForSelectedBean != nil
-                    let shouldShowTips = isCreating && (mostRecentBrewForSelectedBean.map { !$0.tipArray.isEmpty } ?? false)
+                    let shouldShowTips = isCreating && (mostRecentTipsSource.map { !$0.tipArray.isEmpty } ?? false)
                     
                     if shouldShowPinned, let pinned = pinnedBrewForSelectedBean {
                         VStack(spacing: 0) {
@@ -166,7 +169,7 @@ struct LogBrewView: View {
                         }
                         .padding(.vertical, 8)
                     }
-                    if shouldShowTips, let mostRecent = mostRecentBrewForSelectedBean {
+                    if shouldShowTips, let mostRecent = mostRecentTipsSource {
                         VStack(spacing: 0) {
                             SectionHeader(title: "Tips from last brew")
                             TipsPills(brew: mostRecent)
