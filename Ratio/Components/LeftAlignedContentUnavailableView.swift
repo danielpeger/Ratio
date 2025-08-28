@@ -104,7 +104,7 @@ struct LeftAlignedContentUnavailableView<Label: View, Description: View, Actions
         VStack(alignment: .leading, spacing: 8) {
             if Label.self != EmptyView.self {
                 label
-                    .font(.title3)
+                    .font(.title2)
                     .bold()
                     .foregroundColor(Color(.secondaryLabel))
                     .multilineTextAlignment(.leading)

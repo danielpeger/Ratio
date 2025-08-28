@@ -141,6 +141,16 @@ struct BeanDetailView: View {
                             ForEach(beanBrews) { brew in
                                 BrewRowView(brew: brew, showBean: false, onDelete: {
                                     context.delete(brew)
+                                    var transaction = Transaction()
+                                    transaction.disablesAnimations = true
+                                    withTransaction(transaction) {
+                                        path.removeAll { screen in
+                                            if case let .brewDetail(previousBrew) = screen {
+                                                return previousBrew.id == brew.id
+                                            }
+                                            return false
+                                        }
+                                    }
                                     AudioServicesPlaySystemSound(SystemSoundID(1018))
                                 }, onEdit: {
                                     editingBrew = brew
@@ -177,7 +187,18 @@ struct BeanDetailView: View {
                 LogBrewView(initialBean: bean)
             }
             .sheet(item: $editingBrew) { brew in
-                LogBrewView(brew: brew)
+                LogBrewView(brew: brew, onDelete: {
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) {
+                        path.removeAll { screen in
+                            if case let .brewDetail(previousBrew) = screen {
+                                return previousBrew.id == brew.id
+                            }
+                            return false
+                        }
+                    }
+                })
             }
             .sheet(item: $editingBean) { bean in
                 AddBeansView(bean: bean, onDelete: {
