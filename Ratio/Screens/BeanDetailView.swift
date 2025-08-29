@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import AudioToolbox
 
+
 struct BeanDetailView: View {
     @Environment(\.modelContext) private var context
     

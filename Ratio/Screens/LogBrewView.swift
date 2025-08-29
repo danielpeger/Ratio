@@ -310,7 +310,7 @@ extension LogBrewView {
                         .foregroundColor(.secondary)
                         .animation(.snappy, value: brewDose)
                 }
-                WheelPicker(config: config, value: .init(
+                UIKitWheelPicker(config: config, value: .init(
                     get: { CGFloat(brewDose) },
                     set: { brewDose = Int($0.rounded()) }
                 ))
@@ -336,7 +336,7 @@ extension LogBrewView {
                         .animation(.snappy, value: brewGrind)
                         .foregroundColor(.secondary)
                 }
-                WheelPicker(config: config, value: .init(
+                UIKitWheelPicker(config: config, value: .init(
                     get: { CGFloat(brewGrind) },
                     set: { brewGrind = Int($0.rounded()) }
                 ))
@@ -362,7 +362,7 @@ extension LogBrewView {
                         .foregroundColor(.secondary)
                         .animation(.snappy, value: brewYield)
                 }
-                WheelPicker(config: config, value: .init(
+                UIKitWheelPicker(config: config, value: .init(
                     get: { CGFloat(brewYield) },
                     set: { brewYield = Int($0.rounded()) }
                 ))

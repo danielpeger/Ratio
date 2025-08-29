@@ -14,6 +14,7 @@ struct WheelPicker: View {
     @Binding var value: CGFloat
     /// View Properties
     @State private var isLoaded: Bool = false
+    @State private var selectedScrollId: Int? = nil
     var body: some View {
         GeometryReader {
             let size = $0.size
@@ -21,7 +22,7 @@ struct WheelPicker: View {
             let maxValue = CGFloat(config.count * config.multiplier)
             
             ScrollView(.horizontal) {
-                HStack(spacing: config.spacing) {
+                LazyHStack(spacing: config.spacing) {
                     let totalSteps = config.steps * config.count
                     
                     ForEach(0...totalSteps, id: \.self) { index in
@@ -29,12 +30,13 @@ struct WheelPicker: View {
                         // Ensure the divider at the center (matching current value) is 120pt tall
                         let centerIndex = Int(round((value * CGFloat(config.steps)) / CGFloat(config.multiplier)))
                         let isCenter = index == centerIndex
-                        let baseHeight: CGFloat = isCenter ? 100 : (remainder == 0 ? 90 : 80)
+                        let baseHeight: CGFloat = isCenter ? 100 : (remainder == 0 ? 95 : 90)
                         
                         Rectangle()
-                            .fill(isCenter ? Color.red : (remainder == 0 ? Color(.systemGray2) : Color(.systemGray5)))
+                            .fill(isCenter ? Color.red : (remainder == 0 ? .primary.opacity(0.5) : .secondary.opacity(0.5)))
                             .frame(width: 1, height: baseHeight, alignment: .bottom)
                             .frame(maxHeight: 100, alignment: .bottom)
+                            .animation(.spring(duration: 0.3, bounce: 0.15), value: value)
                             /*
                             .overlay(alignment: .bottom) {
                                 if remainder == 0 && config.showsText {
@@ -46,7 +48,6 @@ struct WheelPicker: View {
                                         .offset(y: 20)
                                 }
                             }
-                             */
                             .visualEffect { content, proxy in
                                 let rect = proxy.frame(in: .named("WHEEL"))
                                 let centerX = size.width / 2
@@ -67,7 +68,7 @@ struct WheelPicker: View {
                                     .rotation3DEffect(angle, axis: (x: 0, y: 1, z: 0), anchor: .bottom, perspective: 1)
                                     .scaleEffect(y: clampedScaleY, anchor: .center)
                             }
-                            .animation(.spring(duration: 0.3, bounce: 0.15), value: value)
+                             */
                     }
                 }
                 .frame(height: size.height)
@@ -75,21 +76,22 @@ struct WheelPicker: View {
             }
             .scrollIndicators(.hidden)
             .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: .init(get: {
-                let position: Int? = isLoaded ? (Int(value) * config.steps) / config.multiplier : nil
-                return position
-            }, set: { newValue in
-                if let newValue { 
-                    value = (CGFloat(newValue) / CGFloat(config.steps)) * CGFloat(config.multiplier)
-                    UISelectionFeedbackGenerator().selectionChanged()
+            .scrollPosition(id: $selectedScrollId)
+            .sensoryFeedback(.selection, trigger: selectedScrollId)
+            .onChange(of: selectedScrollId) { oldValue, newValue in
+                guard let newValue else { return }
+                let mapped = (CGFloat(newValue) / CGFloat(config.steps)) * CGFloat(config.multiplier)
+                if mapped != value {
+                    // Only update during active interaction or programmatic alignment
+                    value = mapped
                     AudioServicesPlaySystemSound(SystemSoundID(1479))
                 }
-            }))
+            }
             /*
             .overlay(alignment: .center) {
                 Rectangle()
                     .fill(Color(.accent))
-                    .frame(width: 1, height: 120)
+                    .frame(width: 1, height: 100)
                     .padding(.bottom, 10)
             }
              */
@@ -108,13 +110,24 @@ struct WheelPicker: View {
             )
             .safeAreaPadding(.horizontal, horizontalPadding)
             .onAppear {
-                if !isLoaded { isLoaded = true }
+                if !isLoaded {
+                    isLoaded = true
+                    // Initialize scroll position from the current value once loaded
+                    selectedScrollId = (Int(value) * config.steps) / config.multiplier
+                }
             }
             .coordinateSpace(name: "WHEEL")
         }
         /// Optional
         .onChange(of: config) { oldValue, newValue in
             value = 0
+        }
+        .onChange(of: value) { oldValue, newValue in
+            // Keep scroll position in sync when value is changed externally
+            let newId = (Int(newValue) * config.steps) / config.multiplier
+            if selectedScrollId != newId {
+                selectedScrollId = newId
+            }
         }
     }
     
