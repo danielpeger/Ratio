@@ -70,6 +70,23 @@ struct PickerRow: View {
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 9))
+            .onChange(of: isExpanded) { _, expanded in
+                if expanded {
+                    // Only nudge when near the left edge where mis-centering occurs
+                    let original = value.wrappedValue
+                    if original <= 15 {
+                        // Nudge the value (+/- 1) and immediately restore it to force centering
+                        let canBumpUp = original < CGFloat(config.maxValue)
+                        let temp = canBumpUp ? (original + 1) : (original - 1)
+                        var t = Transaction(); t.disablesAnimations = true
+                        withTransaction(t) { value.wrappedValue = temp }
+                        DispatchQueue.main.async {
+                            var t2 = Transaction(); t2.disablesAnimations = true
+                            withTransaction(t2) { value.wrappedValue = original }
+                        }
+                    }
+                }
+            }
         }
         .padding(.horizontal, 16)
     }
