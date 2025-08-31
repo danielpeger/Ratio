@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import UIKit
+import ImageIO
 
 struct BeanImageView: View {
     var color: ImageColor?
     var large: Bool = false
     var imageData: Data? = nil
     var groupedBgIcon: Bool = false
+    var downsampleBeforeDisplay: Bool = true
     private let scanning: Binding<Bool>?
     private let scanningSucceded: Binding<Bool>?
     private let scanningFailed: Binding<Bool>?
@@ -21,6 +24,7 @@ struct BeanImageView: View {
         large: Bool = false,
         imageData: Data? = nil,
         groupedBgIcon: Bool = false,
+        downsampleBeforeDisplay: Bool = true,
         scanning: Binding<Bool>? = nil,
         scanningSucceded: Binding<Bool>? = nil,
         scanningFailed: Binding<Bool>? = nil
@@ -29,6 +33,7 @@ struct BeanImageView: View {
         self.large = large
         self.imageData = imageData
         self.groupedBgIcon = groupedBgIcon
+        self.downsampleBeforeDisplay = downsampleBeforeDisplay
         self.scanning = scanning
         self.scanningSucceded = scanningSucceded
         self.scanningFailed = scanningFailed
@@ -45,13 +50,13 @@ struct BeanImageView: View {
 
     var body: some View {
         ZStack (alignment: .top){
-            if let data = imageData, let uiImage = UIImage(data: data) {
+            if let data = imageData, let uiImage = makeUIImage(data: data, targetSize: CGSize(width: large ? 240 : 88, height: large ? 240 : 88), downsample: true) {
                 ZStack {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                        .frame(width: large ? 120 : 44, height: large ? 120 : 44)
-                        .clipShape(RoundedRectangle(cornerRadius: large ? 30 : 11))
+                    .frame(width: large ? 120 : 44, height: large ? 120 : 44)
+                    .clipShape(RoundedRectangle(cornerRadius: large ? 30 : 11))
                         .overlay(
                             RoundedRectangle(cornerRadius: large ? 30 : 11)
                                 .strokeBorder(Color(.separator).opacity(0.8), lineWidth: large ? 1.5 : 1)
@@ -201,6 +206,46 @@ struct BeanImageView: View {
                 }
             }
         }
+    }
+}
+
+private extension BeanImageView {
+    func makeUIImage(data: Data, targetSize: CGSize, downsample: Bool) -> UIImage? {
+        if downsample {
+            return downsampledImage(from: data, to: targetSize)
+        } else {
+            return UIImage(data: data)
+        }
+    }
+
+    func downsampledImage(from data: Data, to pointSize: CGSize, scale: CGFloat = UIScreen.main.scale) -> UIImage? {
+        let targetMaxPixels = max(pointSize.width, pointSize.height) * scale
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: targetMaxPixels,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let cgThumb = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+
+        let rendererFormat = UIGraphicsImageRendererFormat.default()
+        rendererFormat.scale = scale
+        rendererFormat.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: pointSize, format: rendererFormat)
+
+        let image = renderer.image { ctx in
+            ctx.cgContext.interpolationQuality = .high
+            let sourceSizePts = CGSize(width: CGFloat(cgThumb.width) / scale, height: CGFloat(cgThumb.height) / scale)
+            let fitScale = max(pointSize.width / sourceSizePts.width, pointSize.height / sourceSizePts.height)
+            let drawSize = CGSize(width: sourceSizePts.width * fitScale, height: sourceSizePts.height * fitScale)
+            let drawOrigin = CGPoint(x: (pointSize.width - drawSize.width) / 2, y: (pointSize.height - drawSize.height) / 2)
+            let drawRect = CGRect(origin: drawOrigin, size: drawSize)
+            UIImage(cgImage: cgThumb, scale: scale, orientation: .up).draw(in: drawRect)
+        }
+        return image
     }
 }
 
