@@ -19,28 +19,36 @@ struct WheelPicker: View {
         GeometryReader {
             let size = $0.size
             let horizontalPadding = size.width / 2
-            let maxValue = CGFloat(config.count * config.multiplier)
             
             ScrollView(.horizontal) {
                 LazyHStack(spacing: config.spacing) {
-                    let totalSteps = config.steps * config.count
+                    let totalTicks = max(config.maxValue - config.minValue, 0)
                     
-                    ForEach(0...totalSteps, id: \.self) { index in
-                        let remainder = index % config.steps
-                        // Ensure the divider at the center (matching current value) is 120pt tall
-                        let centerIndex = Int(round((value * CGFloat(config.steps)) / CGFloat(config.multiplier)))
+                    ForEach(0...totalTicks, id: \.self) { index in
+                        let tickValue = config.minValue + index
+                        let isTenMultiple = tickValue % 10 == 0
+                        // Map current value to the nearest integer index within bounds
+                        let clampedCurrent = Int(min(max(round(value), CGFloat(config.minValue)), CGFloat(config.maxValue)))
+                        let centerIndex = clampedCurrent - config.minValue
                         let isCenter = index == centerIndex
-                        let baseHeight: CGFloat = isCenter ? 100 : (remainder == 0 ? 95 : 90)
+                        let baseHeight: CGFloat = isCenter ? 100 : (isTenMultiple ? 95 : 90)
                         
                         Rectangle()
-                            .fill(isCenter ? Color.red : (remainder == 0 ? .primary.opacity(0.5) : .secondary.opacity(0.5)))
-                            .frame(width: 1, height: baseHeight, alignment: .bottom)
-                            .frame(maxHeight: 100, alignment: .bottom)
-                            .animation(.spring(duration: 0.3, bounce: 0.15), value: value)
+                            .fill(isCenter ? Color.red : (isTenMultiple ? .primary.opacity(0.5) : .secondary.opacity(0.5)))
+                            .transaction { t in
+                                t.disablesAnimations = true
+                            }
+                            .frame(width: 1, height: 100, alignment: .bottom)
+                            .mask {
+                                Rectangle()
+                                    .frame(height: baseHeight, alignment: .bottom)
+                                    .frame(maxHeight: .infinity, alignment: .bottom)
+                                    .animation(.easeOut(duration: 0.2), value: centerIndex)
+                            }
                             /*
                             .overlay(alignment: .bottom) {
-                                if remainder == 0 && config.showsText {
-                                    Text("\((index / config.steps) * config.multiplier)")
+                                if isTenMultiple && config.showsText {
+                                    Text("\(tickValue)")
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                         .textScale(.secondary)
@@ -56,12 +64,12 @@ struct WheelPicker: View {
                                 // Normalize to [-1, 1]
                                 let t = max(min(signedDistance / maxDistance, 1), -1)
                                 // Map horizontal position to an angular curve; adjust thetaMaxDeg to change curvature
-                                let thetaMaxDeg: CGFloat = 60
+                                let thetaMaxDeg: CGFloat = 40
                                 let theta = (t * thetaMaxDeg) * .pi / 180
                                 // Rotation directly uses theta for a cylindrical feel
                                 let angle = Angle(radians: Double(theta))
                                 // Perspective foreshortening approximation using cos(theta). Raise power for a tighter curve
-                                let curvaturePower: CGFloat = 0.4
+                                let curvaturePower: CGFloat = 1
                                 let scaleY = pow(cos(theta), curvaturePower)
                                 let clampedScaleY = max(scaleY, 0.35)
                                 return content
@@ -69,6 +77,7 @@ struct WheelPicker: View {
                                     .scaleEffect(y: clampedScaleY, anchor: .center)
                             }
                              */
+                             
                     }
                 }
                 .frame(height: size.height)
@@ -80,31 +89,24 @@ struct WheelPicker: View {
             .sensoryFeedback(.selection, trigger: selectedScrollId)
             .onChange(of: selectedScrollId) { oldValue, newValue in
                 guard let newValue else { return }
-                let mapped = (CGFloat(newValue) / CGFloat(config.steps)) * CGFloat(config.multiplier)
+                let mappedInt = config.minValue + newValue
+                let mapped = CGFloat(min(max(mappedInt, config.minValue), config.maxValue))
                 if mapped != value {
                     // Only update during active interaction or programmatic alignment
                     value = mapped
                     AudioServicesPlaySystemSound(SystemSoundID(1479))
                 }
             }
-            /*
-            .overlay(alignment: .center) {
-                Rectangle()
-                    .fill(Color(.accent))
-                    .frame(width: 1, height: 100)
-                    .padding(.bottom, 10)
-            }
-             */
             .simultaneousGesture(
                 SpatialTapGesture()
                     .onEnded { tap in
                         let isRightHalf = tap.location.x > 0
-                        withAnimation {
-                            if isRightHalf {
-                                value = min(value + 1, maxValue)
-                            } else {
-                                value = max(value - 1, 0)
-                            }
+                        let target = isRightHalf
+                        ? min(value + 1, CGFloat(config.maxValue))
+                        : max(value - 1, CGFloat(config.minValue))
+                        if target != value {
+                            value = target
+                            AudioServicesPlaySystemSound(SystemSoundID(1479))
                         }
                     }
             )
@@ -113,40 +115,55 @@ struct WheelPicker: View {
                 if !isLoaded {
                     isLoaded = true
                     // Initialize scroll position from the current value once loaded
-                    selectedScrollId = (Int(value) * config.steps) / config.multiplier
+                    let clamped = Int(min(max(round(value), CGFloat(config.minValue)), CGFloat(config.maxValue)))
+                    selectedScrollId = clamped - config.minValue
                 }
             }
             .coordinateSpace(name: "WHEEL")
+            // Edge fade overlays
+            .overlay(alignment: .leading) {
+                LinearGradient(colors: [Color(.secondarySystemGroupedBackground), .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 32)
+                    .frame(maxHeight: .infinity)
+                    .allowsHitTesting(false)
+            }
+            .overlay(alignment: .trailing) {
+                LinearGradient(colors: [.clear, Color(.secondarySystemGroupedBackground)], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 32)
+                    .frame(maxHeight: .infinity)
+                    .allowsHitTesting(false)
+            }
         }
         /// Optional
         .onChange(of: config) { oldValue, newValue in
-            value = 0
+            value = CGFloat(newValue.minValue)
         }
         .onChange(of: value) { oldValue, newValue in
             // Keep scroll position in sync when value is changed externally
-            let newId = (Int(newValue) * config.steps) / config.multiplier
+            let clamped = Int(min(max(round(newValue), CGFloat(config.minValue)), CGFloat(config.maxValue)))
+            let newId = clamped - config.minValue
             if selectedScrollId != newId {
-                selectedScrollId = newId
+                withAnimation(.easeOut(duration: 0.2)) {
+                    selectedScrollId = newId
+                }
             }
         }
     }
     
     /// Picker Configuration
     struct Config: Equatable {
-        var count: Int
-        var steps: Int = 10
+        var minValue: Int
+        var maxValue: Int
         var spacing: CGFloat = 5
-        var multiplier: Int = 10
         var showsText: Bool = true
     }
 }
 
 #Preview {
     @Previewable @State var config: WheelPicker.Config = .init(
-        count: 10,
-        steps: 10,
-        spacing: 10,
-        multiplier: 10
+        minValue: 0,
+        maxValue: 100,
+        spacing: 10
     )
     @Previewable @State var value: CGFloat = 10
     

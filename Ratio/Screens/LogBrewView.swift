@@ -34,8 +34,8 @@ struct TipsPills: View {
 struct LogBrewView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var context
-    @Query(sort: \Bean.name) private var beans: [Bean]
-    @Query(sort: \Brew.creationDate, order: .reverse) private var allBrews: [Brew]
+    @Query(sort: \Bean.name) private var beans: [Bean] // keep, but avoid using in body
+    @Query(sort: \Brew.creationDate, order: .reverse) private var allBrews: [Brew] // keep, but avoid using in body
     
     var brew: Brew?
     var initialBean: Bean?
@@ -57,23 +57,36 @@ struct LogBrewView: View {
     @State private var saved = false
     @State private var yayHasBeenShown = false
 
-    // Precomputed ranges to simplify type-checking
-    private let doseValues = Array(1...50)
-    private let grindValues = Array(1...100)
-    private let yieldValues = Array(1...100)
-    private let timeValues = Array(1...120)
-    private var inStockBeans: [Bean] { beans.filter { $0.inStock } }
+    @State private var beansList: [Bean] = []
+    @State private var allBrewsList: [Brew] = []
+    private var inStockBeans: [Bean] { beansList.filter { $0.inStock } }
+    // Cache bean-derived sections to avoid SwiftData relationship work during wheel updates
+    @State private var cachedShowPinned: Bool = false
+    @State private var cachedPinnedBrewId: PersistentIdentifier? = nil
+    @State private var cachedShowTips: Bool = false
+    @State private var cachedTipsSourceId: PersistentIdentifier? = nil
+    // Snapshot + stable selection id to avoid SwiftData work during unrelated updates
+    @State private var beansSnapshot: [(id: PersistentIdentifier, name: String)] = []
+    @State private var selectedBeanId: PersistentIdentifier? = nil
     
-    @State var config: WheelPicker.Config = .init(
-        count: 10,
-        steps: 10,
-        spacing: 10,
-        multiplier: 10
+    @State var doseConfig: WheelPicker.Config = .init(
+        minValue: 1,
+        maxValue: 50,
+        spacing: 10
+    )
+    @State var grindYieldConfig: WheelPicker.Config = .init(
+        minValue: 1,
+        maxValue: 100,
+        spacing: 10
+    )
+    @State var timeConfig: WheelPicker.Config = .init(
+        minValue: 1,
+        maxValue: 120,
+        spacing: 10
     )
     
     // Initialize the view with the following logic:
     // - if you're editing a brew, then the edited brew's settings
-    // - otherwise if the selected bean has a pinned brew, then the pinned brew's settings
     // - otherwise if the selected bean has any brews, then the latest brew's settings
     // - otherwise the default settings (18,15,36,28)
     init(brew: Brew? = nil, initialBean: Bean? = nil, onDelete: (() -> Void)? = nil) {
@@ -149,14 +162,8 @@ struct LogBrewView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     let isCreating = (brew == nil)
-                    let mostRecentBrewForSelectedBean: Brew? = brewBean.flatMap { Self.mostRecentBrew(for: $0) }
-                    let mostRecentNoBeanBrew: Brew? = (brewBean == nil) ? allBrews.first(where: { $0.bean == nil }) : nil
-                    let mostRecentTipsSource: Brew? = mostRecentBrewForSelectedBean ?? mostRecentNoBeanBrew
-                    let pinnedBrewForSelectedBean: Brew? = brewBean?.brews?.first(where: { $0.pinned })
-                    let shouldShowPinned = isCreating && pinnedBrewForSelectedBean != nil
-                    let shouldShowTips = isCreating && (mostRecentTipsSource.map { !$0.tipArray.isEmpty } ?? false)
                     
-                    if shouldShowPinned, let pinned = pinnedBrewForSelectedBean {
+                    if isCreating, cachedShowPinned, let pinnedId = cachedPinnedBrewId, let pinned = allBrews.first(where: { $0.persistentModelID == pinnedId }) {
                         VStack(spacing: 0) {
                             SectionHeader(
                                 title: "Pinned brew",
@@ -169,7 +176,7 @@ struct LogBrewView: View {
                         }
                         .padding(.vertical, 8)
                     }
-                    if shouldShowTips, let mostRecent = mostRecentTipsSource {
+                    if isCreating, cachedShowTips, let tipsId = cachedTipsSourceId, let mostRecent = allBrews.first(where: { $0.persistentModelID == tipsId }) {
                         VStack(spacing: 0) {
                             SectionHeader(title: "Tips from last brew")
                             TipsPills(brew: mostRecent)
@@ -190,8 +197,76 @@ struct LogBrewView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle(brew == nil ? "Log brew" : "Edit brew")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                // Initialize stable selection id and initial snapshot
+                selectedBeanId = brewBean?.persistentModelID
+                // Snapshot fetches to detach from SwiftData live queries during scroll
+                beansList = (try? context.fetch(FetchDescriptor<Bean>(sortBy: [SortDescriptor(\.name)]))) ?? []
+                allBrewsList = (try? context.fetch(FetchDescriptor<Brew>(sortBy: [SortDescriptor(\.creationDate, order: .reverse)]))) ?? []
+                beansSnapshot = inStockBeans.map { ($0.persistentModelID, $0.name) }
+                // Initialize cached sections based on the initial bean selection
+                let isCreating = (brew == nil)
+                if isCreating {
+                    if let bean = brewBean {
+                        // Pinned brew for selected bean
+                        let pinned = bean.brews?.first(where: { $0.pinned })
+                        cachedShowPinned = (pinned != nil)
+                        cachedPinnedBrewId = pinned?.persistentModelID
+                        // Tips source: only from selected bean's most recent brew (no fallback)
+                        let mostRecentForBean = Self.mostRecentBrew(for: bean)
+                        cachedShowTips = (mostRecentForBean?.tipArray.isEmpty == false)
+                        cachedTipsSourceId = mostRecentForBean?.persistentModelID
+                    } else {
+                        // No bean selected: allow showing tips from most recent brew with no bean
+                        cachedShowPinned = false
+                        let mostRecentNoBean = allBrews.first(where: { $0.bean == nil })
+                        cachedShowTips = (mostRecentNoBean?.tipArray.isEmpty == false)
+                        cachedTipsSourceId = mostRecentNoBean?.persistentModelID
+                    }
+                } else {
+                    cachedShowPinned = false
+                    cachedShowTips = false
+                    cachedPinnedBrewId = nil
+                    cachedTipsSourceId = nil
+                }
+            }
             .onChange(of: brewBean) { _, newValue in
                 applyTemplateForSelectedBeanIfNeeded()
+                // Keep id in sync when model changes externally
+                selectedBeanId = newValue?.persistentModelID
+                // Update cached sections derived from relationships once per change
+                let isCreating = (brew == nil)
+                if isCreating {
+                    if let bean = newValue {
+                        // Pinned brew for selected bean
+                        let pinned = bean.brews?.first(where: { $0.pinned })
+                        cachedShowPinned = (pinned != nil)
+                        cachedPinnedBrewId = pinned?.persistentModelID
+                        // Tips source: only from selected bean's most recent brew (no fallback)
+                        let mostRecentForBean = Self.mostRecentBrew(for: bean)
+                        cachedShowTips = (mostRecentForBean?.tipArray.isEmpty == false)
+                        cachedTipsSourceId = mostRecentForBean?.persistentModelID
+                    } else {
+                        // No bean selected
+                        cachedShowPinned = false
+                        let mostRecentNoBean = allBrews.first(where: { $0.bean == nil })
+                        cachedShowTips = (mostRecentNoBean?.tipArray.isEmpty == false)
+                        cachedTipsSourceId = mostRecentNoBean?.persistentModelID
+                    }
+                } else {
+                    cachedShowPinned = false
+                    cachedShowTips = false
+                    cachedPinnedBrewId = nil
+                    cachedTipsSourceId = nil
+                }
+            }
+            // Intentionally avoid observing @Query during drag; provide manual refresh triggers elsewhere if needed
+            .onChange(of: selectedBeanId) { _, newId in
+                // Translate id -> model only when id actually changes
+                let currentId = brewBean?.persistentModelID
+                if newId != currentId {
+                    brewBean = newId.flatMap { id in beansList.first(where: { $0.persistentModelID == id }) }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -282,10 +357,13 @@ extension LogBrewView {
             HStack {
                 Text("Beans")
                 Spacer()
-                Picker("Beans", selection: $brewBean) {
-                    Text("Not set").tag(nil as Bean?)
-                    ForEach(inStockBeans) { bean in
-                        Text(bean.name).tag(bean as Bean?)
+                Picker("Beans", selection: Binding<PersistentIdentifier?>(
+                    get: { selectedBeanId },
+                    set: { selectedBeanId = $0 }
+                )) {
+                    Text("Not set").tag(nil as PersistentIdentifier?)
+                    ForEach(beansSnapshot, id: \.id) { item in
+                        Text(item.name).tag(item.id as PersistentIdentifier?)
                     }
                 }
             }
@@ -310,7 +388,7 @@ extension LogBrewView {
                         .foregroundColor(.secondary)
                         .animation(.snappy, value: brewDose)
                 }
-                UIKitWheelPicker(config: config, value: .init(
+                WheelPicker(config: doseConfig, value: .init(
                     get: { CGFloat(brewDose) },
                     set: { brewDose = Int($0.rounded()) }
                 ))
@@ -336,7 +414,7 @@ extension LogBrewView {
                         .animation(.snappy, value: brewGrind)
                         .foregroundColor(.secondary)
                 }
-                UIKitWheelPicker(config: config, value: .init(
+                WheelPicker(config: grindYieldConfig, value: .init(
                     get: { CGFloat(brewGrind) },
                     set: { brewGrind = Int($0.rounded()) }
                 ))
@@ -362,7 +440,7 @@ extension LogBrewView {
                         .foregroundColor(.secondary)
                         .animation(.snappy, value: brewYield)
                 }
-                UIKitWheelPicker(config: config, value: .init(
+                WheelPicker(config: grindYieldConfig, value: .init(
                     get: { CGFloat(brewYield) },
                     set: { brewYield = Int($0.rounded()) }
                 ))
@@ -388,7 +466,7 @@ extension LogBrewView {
                         .foregroundColor(.secondary)
                         .animation(.snappy, value: brewTime)
                 }
-                WheelPicker(config: config, value: .init(
+                WheelPicker(config: timeConfig, value: .init(
                     get: { CGFloat(brewTime) },
                     set: { brewTime = Int($0.rounded()) }
                 ))
