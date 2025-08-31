@@ -62,12 +62,16 @@ struct AddBeansView: View {
             return !beanName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                    !beanRoaster.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                    beanOrigin != .notSet ||
-                   beanProcessing != .notSet
+                   beanProcessing != .notSet ||
+                   beanImageColor != .red ||
+                   beanImageData != nil
         } else {
             return beanName != (bean?.name ?? "") ||
                    beanRoaster != (bean?.roaster ?? "") ||
                    beanOrigin != (bean?.origin ?? .notSet) ||
-                   beanProcessing != (bean?.processing ?? .notSet)
+                   beanProcessing != (bean?.processing ?? .notSet) ||
+                   beanImageColor != (bean?.imageColor ?? .red) ||
+                   beanImageData != bean?.imageData
         }
     }
     
@@ -235,6 +239,7 @@ struct AddBeansView: View {
                             dismiss()
                         }
                     }
+                    .disabled(scanning)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(bean == nil ? "Add" : "Save") {
@@ -258,7 +263,7 @@ struct AddBeansView: View {
                         AudioServicesPlaySystemSound(SystemSoundID(1570))
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                     }
-                    .disabled(beanName.isEmpty)
+                    .disabled(scanning || beanName.isEmpty)
                 }
                 if focusedField == .roaster {
                     ToolbarItemGroup(placement: .keyboard) {
@@ -287,13 +292,13 @@ struct AddBeansView: View {
             .alert(isPresented: $scanningError) {
                 Alert(title: Text("Error scanning image"), message: Text("Ratio couldn't scan your image for some reason."), dismissButton: .default(Text("OK")))
             }
-            .alert("Discard edits?", isPresented: $showDiscardAlert) {
-                Button("Discard", role: .destructive) { dismiss() }
-                Button("Don't discard", role: .cancel) { }
+            .confirmationDialog("Discard changes?", isPresented: $showDiscardAlert, titleVisibility: .hidden) {
+                Button("Discard changes", role: .destructive) { dismiss() }
+                Button("Cancel", role: .cancel) { }
             }
-            .interactiveDismissDisabled(formIsDirty())
+            .interactiveDismissDisabled(scanning || formIsDirty())
             .onAppear {
-                focusedField = .name 
+                focusedField = .name
             }
         }
         .alert("Delete bean?", isPresented: $showDeleteAlert) {

@@ -53,6 +53,20 @@ struct LogBrewView: View {
     @State private var brewPinned: Bool = false
     @State private var createdBrew: Brew? = nil
 
+    // Track initial values to detect unsaved edits
+    @State private var initialBeanId: PersistentIdentifier? = nil
+    @State private var initialDose: Int = 18
+    @State private var initialGrind: Int = 15
+    @State private var initialYield: Int = 36
+    @State private var initialTime: Int = 28
+    @State private var initialRating: Rating = .neutral
+    @State private var initialTastes: Set<Taste> = []
+    @State private var initialTips: [Bool?] = [nil, nil, nil]
+    @State private var initialNotes: String = ""
+    @State private var initialPinned: Bool = false
+
+    @State private var showDiscardAlert: Bool = false
+
     @State private var navigateToRateBrew = false
     @State private var saved = false
     @State private var yayHasBeenShown = false
@@ -106,6 +120,18 @@ struct LogBrewView: View {
             self._brewTips = State(initialValue: editingBrew.tips)
             self._brewNotes = State(initialValue: editingBrew.notes ?? "")
             self._brewPinned = State(initialValue: editingBrew.pinned)
+
+            // Snapshot initial values for dirty-check
+            self._initialBeanId = State(initialValue: editingBrew.bean?.persistentModelID)
+            self._initialDose = State(initialValue: editingBrew.dose)
+            self._initialGrind = State(initialValue: editingBrew.grind)
+            self._initialYield = State(initialValue: editingBrew.yield)
+            self._initialTime = State(initialValue: editingBrew.time)
+            self._initialRating = State(initialValue: editingBrew.rating)
+            self._initialTastes = State(initialValue: editingBrew.tastes)
+            self._initialTips = State(initialValue: editingBrew.tips)
+            self._initialNotes = State(initialValue: editingBrew.notes ?? "")
+            self._initialPinned = State(initialValue: editingBrew.pinned)
         } else {
             // Creating: prefer template from initial bean (pinned > latest) else defaults
             let source: Brew? = initialBean.flatMap { Self.mostRecentBrew(for: $0) }
@@ -121,6 +147,18 @@ struct LogBrewView: View {
             self._brewTips = State(initialValue: [nil, nil, nil])
             self._brewNotes = State(initialValue: "")
             self._brewPinned = State(initialValue: false)
+
+            // Snapshot initial values for dirty-check
+            self._initialBeanId = State(initialValue: initialBean?.persistentModelID)
+            self._initialDose = State(initialValue: source?.dose ?? 18)
+            self._initialGrind = State(initialValue: source?.grind ?? 15)
+            self._initialYield = State(initialValue: source?.yield ?? 36)
+            self._initialTime = State(initialValue: source?.time ?? 28)
+            self._initialRating = State(initialValue: .neutral)
+            self._initialTastes = State(initialValue: [])
+            self._initialTips = State(initialValue: [nil, nil, nil])
+            self._initialNotes = State(initialValue: "")
+            self._initialPinned = State(initialValue: false)
         }
     }
     
@@ -141,6 +179,20 @@ struct LogBrewView: View {
         brewGrind = 15
         brewYield = 36
         brewTime = 28
+    }
+
+    private func formIsDirty() -> Bool {
+        let currentBeanId = brewBean?.persistentModelID
+        return currentBeanId != initialBeanId ||
+               brewDose != initialDose ||
+               brewGrind != initialGrind ||
+               brewYield != initialYield ||
+               brewTime != initialTime ||
+               brewRating != initialRating ||
+               brewTastes != initialTastes ||
+               brewTips != initialTips ||
+               brewNotes != initialNotes ||
+               brewPinned != initialPinned
     }
     
     private func applyTemplateForSelectedBeanIfNeeded() {
@@ -271,7 +323,11 @@ struct LogBrewView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        if formIsDirty() {
+                            showDiscardAlert = true
+                        } else {
+                            dismiss()
+                        }
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -280,6 +336,11 @@ struct LogBrewView: View {
                     }
                 }
             }
+            .confirmationDialog("Discard changes?", isPresented: $showDiscardAlert, titleVisibility: .hidden) {
+                Button("Discard changes", role: .destructive) { dismiss() }
+                Button("Cancel", role: .cancel) { }
+            }
+            .interactiveDismissDisabled(formIsDirty())
             .navigationDestination(isPresented: $navigateToRateBrew) {
                 RateBrewView(
                     rating: $brewRating,
