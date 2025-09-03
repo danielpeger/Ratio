@@ -22,6 +22,8 @@ struct ContentView: View {
 
     var body: some View {
       // SystemSoundsTesterView()
+        //WelcomeView()
+        
         TabView {
             BeansView()
                 .tabItem {
