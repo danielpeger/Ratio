@@ -38,7 +38,7 @@ struct WheelPicker: View {
                             .transaction { t in
                                 t.disablesAnimations = true
                             }
-                            .frame(width: 1, height: 100, alignment: .bottom)
+                            .frame(width: isCenter ? 1.5 : 1, height: 100, alignment: .bottom)
                             .mask {
                                 Rectangle()
                                     .frame(height: baseHeight, alignment: .bottom)
@@ -85,7 +85,7 @@ struct WheelPicker: View {
             }
             .scrollIndicators(.hidden)
             .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: $selectedScrollId)
+            .scrollPosition(id: $selectedScrollId, anchor: .leading)
             .sensoryFeedback(.selection, trigger: selectedScrollId)
             .onChange(of: selectedScrollId) { oldValue, newValue in
                 guard let newValue else { return }
@@ -114,7 +114,6 @@ struct WheelPicker: View {
             .onAppear {
                 if !isLoaded {
                     isLoaded = true
-                    // Initialize scroll position from the current value once loaded
                     let clamped = Int(min(max(round(value), CGFloat(config.minValue)), CGFloat(config.maxValue)))
                     selectedScrollId = clamped - config.minValue
                 }

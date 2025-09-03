@@ -294,7 +294,7 @@ struct AddBeansView: View {
             }
             .confirmationDialog("Discard changes?", isPresented: $showDiscardAlert, titleVisibility: .hidden) {
                 Button("Discard changes", role: .destructive) { dismiss() }
-                Button("Cancel", role: .cancel) { }
+                Button("Don't discard", role: .cancel) { }
             }
             .interactiveDismissDisabled(scanning || formIsDirty())
             .onAppear {
