@@ -69,7 +69,6 @@ struct LogBrewView: View {
 
     @State private var navigateToRateBrew = false
     @State private var saved = false
-    @State private var yayHasBeenShown = false
 
     @State private var beansList: [Bean] = []
     @State private var allBrewsList: [Brew] = []
@@ -447,7 +446,6 @@ extension LogBrewView {
             tips: $brewTips,
             notes: $brewNotes,
             pinned: $brewPinned,
-            yayHasBeenShown: $yayHasBeenShown,
             isPinnable: isPinnable,
             isEditing: isEditing,
             originalRating: originalRating,
@@ -541,7 +539,7 @@ extension LogBrewView {
 
     private func handleRateDismiss() {
         dismiss()
-        if saved && !yayHasBeenShown {
+        if saved {
             AudioServicesPlaySystemSound(SystemSoundID(1570))
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }

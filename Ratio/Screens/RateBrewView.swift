@@ -15,7 +15,6 @@ struct RateBrewView: View {
     @Binding var tips: [Bool?]
     @Binding var notes: String
     @Binding var pinned: Bool
-    @Binding var yayHasBeenShown: Bool
 
     var isPinnable: Bool
     // Edit flow controls
@@ -26,6 +25,7 @@ struct RateBrewView: View {
     var onYayPinToggle: (() -> Void)?
     
     @State private var navigateToYay = false
+    @State private var shouldSaveOnYayDone: Bool = false
     @State private var manualTipSet: [Bool] = [false, false, false]
     @State private var manualTipValue: [Bool?] = [nil, nil, nil]
     
@@ -90,21 +90,16 @@ struct RateBrewView: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
-                    onSave?()
-                    if isEditing {
-                        if (originalRating != .good) && (rating == .good) {
-                            navigateToYay = true
-                            yayHasBeenShown = true
-                        } else {
-                            onDismiss?()
-                        }
+                    // Defer saving to YayView when Yay will be shown; otherwise save immediately
+                    let willShowYay: Bool = isEditing
+                        ? ((originalRating != .good) && (rating == .good))
+                        : (rating == .good)
+                    if willShowYay {
+                        navigateToYay = true
+                        shouldSaveOnYayDone = true
                     } else {
-                        if rating == .good {
-                            navigateToYay = true
-                            yayHasBeenShown = true
-                        } else {
-                            onDismiss?()
-                        }
+                        onSave?()
+                        onDismiss?()
                     }
                 }
             }
@@ -121,6 +116,10 @@ struct RateBrewView: View {
                 isPinnable: isPinnable,
                 onPinToggle: { onYayPinToggle?() },
                 onDone: {
+                    if shouldSaveOnYayDone {
+                        onSave?()
+                        shouldSaveOnYayDone = false
+                    }
                     onDismiss?()
                 }
             )
@@ -343,7 +342,6 @@ private struct NotesSection: View {
     @Previewable @State var previewTips: [Bool?] = [nil, nil, nil]
     @Previewable @State var previewNotes: String = "Test note"
     @Previewable @State var previewPinned: Bool = false
-    @Previewable @State var previewYayHasBeenShown: Bool = false
     
     RateBrewView(
         rating: $previewRating,
@@ -351,7 +349,6 @@ private struct NotesSection: View {
         tips: $previewTips,
         notes: $previewNotes,
         pinned: $previewPinned,
-        yayHasBeenShown: $previewYayHasBeenShown,
         isPinnable: true
     )
 }
