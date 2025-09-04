@@ -34,7 +34,7 @@ struct WheelPicker: View {
                         let baseHeight: CGFloat = isCenter ? 100 : (isTenMultiple ? 95 : 90)
                         
                         Rectangle()
-                            .fill(isCenter ? Color.red : (isTenMultiple ? .primary.opacity(0.5) : .secondary.opacity(0.5)))
+                            .fill(isCenter ? Color.red : (isTenMultiple ? .primary.opacity(0.4) : .secondary.opacity(0.4)))
                             .transaction { t in
                                 t.disablesAnimations = true
                             }

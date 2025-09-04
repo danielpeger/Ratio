@@ -31,15 +31,13 @@ struct YayView: View {
                     .bold()
                     .multilineTextAlignment(.center)
                 if isPinnable {
-                    Text("Pin it if you'd like to remember it and reproduce it later.")
+                    Text("Pin it if you'd like to remember the settings and reproduce it later.")
                         .font(.title3)
-                        .foregroundStyle(Color(.systemBackground))
                         .opacity(0.75)
                         .multilineTextAlignment(.center)
                 } else {
                     Text("To save it for later, add it to a bean.")
                         .font(.title3)
-                        .foregroundStyle(Color(.systemBackground))
                         .opacity(0.75)
                         .multilineTextAlignment(.center)
                 }
@@ -52,22 +50,23 @@ struct YayView: View {
                 }) {
                     Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
                         .fontWeight(.medium)
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(colorScheme == .dark ? Color(.systemBackground) : .accent)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(14)
-                        .background(Color(.systemBackground))
+                        .background(colorScheme == .dark ? .accent : Color(.systemBackground))
                         .contentShape(Capsule())
                 }
                 .clipShape(Capsule())
                 .buttonStyle(.plain)
             }
         }
-        .foregroundStyle(Color(.systemBackground))
+        .foregroundStyle(colorScheme == .dark ? .accent : Color(.systemBackground))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding(.horizontal, 24)
         .padding(.top, 56)
         .padding(.bottom, 32)
-        .background(Color.red.gradient)
+        .background(colorScheme == .light ? Color.red.gradient : Color.clear.gradient)
+        .background(colorScheme == .dark ? Color(.systemGroupedBackground) : Color.clear)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
@@ -75,11 +74,9 @@ struct YayView: View {
                 }
             }
         }
-        // Make navigation bar items systemBackground color
-        .toolbarBackground(Color("RedGradientTopColor"), for: .navigationBar)
+        .toolbarBackground(colorScheme == .light ? Color("RedGradientTopColor") : Color(.systemGroupedBackground), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(colorScheme == .dark ? .light : .dark, for: .navigationBar)
-        .tint(.black)
+        .toolbarColorScheme(colorScheme == .light ? .dark : nil, for: .navigationBar)
         .animation(.none, value: pinned)
         .onAppear {
             // Fire immediately then repeat in sync using the same tick driving the effect

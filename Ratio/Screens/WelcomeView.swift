@@ -275,6 +275,7 @@ struct WelcomeView: View {
                             Text("Achieve café-quality espresso at home.")
                                 .font(.subheadline)
                                 .fixedSize(horizontal: false, vertical: true)
+                                .opacity(0.75)
                         }
                     }
                     HStack(alignment: .top, spacing: 16) {
@@ -288,6 +289,7 @@ struct WelcomeView: View {
                             Text("Taste and reflect to sharpen your palate.")
                                 .font(.subheadline)
                                 .fixedSize(horizontal: false, vertical: true)
+                                .opacity(0.75)
                         }
                     }
                     HStack(alignment: .top, spacing: 16) {
@@ -301,6 +303,7 @@ struct WelcomeView: View {
                             Text("Leave notes after each brew to guide your next one.")
                                 .font(.subheadline)
                                 .fixedSize(horizontal: false, vertical: true)
+                                .opacity(0.75)
                         }
                     }
                     HStack(alignment: .top, spacing: 16) {
@@ -314,6 +317,7 @@ struct WelcomeView: View {
                             Text("Nail the perfect shot? Pin it, so you can easily recreate it later.")
                                 .font(.subheadline)
                                 .fixedSize(horizontal: false, vertical: true)
+                                .opacity(0.75)
                         }
                     }
                 }

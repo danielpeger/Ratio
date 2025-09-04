@@ -16,6 +16,8 @@ enum ImageSize: String, Codable, Hashable, CaseIterable, Identifiable {
 }
 
 struct BrewImageView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var rating: Rating
     var size: ImageSize = .small
     var brightBackground: Bool = false
@@ -61,10 +63,10 @@ struct BrewImageView: View {
                         .frame(width: frameSize, height: frameSize)
                     if !noBorder {
                         Circle()
-                            .inset(by: size == .large ? 2 : 1.5)
+                            .inset(by: size == .large ? 2.25 : 1.5)
                             .fill(Color.clear)
                             .stroke(Gradient(colors: [
-                                .white.opacity(0.4), .clear
+                                .white.opacity(colorScheme == .dark ? 0.25 : 0.4), .clear
                             ]), lineWidth: size == .large ? 1.5 : 1)
                             .frame(width: frameSize, height: frameSize)
                     }
