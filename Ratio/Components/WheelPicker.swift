@@ -56,6 +56,7 @@ struct WheelPicker: View {
                                         .offset(y: 20)
                                 }
                             }
+                            */
                             .visualEffect { content, proxy in
                                 let rect = proxy.frame(in: .named("WHEEL"))
                                 let centerX = size.width / 2
@@ -63,21 +64,46 @@ struct WheelPicker: View {
                                 let maxDistance = max(centerX, 1)
                                 // Normalize to [-1, 1]
                                 let t = max(min(signedDistance / maxDistance, 1), -1)
-                                // Map horizontal position to an angular curve; adjust thetaMaxDeg to change curvature
-                                let thetaMaxDeg: CGFloat = 40
-                                let theta = (t * thetaMaxDeg) * .pi / 180
-                                // Rotation directly uses theta for a cylindrical feel
-                                let angle = Angle(radians: Double(theta))
-                                // Perspective foreshortening approximation using cos(theta). Raise power for a tighter curve
-                                let curvaturePower: CGFloat = 1
-                                let scaleY = pow(cos(theta), curvaturePower)
-                                let clampedScaleY = max(scaleY, 0.35)
+                                // Use Double math to ease type inference
+                                let tD = Double(t)
+                                let theta = (tD * Double(config.thetaMaxDeg)) * .pi / 180.0
+                                let cosThetaD = max(cos(theta), 0.0)
+                                // Rotation around vertical axis (negative for front-facing cylinder)
+                                let angle = Angle(radians: -theta)
+                                // Foreshortening along Y using cos(theta)
+                                let curvaturePowerD = Double(config.curvaturePower)
+                                let scaleYRaw = pow(cosThetaD, curvaturePowerD)
+                                let clampedScaleY = max(CGFloat(scaleYRaw), config.minScaleY)
+                                // Remove horizontal squash to avoid visual widening at edges
+                                let xSquash: CGFloat = 1
                                 return content
-                                    .rotation3DEffect(angle, axis: (x: 0, y: 1, z: 0), anchor: .bottom, perspective: 1)
-                                    .scaleEffect(y: clampedScaleY, anchor: .center)
+                                    .rotation3DEffect(
+                                        angle,
+                                        axis: (x: 0, y: 1, z: 0),
+                                        anchor: .bottom,
+                                        perspective: config.perspective
+                                    )
+                                    .scaleEffect(x: xSquash, y: clampedScaleY, anchor: .center)
                             }
-                             */
-                             
+                            .visualEffect { content, proxy in
+                                let rect = proxy.frame(in: .named("WHEEL"))
+                                let centerX = size.width / 2
+                                let signedDistance = rect.midX - centerX
+                                let maxDistance = max(centerX, 1)
+                                // Normalize to [-1, 1]
+                                let t = max(min(signedDistance / maxDistance, 1), -1)
+                                let tAbs = abs(t)
+                                // Coordinate warp: compress x near edges by scaling distance from center
+                                let factor = 1 - min(max(config.edgeCompressionFactor, 0), 0.95) * pow(tAbs, max(config.edgeCompressionExponent, 0.5))
+                                let offsetX = (factor - 1) * signedDistance
+                                // Optional edge dimming
+                                let theta = (Double(t) * Double(config.thetaMaxDeg)) * .pi / 180.0
+                                let cosTheta = max(cos(theta), 0)
+                                let opacity = config.minEdgeOpacity + (1 - config.minEdgeOpacity) * CGFloat(cosTheta)
+                                return content
+                                    .offset(x: offsetX)
+                                    .opacity(opacity)
+                            }
                     }
                 }
                 .frame(height: size.height)
@@ -122,13 +148,13 @@ struct WheelPicker: View {
             // Edge fade overlays
             .overlay(alignment: .leading) {
                 LinearGradient(colors: [Color(.secondarySystemGroupedBackground), .clear], startPoint: .leading, endPoint: .trailing)
-                    .frame(width: 32)
+                    .frame(width: 40)
                     .frame(maxHeight: .infinity)
                     .allowsHitTesting(false)
             }
             .overlay(alignment: .trailing) {
                 LinearGradient(colors: [.clear, Color(.secondarySystemGroupedBackground)], startPoint: .leading, endPoint: .trailing)
-                    .frame(width: 32)
+                    .frame(width: 40)
                     .frame(maxHeight: .infinity)
                     .allowsHitTesting(false)
             }
@@ -155,6 +181,16 @@ struct WheelPicker: View {
         var maxValue: Int
         var spacing: CGFloat = 5
         var showsText: Bool = true
+        // Cylinder distortion tuning
+        var thetaMaxDeg: CGFloat = 30            // maximum rotation at edges
+        var curvaturePower: CGFloat = 0.8        // foreshortening curve
+        var minScaleY: CGFloat = 0.1            // minimum vertical scale at edges
+        var edgeXSquash: CGFloat = 0.08          // horizontal squash near edges [0,1]
+        var edgeCompression: CGFloat = 100         // legacy (unused) point offset compression
+        var edgeCompressionFactor: CGFloat = 0.08 // [0, 0.95] strength of edge compression
+        var edgeCompressionExponent: CGFloat = 5 // >= 0.5, curve steepness towards edges
+        var minEdgeOpacity: CGFloat = 1       // fade near edges
+        var perspective: CGFloat = 1           // 3D perspective strength
     }
 }
 
@@ -173,5 +209,118 @@ struct WheelPicker: View {
             .animation(.snappy, value: value)
         WheelPicker(config: config, value: $value)
             .frame(height: 100)
+        Divider().padding(.vertical, 8)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Cylinder Distortion Controls").font(.headline)
+            // thetaMaxDeg
+            HStack {
+                Text("θ max")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.thetaMaxDeg) },
+                        set: { config.thetaMaxDeg = CGFloat($0) }
+                    ),
+                    in: 0...90
+                )
+                Text("\(Int(config.thetaMaxDeg))°").monospacedDigit()
+            }
+            // curvaturePower
+            HStack {
+                Text("Curvature")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.curvaturePower) },
+                        set: { config.curvaturePower = CGFloat($0) }
+                    ),
+                    in: 0.1...1.5
+                )
+                Text(String(format: "%.2f", Double(config.curvaturePower))).monospacedDigit()
+            }
+            // minScaleY
+            HStack {
+                Text("Min Scale Y")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.minScaleY) },
+                        set: { config.minScaleY = CGFloat($0) }
+                    ),
+                    in: 0.1...1.0
+                )
+                Text(String(format: "%.2f", Double(config.minScaleY))).monospacedDigit()
+            }
+            // edgeXSquash
+            HStack {
+                Text("Edge X Squash")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.edgeXSquash) },
+                        set: { config.edgeXSquash = CGFloat($0) }
+                    ),
+                    in: 0.0...0.4
+                )
+                Text(String(format: "%.2f", Double(config.edgeXSquash))).monospacedDigit()
+            }
+            // edgeCompression
+            HStack {
+                Text("Edge Compression")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.edgeCompression) },
+                        set: { config.edgeCompression = CGFloat($0) }
+                    ),
+                    in: 0...200
+                )
+                Text(String(format: "%.0f", Double(config.edgeCompression))).monospacedDigit()
+            }
+            // edgeCompressionFactor
+            HStack {
+                Text("Edge Compression Factor")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.edgeCompressionFactor) },
+                        set: { config.edgeCompressionFactor = CGFloat($0) }
+                    ),
+                    in: 0.0...0.95
+                )
+                Text(String(format: "%.2f", Double(config.edgeCompressionFactor))).monospacedDigit()
+            }
+            // edgeCompressionExponent
+            HStack {
+                Text("Edge Compression Exponent")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.edgeCompressionExponent) },
+                        set: { config.edgeCompressionExponent = CGFloat($0) }
+                    ),
+                    in: 0.5...10.0
+                )
+                Text(String(format: "%.2f", Double(config.edgeCompressionExponent))).monospacedDigit()
+            }
+            // minEdgeOpacity
+            HStack {
+                Text("Min Edge Opacity")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.minEdgeOpacity) },
+                        set: { config.minEdgeOpacity = CGFloat($0) }
+                    ),
+                    in: 0.0...1.0
+                )
+                Text(String(format: "%.2f", Double(config.minEdgeOpacity))).monospacedDigit()
+            }
+            // perspective
+            HStack {
+                Text("Perspective")
+                Slider(
+                    value: Binding(
+                        get: { Double(config.perspective) },
+                        set: { config.perspective = CGFloat($0) }
+                    ),
+                    in: 0.0...1.5
+                )
+                Text(String(format: "%.2f", Double(config.perspective))).monospacedDigit()
+            }
+        }
+        .padding(.horizontal)
     }
 }
