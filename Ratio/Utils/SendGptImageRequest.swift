@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
  
 
 struct ParsedBeanInfo {
@@ -28,6 +29,9 @@ private struct CoffeeBeanInfo: Decodable {
 func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?) -> Void) {
     let apiKey = "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"
 
+    // Resize image to max 1800px, 0.80 quality
+    let processedData = resizeImage(data: imageData, maxSize: 4000, quality: 0.80) ?? imageData
+
     guard let url = URL(string: "https://api.openai.com/v1/responses") else {
         completion(nil)
         return
@@ -36,8 +40,8 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?
     let instruction = "First, decide if the image provided is a coffee bean bag label with text printed on it. If the image has no text, stop and return null for all values. If the image is not a coffee bean bag label, stop and return null for all values. If you're sure it is a bean bag with text, extract information that is printed on it: name, roaster, origin, processing. Only return values that you recognised as text written on the bag label. Don't add notes or commentary, just the extracted text or null."
 
     // Build data URI for the image
-    let mimeType = guessMimeType(for: imageData)
-    let base64 = imageData.base64EncodedString()
+    let mimeType = guessMimeType(for: processedData)
+    let base64 = processedData.base64EncodedString()
     let dataURL = "data:\(mimeType);base64,\(base64)"
 
     // Enum lists from app models (excluding "Not set")
@@ -94,7 +98,9 @@ func sendGptImageRequest(imageData: Data, completion: @escaping (ParsedBeanInfo?
     let body: [String: Any] = [
         "model": "gpt-5-nano",
         "input": input,
-        "text": textOptions
+        "text": textOptions,
+        "max_output_tokens": 150,
+        "reasoning": ["effort": "minimal"]
     ]
 
     // Serialize to JSON
@@ -230,4 +236,17 @@ private func normalizeOptional(_ value: String?) -> String? {
     let nullish: Set<String> = ["null", "none", "n/a", "na", "not set", "unknown", ":null", ":null,", ",", ":", "/", "/null", ":null}", "}", "null}", ": null,"]
     if nullish.contains(lower) { return nil }
     return trimmed
+}
+
+private func resizeImage(data: Data, maxSize: CGFloat, quality: CGFloat) -> Data? {
+    guard let image = UIImage(data: data) else { return nil }
+    let size = image.size
+    let scale = min(1.0, maxSize / max(size.width, size.height))
+    guard scale < 1.0 else { return image.jpegData(compressionQuality: quality) }
+    let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+    UIGraphicsBeginImageContextWithOptions(newSize, true, 1.0)
+    image.draw(in: CGRect(origin: .zero, size: newSize))
+    let resized = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    return resized?.jpegData(compressionQuality: quality)
 }
