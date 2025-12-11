@@ -136,13 +136,24 @@ struct BeansView: View {
             .background(Color(.systemGroupedBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
-                        showingAddBeans = true
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    }) {
-                        AddCircle(progress: $pullProgress)
+                    if #available(iOS 26.0, *) {
+                        Button("Add beans", systemImage: "plus", action: {
+                            showingAddBeans = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        })
+                        .buttonStyle(.glassProminent)
+                        .tint(.red.opacity(pullProgress))
+                        .scaleEffect(1.0 + pullProgress)
+                        .labelStyle(.iconOnly)
+                    } else {
+                        Button(action: {
+                            showingAddBeans = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        }) {
+                            AddCircle(progress: $pullProgress)
+                        }
+                        .labelStyle(.iconOnly)
                     }
-                    .labelStyle(.iconOnly)
                 }
             }
             .navigationTitle("Beans")

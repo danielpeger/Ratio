@@ -62,7 +62,7 @@ struct BeanCardView: View {
             .padding([.leading, .trailing, .bottom], 12)
         }
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(9)
+        .cornerRadius(Design.containerCornerRadius)
         .contextMenu {
             Button(inStock ? "Out of stock" : "In stock", systemImage: inStock ? "arrow.right" : "arrow.left") {
                 onToggleStock?()

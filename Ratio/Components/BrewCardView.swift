@@ -41,9 +41,9 @@ struct BrewCardView: View {
         }
         .padding(16)
         .background(brew.pinned ? Color("QuaternaryAccentColor") : Color(.secondarySystemGroupedBackground))
-        .cornerRadius(9)
+        .cornerRadius(Design.containerCornerRadius)
         .overlay(
-            RoundedRectangle(cornerRadius: 9)
+            RoundedRectangle(cornerRadius: Design.containerCornerRadius)
                 .strokeBorder(brew.pinned ? Color.accent : Color.clear)
         )
         .onChange(of: brew) { _, newBrew in

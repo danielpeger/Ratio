@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct TicksCircle: Shape {
     func path(in rect: CGRect) -> Path {
@@ -235,38 +236,173 @@ struct TicksCircle: Shape {
 }
 
 struct WelcomeView: View {
-    @State private var spin = false
-    @State private var trim: CGFloat = 0
+    @Environment(\.colorScheme) private var colorScheme
 
+    @State private var startDate = Date()
+    @State private var trim: Double = 0.0
+    @State private var appear: Double = 0.0
+    private let fastPhase: TimeInterval = 1
+    private let fastPeriod: TimeInterval = 6   // seconds per rotation during fast phase
+    private let slowPeriod: TimeInterval = 60  // seconds per rotation after
+    private let rampPhase: TimeInterval = 4     // seconds to interpolate from fast to slow
+    @State private var lastHapticDate: Date = Date()
+    private let selectionGenerator = UISelectionFeedbackGenerator()
+    // Haptic behavior
+    private let hapticMaxHz: Double = 40      // peak rate when spring speed is max
+    private let hapticBaselineHz: Double = 0.53  // fallback rate after spring settles
+    // Match trim's spring animation parameters
+    private let trimSpringResponse: Double = 3
+    private let trimSpringDamping: Double = 0.28
     
+    private var mainColor: Color { colorScheme == .dark ? .accent : Color(.systemBackground) }
+
+    private func angleDegrees(for date: Date) -> Double {
+        let t = max(0, date.timeIntervalSince(startDate))
+        let rFast = 1.0 / fastPeriod
+        let rSlow = 1.0 / slowPeriod
+
+        if t <= fastPhase {
+            let revs = t * rFast
+            return -360 * revs
+        } else if t <= fastPhase + rampPhase {
+            let u = t - fastPhase
+            let b = (rSlow - rFast) / rampPhase
+            let revs = fastPhase * rFast + rFast * u + 0.5 * b * u * u
+            return -360 * revs
+        } else {
+            let rampIntegral = rFast * rampPhase + 0.5 * ((rSlow - rFast) / rampPhase) * rampPhase * rampPhase
+            let revs = fastPhase * rFast + rampIntegral + (t - fastPhase - rampPhase) * rSlow
+            return -360 * revs
+        }
+    }
+
+    private func hapticFrequency(at t: TimeInterval) -> Double {
+        // During spring window, drive haptic frequency from the instantaneous spring velocity magnitude
+        let springWindow: TimeInterval = fastPhase + rampPhase + 2.0
+        if t <= springWindow {
+            let s = springNormalizedSpeed(at: t)
+            return max(0.0, hapticMaxHz * s)
+        }
+        // After spring settles, use baseline frequency indefinitely
+        return hapticBaselineHz
+    }
+
+    private func maybeFireHaptic(at date: Date) {
+        let t = max(0, date.timeIntervalSince(startDate))
+        let freq = max(0.1, hapticFrequency(at: t))
+        let interval = 1.0 / freq
+        if date.timeIntervalSince(lastHapticDate) >= interval {
+            selectionGenerator.selectionChanged()
+            selectionGenerator.prepare()
+            lastHapticDate = date
+        }
+    }
+
+    private func springNormalizedSpeed(at t: TimeInterval) -> Double {
+        // Underdamped second-order step response derivative magnitude, normalized by a sampled peak
+        let zeta = max(0.0, min(0.999, trimSpringDamping))
+        let omega0 = 2.0 * .pi / max(0.001, trimSpringResponse)
+        let omegaD = omega0 * sqrt(max(0.0, 1.0 - zeta * zeta))
+        let phi = atan2(sqrt(max(0.0, 1.0 - zeta * zeta)), zeta)
+        let A = 1.0 / max(1e-6, sqrt(max(0.0, 1.0 - zeta * zeta)))
+
+        func v(_ time: Double) -> Double {
+            let expTerm = exp(-zeta * omega0 * time)
+            let arg = omegaD * time + phi
+            // Velocity of step response: derivative of x(t)
+            let val = A * expTerm * (zeta * omega0 * sin(arg) - omegaD * cos(arg))
+            return val
+        }
+
+        // Sample over a reasonable window to estimate peak speed
+        let sampleWindow = max(2.0 * trimSpringResponse, fastPhase + rampPhase + 2.0)
+        let samples = 240
+        var vmax: Double = 0
+        if samples > 0 {
+            let dt = sampleWindow / Double(samples)
+            var i = 0
+            while i <= samples {
+                let vv = abs(v(Double(i) * dt))
+                if vv > vmax { vmax = vv }
+                i += 1
+            }
+        }
+        if vmax <= 0 { return 0 }
+        return min(1.0, abs(v(t)) / vmax)
+    }
+
     var body: some View {
         VStack(spacing: 32) {
             VStack(spacing: 32) {
                 ZStack {
-                    TicksCircle()
-                        .scaledToFit()
-                        .rotationEffect(.degrees(spin ? 360 : 0))
-                        .animation(.linear(duration: 60).repeatForever(autoreverses: false), value: spin)
-                        .frame(width: 160, height: 160)
                     Circle()
-                        .trim(from: 0, to: 0.66)
+                        .stroke(Color("RedGradientTopColor"), lineWidth: 54.666)
+                        .frame(width: 105.6666, height: 105.6666)
+                        .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 10)
+                    TimelineView(.animation) { context in
+                        TicksCircle()
+                            .scaledToFit()
+                            .rotationEffect(.degrees(angleDegrees(for: context.date)))
+                            .frame(width: 160, height: 160)
+                            .onChange(of: context.date) { _, newDate in
+                                maybeFireHaptic(at: newDate)
+                            }
+                    }
+                    Circle()
+                        .trim(from: 0, to: trim)
                         .rotation(Angle(degrees: 270))
                         .scale(x: -1, y: 1)
-                        .stroke(Color(.systemBackground), lineWidth: 54.666)
+                        .stroke(mainColor, lineWidth: 54.666)
                         .frame(width: 105.6666, height: 105.6666)
                         .animation(.spring(
-                            response: 4,
-                            dampingFraction: 0.25,
+                            response: trimSpringResponse,
+                            dampingFraction: trimSpringDamping,
                         ), value: trim)
+                    // Angular gradient overlay masked to ring thickness
+                    AngularGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: Color("RedGradientTopColor"), location: 0.0),
+                            .init(color: Color("RedGradientTopColor").opacity(0), location: trim),
+                            .init(color: Color("RedGradientTopColor"), location: 1.0)
+                        ]),
+                        center: .center,
+                        startAngle: .degrees(0),   // top
+                        endAngle: .degrees(360)     // full 360 sweep from top
+                    )
+                        .frame(width: 105.6666, height: 105.6666)
+                        .mask(
+                            Circle()
+                                .stroke(lineWidth: 54.666)
+                                .frame(width: 105.6666, height: 105.6666)
+                        )
+                        .rotationEffect(Angle(degrees: -90))
+                        .scaleEffect(x: -1, y: 1)
+                        .animation(.spring(
+                            response: trimSpringResponse,
+                            dampingFraction: trimSpringDamping,
+                        ), value: trim)
+                    
+                    Circle()
+                        .stroke(lineWidth: 54.666)
+                        .frame(width: 105.6666, height: 105.6666)
+                        .foregroundStyle(
+                            .white.opacity(0.04)
+                            .shadow(.inner(color: .white.opacity(1), radius: 8, x: 0, y: 0))
+                        )
                 }
                 Text("Welcome to Ratio")
                     .font(.largeTitle)
                     .fontWeight(.heavy)
                     .multilineTextAlignment(.center)
+                    .opacity(appear)
+                    .offset(y: (1 - appear) * 16)
+                    .blur(radius: (1 - appear) * 5)
+                    .animation(.easeOut(duration: 0.5).delay(4), value: appear)
+                
                 VStack(alignment:.leading, spacing: 32) {
                     HStack(alignment: .top, spacing: 16) {
                         Image(systemName: "heart.fill")
-                            .foregroundStyle(Color(.systemBackground).opacity(0.8))
+                            .foregroundStyle(mainColor.opacity(0.8))
                             .font(.system(size: 40))
                             .frame(width: 40, height: 40)
                         VStack(alignment: .leading, spacing: 4) {
@@ -278,9 +414,14 @@ struct WelcomeView: View {
                                 .opacity(0.75)
                         }
                     }
+                    .opacity(appear)
+                    .offset(y: (1 - appear) * 16)
+                    .blur(radius: (1 - appear) * 5)
+                    .animation(.easeOut(duration: 0.5).delay(4.25), value: appear)
+                    
                     HStack(alignment: .top, spacing: 16) {
                         Image("cup.sparkle")
-                            .foregroundStyle(Color(.systemBackground).opacity(0.8))
+                            .foregroundStyle(mainColor.opacity(0.8))
                             .font(.system(size: 36))
                             .frame(width: 40, height: 40)
                         VStack(alignment: .leading, spacing: 4) {
@@ -292,9 +433,14 @@ struct WelcomeView: View {
                                 .opacity(0.75)
                         }
                     }
+                    .opacity(appear)
+                    .offset(y: (1 - appear) * 16)
+                    .blur(radius: (1 - appear) * 5)
+                    .animation(.easeOut(duration: 0.5).delay(4.5), value: appear)
+                    
                     HStack(alignment: .top, spacing: 16) {
                         Image(systemName: "dial.low.fill")
-                            .foregroundStyle(Color(.systemBackground).opacity(0.8))
+                            .foregroundStyle(mainColor.opacity(0.8))
                             .font(.system(size: 40))
                             .frame(width: 40, height: 40)
                         VStack(alignment: .leading, spacing: 4) {
@@ -306,9 +452,14 @@ struct WelcomeView: View {
                                 .opacity(0.75)
                         }
                     }
+                    .opacity(appear)
+                    .offset(y: (1 - appear) * 16)
+                    .blur(radius: (1 - appear) * 5)
+                    .animation(.easeOut(duration: 0.5).delay(4.75), value: appear)
+                    
                     HStack(alignment: .top, spacing: 16) {
                         Image(systemName: "pin.fill")
-                            .foregroundStyle(Color(.systemBackground).opacity(0.8))
+                            .foregroundStyle(mainColor.opacity(0.8))
                             .font(.system(size: 37))
                             .frame(width: 40, height: 48)
                         VStack(alignment: .leading, spacing: 4) {
@@ -320,6 +471,10 @@ struct WelcomeView: View {
                                 .opacity(0.75)
                         }
                     }
+                    .opacity(appear)
+                    .offset(y: (1 - appear) * 16)
+                    .blur(radius: (1 - appear) * 5)
+                    .animation(.easeOut(duration: 0.5).delay(5), value: appear)
                 }
             }
             Spacer()
@@ -336,16 +491,24 @@ struct WelcomeView: View {
             }
             .clipShape(Capsule())
             .buttonStyle(.plain)
+            .opacity(appear)
+            .offset(y: (1 - appear) * 16)
+            .blur(radius: (1 - appear) * 5)
+            .animation(.easeOut(duration: 0.5).delay(5.25), value: appear)
         }
-        .foregroundStyle(Color(.systemBackground))
+        .foregroundStyle(mainColor)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding(.horizontal, 32)
         .padding(.top, 48)
         .padding(.bottom, 32)
-        .background(Color.red.gradient)
+        .background(colorScheme == .light ? Color.red.gradient : Color.clear.gradient)
+        .background(colorScheme == .dark ? Color(.systemBackground) : Color.clear)
         .onAppear {
-            spin = true
+            startDate = Date()
             trim = 0.66
+            appear = 1.0
+            lastHapticDate = startDate
+            selectionGenerator.prepare()
         }
     }
 }

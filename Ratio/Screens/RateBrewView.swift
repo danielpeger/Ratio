@@ -174,7 +174,7 @@ private struct RatingSection: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 9))
+                .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
             }
             .padding(.horizontal, 16)
     }
@@ -208,7 +208,7 @@ private struct TasteSection: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
         }
         .padding(.horizontal, 16)
     }
@@ -238,7 +238,7 @@ private struct TipsSection: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
         }
         .padding(.horizontal, 16)
     }
@@ -330,7 +330,7 @@ private struct NotesSection: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
         }
         .padding(.horizontal, 16)
     }

@@ -6,6 +6,14 @@
 //
 
 import SwiftUI
+import Foundation
+
+enum Design {
+    static let containerCornerRadius: CGFloat = {
+        let major = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
+        return major >= 26 ? 26 : 10
+    }()
+}
 import SwiftData
 
 @main

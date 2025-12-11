@@ -475,7 +475,7 @@ extension LogBrewView {
             .padding(.trailing, 4)
             .padding(.vertical, 5)
             .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
@@ -496,7 +496,7 @@ extension LogBrewView {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                    .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)

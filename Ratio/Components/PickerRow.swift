@@ -69,7 +69,7 @@ struct PickerRow: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
         }
         .padding(.horizontal, 16)
     }

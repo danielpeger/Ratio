@@ -137,7 +137,7 @@ struct BrewDetailView: View {
                     .padding(.leading, 16)
                     .padding(.vertical, 12)
                     .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                    .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
                 }
                 .padding(.top, 32)
                 .padding(.horizontal, 16)
@@ -188,7 +188,7 @@ struct BrewDetailView: View {
                         .padding(.leading, 16)
                         .padding(.vertical, 12)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 9))
+                        .clipShape(RoundedRectangle(cornerRadius: Design.containerCornerRadius))
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 32)
