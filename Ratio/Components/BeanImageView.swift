@@ -124,11 +124,11 @@ struct BeanImageView: View {
                                 .opacity(0)
                         }
                         if showSuccessText {
-                            Text("Bean info added")
+                            Text("Label info added")
                                 .multilineTextAlignment(.center)
                                 .transition(.move(edge: .top).combined(with: .opacity))
                         } else {
-                            Text("Bean info added")
+                            Text("Label info added")
                                 .multilineTextAlignment(.center)
                                 .opacity(0)
                         }
@@ -172,11 +172,11 @@ struct BeanImageView: View {
                                 .opacity(0)
                         }
                         if showFailureText {
-                            Text("No bean info found")
+                            Text("No coffee info found")
                                 .multilineTextAlignment(.center)
                                 .transition(.move(edge: .top).combined(with: .opacity))
                         } else {
-                            Text("No bean info found")
+                            Text("No coffee info found")
                                 .multilineTextAlignment(.center)
                                 .opacity(0)
                         }

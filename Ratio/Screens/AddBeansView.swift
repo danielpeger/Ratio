@@ -38,6 +38,17 @@ struct AddBeansView: View {
     @State private var beanPendingDeletion: Bean? = nil
     @State private var showDiscardAlert: Bool = false
     
+    @State private var loadingTextIndex: Int = 0
+    @State private var loadingTextTimer: Timer? = nil
+    
+    private let loadingTexts = [
+        "Scanning...",
+        "Reading the label...",
+        "Squinting at tiny text...",
+        "Sniffing beans...",
+        "Extracting the details..."
+    ]
+    
     @Query private var beans: [Bean]
 
     private var uniqueRoasters: [String] {
@@ -127,8 +138,9 @@ struct AddBeansView: View {
                                     Image("scan.beanbag")
                                         .font(.system(size: 18))
                                 }
-                                Text(scanning ? "Scanning..." : "Scan label")
+                                Text(scanning ? loadingTexts[loadingTextIndex] : "Scan label")
                                     .fontWeight(.medium)
+                                    .contentTransition(.numericText())
                             }
                             .padding(.vertical, 4)
                             .padding(.horizontal, 8)
@@ -317,12 +329,15 @@ struct AddBeansView: View {
         .onChange(of: scanning) { _, isNowScanning in
             if isNowScanning {
                 startScanSoundTimer()
+                startLoadingTextTimer()
             } else {
                 stopScanSoundTimer()
+                stopLoadingTextTimer()
             }
         }
         .onDisappear {
             stopScanSoundTimer()
+            stopLoadingTextTimer()
             focusedField = nil
         }
     }
@@ -371,6 +386,28 @@ struct AddBeansView: View {
     private func stopScanSoundTimer() {
         scanSoundTimer?.cancel()
         scanSoundTimer = nil
+    }
+    
+    private func startLoadingTextTimer() {
+        loadingTextIndex = 0
+        scheduleNextLoadingText()
+    }
+    
+    private func scheduleNextLoadingText() {
+        let randomInterval = Double.random(in: 3.0...5.0)
+        loadingTextTimer = Timer.scheduledTimer(withTimeInterval: randomInterval, repeats: false) { _ in
+            guard self.scanning else { return }
+            withAnimation {
+                self.loadingTextIndex = (self.loadingTextIndex + 1) % self.loadingTexts.count
+            }
+            self.scheduleNextLoadingText()
+        }
+    }
+    
+    private func stopLoadingTextTimer() {
+        loadingTextTimer?.invalidate()
+        loadingTextTimer = nil
+        loadingTextIndex = 0
     }
 }
 
