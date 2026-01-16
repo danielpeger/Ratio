@@ -20,6 +20,38 @@ struct YayView: View {
     private let effectRepeatDelay: TimeInterval = 1.2
     @State private var bounceTick: Int = 0
 
+    @ViewBuilder
+    private var pinButton: some View {
+        if #available(iOS 26.0, *) {
+            Button(action: {
+                pinned.toggle()
+                onPinToggle?()
+            }) {
+                Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
+                    .fontWeight(.medium)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(14)
+            }
+            .primaryActionStyle()
+            .tint(.accent)
+        } else {
+            Button(action: {
+                pinned.toggle()
+                onPinToggle?()
+            }) {
+                Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
+                    .fontWeight(.medium)
+                    .foregroundStyle(colorScheme == .dark ? Color(.systemBackground) : .accent)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(14)
+                    .background(colorScheme == .dark ? .accent : Color(.systemBackground))
+                    .contentShape(Capsule())
+            }
+            .clipShape(Capsule())
+            .buttonStyle(.plain)
+        }
+    }
+
     var body: some View {
         VStack(spacing: 32) {
             Image(systemName: "heart.fill")
@@ -44,20 +76,7 @@ struct YayView: View {
             }
             Spacer()
             if isPinnable {
-                Button(action: {
-                    pinned.toggle()
-                    onPinToggle?()
-                }) {
-                    Label(pinned ? "Unpin brew" : "Pin brew", systemImage: pinned ? "pin.slash.fill" : "pin")
-                        .fontWeight(.medium)
-                        .foregroundStyle(colorScheme == .dark ? Color(.systemBackground) : .accent)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(14)
-                        .background(colorScheme == .dark ? .accent : Color(.systemBackground))
-                        .contentShape(Capsule())
-                }
-                .clipShape(Capsule())
-                .buttonStyle(.plain)
+                pinButton
             }
         }
         .foregroundStyle(colorScheme == .dark ? .accent : Color(.systemBackground))

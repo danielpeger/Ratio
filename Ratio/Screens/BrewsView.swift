@@ -41,7 +41,7 @@ struct BrewsView: View {
                                         showingLogBrew = true
                                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                     }
-                                    .buttonStyle(.borderedProminent)
+                                    .primaryActionStyle()
                                     .fontWeight(.medium)
                                 }
                             )
@@ -73,14 +73,24 @@ struct BrewsView: View {
             .background(Color(.systemGroupedBackground))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
-                        showingLogBrew = true
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-
-                    }) {
-                        AddCircle(progress: $pullProgress)
+                    if #available(iOS 26.0, *) {
+                        Button("Log brew", systemImage: "plus", action: {
+                            showingLogBrew = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        })
+                        .primaryActionStyle()
+                        .tint(.red.opacity(pullProgress))
+                        .scaleEffect(1.0 + pullProgress)
+                        .labelStyle(.iconOnly)
+                    } else {
+                        Button(action: {
+                            showingLogBrew = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        }) {
+                            AddCircle(progress: $pullProgress)
+                        }
+                        .labelStyle(.iconOnly)
                     }
-                    .labelStyle(.iconOnly)
                 }
             }
             .navigationTitle("Brews")

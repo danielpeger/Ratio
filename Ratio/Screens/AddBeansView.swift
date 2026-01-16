@@ -148,7 +148,7 @@ struct AddBeansView: View {
                         .disabled(scanning)
                         .foregroundColor(.primary)
                         .clipShape(Capsule())
-                        .buttonStyle(.bordered)
+                        .secondaryActionStyle()
                         .fullScreenCover(isPresented: $showCamera) {
                             ZStack {
                                 Color.black.edgesIgnoringSafeArea(.all)
@@ -187,7 +187,7 @@ struct AddBeansView: View {
                                 .padding(.vertical, 4)
                                 .padding(.horizontal, 8)
                             }
-                            .buttonStyle(.bordered)
+                            .secondaryActionStyle()
                             .clipShape(Capsule())
                         }
                     }

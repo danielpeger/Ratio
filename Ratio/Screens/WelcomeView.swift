@@ -331,6 +331,34 @@ struct WelcomeView: View {
         return min(1.0, abs(v(t)) / vmax)
     }
 
+    @ViewBuilder
+    private var continueButton: some View {
+        if #available(iOS 26.0, *) {
+            Button("Continue") {
+                
+            }
+            .fontWeight(.medium)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(14)
+            .primaryActionStyle()
+            .tint(.accent)
+        } else {
+            Button(action: {
+                
+            }) {
+                Text("Continue")
+                    .fontWeight(.medium)
+                    .foregroundStyle(.accent)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(14)
+                    .background(Color(.systemBackground))
+                    .contentShape(Capsule())
+            }
+            .clipShape(Capsule())
+            .buttonStyle(.plain)
+        }
+    }
+
     var body: some View {
         VStack(spacing: 32) {
             VStack(spacing: 32) {
@@ -478,19 +506,7 @@ struct WelcomeView: View {
                 }
             }
             Spacer()
-            Button(action: {
-                
-            }) {
-                Text("Continue")
-                    .fontWeight(.medium)
-                    .foregroundStyle(.accent)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(14)
-                    .background(Color(.systemBackground))
-                    .contentShape(Capsule())
-            }
-            .clipShape(Capsule())
-            .buttonStyle(.plain)
+            continueButton
             .opacity(appear)
             .offset(y: (1 - appear) * 16)
             .blur(radius: (1 - appear) * 5)

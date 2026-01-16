@@ -36,6 +36,7 @@ struct ContentView: View {
                     Text("Brews")
                 }
         }
+        .tabBarGlassBackground()
         .withUndoRedo { undoManager in
             modelContext.undoManager = undoManager
         }
@@ -56,7 +57,7 @@ struct SystemSoundsTesterView: View {
                     Button("Play") {
                         play(id: previewSoundId)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .primaryActionStyle()
                 }
                 .padding()
                 
@@ -69,7 +70,7 @@ struct SystemSoundsTesterView: View {
                             previewSoundId = id
                             play(id: id)
                         }
-                        .buttonStyle(.bordered)
+                        .secondaryActionStyle()
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
