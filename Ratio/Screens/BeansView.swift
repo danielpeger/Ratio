@@ -117,7 +117,7 @@ struct BeansView: View {
                                             showingAddBeans = true
                                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                         }
-                                        .buttonStyle(.borderedProminent)
+                                        .primaryActionStyle()
                                         .fontWeight(.medium)
                                     }
                                 }
@@ -141,7 +141,7 @@ struct BeansView: View {
                             showingAddBeans = true
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         })
-                        .buttonStyle(.glassProminent)
+                        .primaryActionStyle()
                         .tint(.red.opacity(pullProgress))
                         .scaleEffect(1.0 + pullProgress)
                         .labelStyle(.iconOnly)

@@ -115,9 +115,15 @@ struct LeftAlignedContentUnavailableView<Label: View, Description: View, Actions
                 .multilineTextAlignment(.leading)
 
             if Actions.self != EmptyView.self {
-                actions
-                    .buttonStyle(CapsuleActionButtonStyle())
-                    .padding(.top, 4)
+                if #available(iOS 26.0, *) {
+                    actions
+                        .primaryActionStyle()
+                        .padding(.top, 4)
+                } else {
+                    actions
+                        .buttonStyle(CapsuleActionButtonStyle())
+                        .padding(.top, 4)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
