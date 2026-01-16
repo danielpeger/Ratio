@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import PhotosUI
 import SwiftData
 import AudioToolbox
 
@@ -26,8 +25,6 @@ struct AddBeansView: View {
     @State private var beanImageData: Data?
     
     @State private var showCamera = false
-    @State private var pickedPhoto: PhotosPickerItem? = nil
-    @State private var showPhotoPicker = false
     @State private var scanning = false
     @State private var scanningError = false
     @State private var scanningSucceded = false
@@ -121,17 +118,8 @@ struct AddBeansView: View {
                     .padding(.top, 32)
 
                     VStack(spacing: 8) {
-                        Menu {
-                            Button {
-                                showCamera = true
-                            } label: {
-                                Label("Take photo", systemImage: "camera")
-                            }
-                            Button {
-                                showPhotoPicker = true
-                            } label: {
-                                Label("Pick photo", systemImage: "photo.on.rectangle")
-                            }
+                        Button {
+                            showCamera = true
                         } label: {
                             HStack{
                                 if (!scanning) {
@@ -160,23 +148,10 @@ struct AddBeansView: View {
                                 }
                             }
                         }
-                        .photosPicker(isPresented: $showPhotoPicker,
-                                      selection: $pickedPhoto,
-                                      matching: .images,
-                                      photoLibrary: .shared())
-                        .onChange(of: pickedPhoto) {
-                            Task {
-                                if let data = try? await pickedPhoto?.loadTransferable(type: Data.self) {
-                                    beanImageData = data
-                                    scanBagImage(imageData: data)
-                                }
-                            }
-                        }
                         
                         if beanImageData != nil && !scanning {
                             Button(role: .destructive ,action: {
                                 beanImageData = nil
-                                pickedPhoto = nil
                             }) {
                                 HStack{
                                     Image(systemName: "trash")
@@ -328,6 +303,7 @@ struct AddBeansView: View {
         }
         .onChange(of: scanning) { _, isNowScanning in
             if isNowScanning {
+                focusedField = nil
                 startScanSoundTimer()
                 startLoadingTextTimer()
             } else {
