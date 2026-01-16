@@ -47,10 +47,14 @@ struct BeanImageView: View {
     private var isFailure: Bool { scanningFailed?.wrappedValue ?? false }
     @State private var showFailureIcon: Bool = false
     @State private var showFailureText: Bool = false
+    @State private var cachedImage: UIImage? = nil
+    @State private var cachedImageData: Data? = nil
+    @State private var cachedTargetSize: CGSize = .zero
+    @State private var cachedDownsample: Bool = true
 
     var body: some View {
         ZStack (alignment: .top){
-            if let data = imageData, let uiImage = makeUIImage(data: data, targetSize: CGSize(width: large ? 240 : 88, height: large ? 240 : 88), downsample: true) {
+            if let uiImage = cachedImage {
                 ZStack {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -63,6 +67,9 @@ struct BeanImageView: View {
                         )
                         .shadow(color: large ? .primary.opacity(0.12) : Color.clear, radius: 40, x: 0, y: 20)
                         .shadow(color: large ? .primary.opacity(0.04) : Color.clear, radius: 4, x: 0, y: 2)
+                        .transaction { transaction in
+                            transaction.animation = nil
+                        }
                     RoundedRectangle(cornerRadius: large ? 30 : 11)
                         .inset(by: large ? 2 : 1.5)
                         .fill(Color.clear)
@@ -206,10 +213,48 @@ struct BeanImageView: View {
                 }
             }
         }
+        .onAppear {
+            updateCachedImage()
+        }
+        .onChange(of: imageData) { _, _ in
+            updateCachedImage()
+        }
+        .onChange(of: large) { _, _ in
+            updateCachedImage()
+        }
+        .onChange(of: downsampleBeforeDisplay) { _, _ in
+            updateCachedImage()
+        }
     }
 }
 
 private extension BeanImageView {
+    var currentTargetSize: CGSize {
+        CGSize(width: large ? 240 : 88, height: large ? 240 : 88)
+    }
+
+    func updateCachedImage() {
+        guard let data = imageData else {
+            cachedImage = nil
+            cachedImageData = nil
+            cachedTargetSize = .zero
+            cachedDownsample = downsampleBeforeDisplay
+            return
+        }
+
+        let targetSize = currentTargetSize
+        if cachedImageData == data,
+           cachedTargetSize == targetSize,
+           cachedDownsample == downsampleBeforeDisplay {
+            return
+        }
+
+        cachedImageData = data
+        cachedTargetSize = targetSize
+        cachedDownsample = downsampleBeforeDisplay
+        cachedImage = makeUIImage(data: data, targetSize: targetSize, downsample: downsampleBeforeDisplay)
+    }
+
     func makeUIImage(data: Data, targetSize: CGSize, downsample: Bool) -> UIImage? {
         if downsample {
             return downsampledImage(from: data, to: targetSize)
